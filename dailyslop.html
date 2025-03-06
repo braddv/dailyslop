@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            margin: 20px auto;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        video {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .subscribe {
+            margin-top: 20px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Daily Slop</h2>
+        <video controls autoplay loop>
+            <source src="your-video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        
+        <div class="subscribe">
+            <h3>Subscribe for Updates</h3>
+            <input type="email" id="email" placeholder="Enter your email">
+            <button onclick="subscribe()">Subscribe</button>
+        </div>
+    </div>
+    
+    <script>
+        function subscribe() {
+            let email = document.getElementById('email').value;
+            if (email) {
+                alert(`Thank you for subscribing: ${email}`);
+                document.getElementById('email').value = '';
+                // Here you can send the email to your backend or save it in a database.
+            } else {
+                alert('Please enter a valid email.');
+            }
+        }
+    </script>
+</body>
+</html>
