@@ -1,16 +1,16 @@
 {
-    "routes": [
-      {
-        "src": "/.*",
-        "dest": "/dailyslop.html"
-      }
-    ],
-    "headers": [
-        {
-          "source": "public/dailyslop.mp4",
-          "headers": [
-            { "key": "Content-Type", "value": "video/mp4" }
-          ]
-        }
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "destination": "/dailyslop.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/public/dailyslop.mp4",
+      "headers": [
+        { "key": "Content-Type", "value": "video/mp4" }
       ]
-}  
+    }
+  ]
+}
