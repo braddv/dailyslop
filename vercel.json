@@ -1,15 +1,14 @@
 {
-        "routes": [
-          {
-            "src": "/",
-            "dest": "/dailyslop.html"
-          }
-        ],
+
   "rewrites": [
     {
       "source": "/:path*",
       "destination": "/dailyslop.html"
-    }
+    },
+    {
+        "source": "/",
+        "destination": "/dailyslop.html"
+      }
   ],
   "headers": [
     {
