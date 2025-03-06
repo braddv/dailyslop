@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
     <title>Video Page</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Dancing Script', cursive;
             text-align: center;
             background-color: #f4f4f4;
+            font-size: 28px;
         }
         .container {
             margin: 20px auto;
@@ -27,37 +29,33 @@
         }
         input, button {
             padding: 10px;
-            font-size: 16px;
+            font-size: 26px;
             margin: 5px;
+            font-family: 'Dancing Script', cursive;
+        }
+        label {
+            display: block;
+            font-size: 32px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Daily Slop</h2>
+        <h2>dAIly Slop</h2>
         <video controls autoplay loop>
-            <source src="your-video.mp4" type="video/mp4">
+            <source src="dailyslop.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         
-        <div class="subscribe">
-            <h3>Subscribe for Updates</h3>
-            <input type="email" id="email" placeholder="Enter your email">
-            <button onclick="subscribe()">Subscribe</button>
-        </div>
+        <form action="https://formspree.io/f/mwplevel" method="POST">
+            <label>
+            Serve me dAIly Slop
+            </label>
+            <input type="email" name="email">
+            <button type="submit">please</button>
+        </form>
     </div>
     
-    <script>
-        function subscribe() {
-            let email = document.getElementById('email').value;
-            if (email) {
-                alert(`Thank you for subscribing: ${email}`);
-                document.getElementById('email').value = '';
-                // Here you can send the email to your backend or save it in a database.
-            } else {
-                alert('Please enter a valid email.');
-            }
-        }
-    </script>
 </body>
 </html>
