@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/:path*",
-      "destination": "/dailyslop.html"
+      "destination": "/index.html"
     }
   ],
   "headers": [
