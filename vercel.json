@@ -1,4 +1,10 @@
 {
+        "routes": [
+          {
+            "src": "/",
+            "dest": "/dailyslop.html"
+          }
+        ],
   "rewrites": [
     {
       "source": "/:path*",
