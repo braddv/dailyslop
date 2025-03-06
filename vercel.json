@@ -7,7 +7,7 @@
     ],
     "headers": [
         {
-          "source": "/your-video.mp4",
+          "source": "/dailyslop.mp4",
           "headers": [
             { "key": "Content-Type", "value": "video/mp4" }
           ]
