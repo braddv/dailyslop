@@ -4,5 +4,13 @@
         "src": "/.*",
         "dest": "/dailyslop.html"
       }
-    ]
+    ],
+    "headers": [
+        {
+          "source": "/your-video.mp4",
+          "headers": [
+            { "key": "Content-Type", "value": "video/mp4" }
+          ]
+        }
+      ]
 }  
