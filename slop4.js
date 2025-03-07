@@ -134,8 +134,7 @@ class Player {
   update(direction) {
     // If joystick is providing directional input, update angle and position.
     if (direction.mag() > 0.1) {
-      // Set player's angle so that the tip of the triangle (default at (0, -size))
-      // points in the joystick direction.
+      // Set player's angle so the triangle (with tip at (0, -size)) points toward the joystick.
       this.angle = direction.heading() + HALF_PI;
       let velocity = direction.copy().setMag(this.speed);
       this.pos.add(velocity);
@@ -253,8 +252,18 @@ class Joystick {
   
   update() {
     if (this.active) {
-      let mousePos = createVector(mouseX, mouseY);
-      let dir = p5.Vector.sub(mousePos, this.base);
+      let pos = createVector(mouseX, mouseY);
+      // For multi-touch, we rely on touches in touchStarted/touchMoved
+      if (touches.length > 0) {
+        // Use the first touch that falls within the joystick's base.
+        for (let t of touches) {
+          if (dist(t.x, t.y, this.base.x, this.base.y) < this.r) {
+            pos = createVector(t.x, t.y);
+            break;
+          }
+        }
+      }
+      let dir = p5.Vector.sub(pos, this.base);
       if (dir.mag() > this.r) {
         dir.setMag(this.r);
       }
@@ -265,11 +274,8 @@ class Joystick {
   }
   
   getVector() {
-    if (this.active) {
-      let dir = p5.Vector.sub(this.knob, this.base);
-      return dir.copy().div(this.r); // Normalized vector (0 to 1 magnitude)
-    }
-    return createVector(0, 0);
+    let dir = p5.Vector.sub(this.knob, this.base);
+    return dir.copy().div(this.r); // Normalized vector (0 to 1 magnitude)
   }
   
   display() {
@@ -286,6 +292,8 @@ class Joystick {
 //====================
 // Input Handling
 //====================
+
+// Desktop mouse events:
 function mousePressed() {
   // If game is over, restart immediately.
   if (gameOver) {
@@ -294,11 +302,9 @@ function mousePressed() {
     return;
   }
   
-  // Check if the press is within the joystick area.
   if (dist(mouseX, mouseY, joystick.base.x, joystick.base.y) < joystick.r) {
     joystick.active = true;
   }
-  // Check if the press is within the shoot button area.
   if (mouseX > shootButton.x && mouseX < shootButton.x + shootButton.size &&
       mouseY > shootButton.y && mouseY < shootButton.y + shootButton.size) {
     fireBullet();
@@ -309,13 +315,38 @@ function mouseReleased() {
   joystick.active = false;
 }
 
+// Multi-touch events:
 function touchStarted() {
-  mousePressed();
+  // If game is over, restart immediately.
+  if (gameOver) {
+    resetGame();
+    loop();
+    return false;
+  }
+  
+  // Process each touch point.
+  for (let t of touches) {
+    if (dist(t.x, t.y, joystick.base.x, joystick.base.y) < joystick.r) {
+      joystick.active = true;
+    }
+    if (t.x > shootButton.x && t.x < shootButton.x + shootButton.size &&
+        t.y > shootButton.y && t.y < shootButton.y + shootButton.size) {
+      fireBullet();
+    }
+  }
   return false;
 }
 
 function touchEnded() {
-  joystick.active = false;
+  // If no remaining touch is in the joystick area, disable it.
+  let stillActive = false;
+  for (let t of touches) {
+    if (dist(t.x, t.y, joystick.base.x, joystick.base.y) < joystick.r) {
+      stillActive = true;
+      break;
+    }
+  }
+  joystick.active = stillActive;
   return false;
 }
 
@@ -324,7 +355,7 @@ function fireBullet() {
   let tipOffset = createVector(0, -player.size);
   tipOffset.rotate(player.angle);
   let bulletStart = p5.Vector.add(player.pos, tipOffset);
-  // Use player's angle minus HALF_PI so the bullet travels in the joystick direction.
+  // The bullet's velocity vector aligns with the direction the player is pointing.
   let bulletAngle = player.angle - HALF_PI;
   let bullet = new Bullet(bulletStart.x, bulletStart.y, bulletAngle);
   bullets.push(bullet);
