@@ -282,19 +282,19 @@ function drawButtons() {
   rectMode(CORNER);
   // Draw left button in the bottom left.
   fill(50, 150, 250);
-  rect(20, height - buttonSize - 20, buttonSize, buttonSize, 10);
+  rect(20, height - buttonSize - 80, buttonSize, buttonSize, 10);
   fill(255);
   textSize(32);
   textAlign(CENTER, CENTER);
-  text("←", 20 + buttonSize / 2, height - buttonSize / 2 - 20);
+  text("←", 20 + buttonSize / 2, height - buttonSize / 2 - 80);
   
   // Draw right button in the bottom right.
   fill(50, 150, 250);
-  rect(width - buttonSize - 20, height - buttonSize - 20, buttonSize, buttonSize, 10);
+  rect(width - buttonSize - 20, height - buttonSize - 80, buttonSize, buttonSize, 10);
   fill(255);
   textSize(32);
   textAlign(CENTER, CENTER);
-  text("→", width - buttonSize / 2 - 20, height - buttonSize / 2 - 20);
+  text("→", width - buttonSize / 2 - 20, height - buttonSize / 2 - 80);
   pop();
 }
 
