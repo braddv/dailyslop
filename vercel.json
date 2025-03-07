@@ -5,8 +5,8 @@
       "destination": "index.html"
     },
     {
-        "source": "/slop1",
-        "destination": "slop1.html"
+        "source": "/slop",
+        "destination": "slop.html"
     }
   ],
   "headers": [
