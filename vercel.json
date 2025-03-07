@@ -1,16 +1,12 @@
 {
   "rewrites": [
     {
-        "source": "public/:asset*",
-        "destination": "public/:asset*"
-    },
-    {
       "source": "/:path*",
-      "destination": "public/index.html"
+      "destination": "index.html"
     },
     {
         "source": "/slop1",
-        "destination": "public/slop1.html"
+        "destination": "slop1.html"
     }
   ],
   "headers": [
