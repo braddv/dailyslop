@@ -314,12 +314,12 @@ function mousePressed() {
   
   // Check if the left button is pressed.
   if (mouseX > 20 && mouseX < 20 + buttonSize &&
-      mouseY > height - buttonSize - 20 && mouseY < height - 20) {
+      mouseY > height - buttonSize - 80 && mouseY < height - 80) {
     player.moveLeft();
   }
   // Check if the right button is pressed.
   if (mouseX > width - buttonSize - 20 && mouseX < width - 20 &&
-      mouseY > height - buttonSize - 20 && mouseY < height - 20) {
+      mouseY > height - buttonSize - 80 && mouseY < height - 80) {
     player.moveRight();
   }
 }
