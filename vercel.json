@@ -2,8 +2,12 @@
   "rewrites": [
     {
       "source": "/:path*",
-      "destination": "/index.html"
-    }
+      "destination": "/public/index.html"
+    },
+    {
+        "source": "/slop1",
+        "destination": "/public/slop1.html"
+      }
   ],
   "headers": [
     {
