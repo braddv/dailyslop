@@ -18,6 +18,7 @@ function setup() {
   let canvas = createCanvas(windowWidth, windowHeight);
   // Disable default touch actions for compatibility.
   canvas.style('touch-action', 'none');
+  canvas.parent("game-container");
 
   cols = floor(width / cellSize);
   // Subtract 9 rows from the gameplay area.

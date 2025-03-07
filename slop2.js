@@ -9,6 +9,8 @@ let startTime = 0;
 function setup() {
   let cnv = createCanvas(windowWidth, windowHeight);
   // Disable default touch actions for Safari
+  cnv.parent("game-container");
+
   cnv.style('touch-action', 'none');
   document.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
   
