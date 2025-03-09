@@ -37,7 +37,7 @@
         button {
             padding: 10px;
             font-size: 20px;
-            margin: 5px;
+            margin: 20px;
             background-color: #f5e6cc;
             font-family: 'Dancing Script', cursive;
             color: black;
@@ -47,6 +47,55 @@
             font-size: 32px;
             margin-bottom: 10px;
         }
+
+        .container img {
+            max-width: 100%;
+            max-height: 300px;
+            overflow: hidden;
+            height: auto;
+            display: block; 
+            margin: 0 auto; /* Optional: centers the image horizontally if needed */
+            margin-top: 10px;
+        }
+
+        .group-middle {
+            display: flex;
+            align-items: left; /* vertically centers the image and text */
+            gap: 10px; /* adds some spacing between the image and the text */
+        }
+        /* Left half: centers the image horizontally */
+        .group-middle .left {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        }
+
+        /* Right half: centers the text horizontally and aligns to the top */
+        .group-middle .right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Left align everything */
+            justify-content: flex-start;
+            padding-top: 0;        
+        }
+
+
+        /* Style for the title */
+        .group-middle .right .title {
+        font-size: 32px;
+        margin-bottom: 10px; /* space between title and leaderboard */
+        }
+
+        /* Leaderboard styles */
+        .group-middle .right .leaderboard {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        text-align: left;
+        font-size: 28px;
+        }
+
     </style>
 </head>
 <body>
@@ -61,10 +110,30 @@
             <label>
             Serve me dAIly Slop
             </label>
-            <input type="email" name="email">
+            <input type="email" name="email" placeholder="ai@slopmail.com">
             <button type="submit">please</button>
         </form>
+
+        <hr>
+
+        <label>Flabby Circle - April 1st 2025</label>
+        <div class="group-middle">
+            <div class="left">
+              <img src="public/flabbycircle.jpg" alt="Flabby Circle">
+            </div>
+            <div class="right">
+                <span class="title">Top of the Slop</span>
+                <ul class="leaderboard">
+                  <li>Adelina - 99</li>
+                  <li>Brad - 12</li>
+                  <!-- More leaderboard entries here -->
+                </ul>
+            </div>
+          </div>
+          <button>Unlock for $1</button>
+        </div>
     </div>
+    
     
 </body>
 </html>
