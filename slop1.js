@@ -108,8 +108,23 @@ function drawGameOver() {
   text("Score: " + score, width / 2, height / 2 - 20);
   textSize(32);
   text("Highscore: " + highscore, width / 2, height / 2 + 20);
-  textSize(18);
-  text("Click to restart", width / 2, height / 2 + 60);
+  
+  // Draw restart button
+  fill(50, 150, 250);
+  rectMode(CENTER);
+  rect(width / 2 - 100, height / 2 + 80, 160, 50, 10);
+  fill(255);
+  textSize(20);
+  text("Restart Game", width / 2 - 100, height / 2 + 80);
+  
+  // Draw home button
+  fill(50, 150, 250);
+  rect(width / 2 + 100, height / 2 + 80, 160, 50, 10);
+  fill(255);
+  textSize(20);
+  text("Home", width / 2 + 100, height / 2 + 80);
+  
+  rectMode(CORNER); // Reset rectMode to default
 }
 
 class Player {
@@ -299,16 +314,50 @@ function drawButtons() {
 }
 
 function mousePressed() {
-  // If the game is over, clicking anywhere will restart the game.
+  // If the game is over, check if either button is clicked
   if (gameOver) {
-    if (score > highscore) {
-      highscore = score;
+    // Check if restart button is clicked
+    if (mouseX > width / 2 - 180 && mouseX < width / 2 - 20 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highscore) {
+        highscore = score;
+      }
+      // Reset the game
+      gameOver = false;
+      score = 0;
+      player = new Player(width / 2, height / 2);
+      enemies = [];
+      showInstructions = true;
+      return;
     }
-    gameOver = false;
-    score = 0;
-    player = new Player(width / 2, height / 2);
-    enemies = [];
-    showInstructions = true;
+    
+    // Check if home button is clicked
+    if (mouseX > width / 2 + 20 && mouseX < width / 2 + 180 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Toggle visibility of game and not-game containers
+      document.getElementById('game-container').style.display = 'none';
+      document.getElementById('not-game-container').style.display = 'block';
+      
+      // Add event listener to the play button to show the game again
+      document.getElementById('play-button').addEventListener('click', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        if (score > highscore) {
+          highscore = score;
+        }
+        gameOver = false;
+        score = 0;
+        player = new Player(width / 2, height / 2);
+        enemies = [];
+        showInstructions = true;
+      });
+      
+      return;
+    }
+    
+    // If neither button was clicked, do nothing
     return;
   }
   
@@ -362,15 +411,9 @@ function touchEnded() {
 }
 
 function keyPressed() {
-  // For debugging: pressing any key when game over also restarts the game.
-  if (gameOver) {
-    if (score > highscore) {
-      highscore = score;
-    }
-    gameOver = false;
-    score = 0;
-    player = new Player(width / 2, height / 2);
-    enemies = [];
-    showInstructions = true;
+  // No longer restart the game when keys are pressed during game over
+  // Only the buttons should control game over actions now
+  if (!gameOver) {
+    // Add any key controls for active gameplay here if needed
   }
 }
