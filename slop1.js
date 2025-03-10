@@ -115,14 +115,14 @@ function drawGameOver() {
   rect(width / 2 - 100, height / 2 + 80, 160, 50, 10);
   fill(255);
   textSize(20);
-  text("Restart Game", width / 2 - 100, height / 2 + 80);
+  text("Sloppy Seconds?", width / 2 - 100, height / 2 + 80);
   
   // Draw home button
   fill(50, 150, 250);
   rect(width / 2 + 100, height / 2 + 80, 160, 50, 10);
   fill(255);
   textSize(20);
-  text("Home", width / 2 + 100, height / 2 + 80);
+  text("Leaderboard", width / 2 + 100, height / 2 + 80);
   
   rectMode(CORNER); // Reset rectMode to default
 }

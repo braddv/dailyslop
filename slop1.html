@@ -8,42 +8,33 @@
     <script src="slop1.js" defer></script>
     <style>
         body { 
-            display: flex; 
             flex-direction: column;
             justify-content: center; 
             align-items: center; 
             margin: 0; 
-            background-color: #f5e6cc; 
+            background-color: #d8c3a5;
             font-family: 'Dancing Script', cursive;
         }
-        canvas { border: 2px solid black; }
+        canvas { 
+            border: 0px solid black; 
+        }
         #not-game-container {
             display: none; /* Initially hidden */
             text-align: center;
             padding: 20px;
         }
-        #not-game-container h1 {
-            color: #333;
-            font-size: 36px;
-            margin-bottom: 20px;
+        #game-container {
+            display: block; /* Initially hidden */
+            padding: 0px;
         }
-        #not-game-container p {
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-        #play-button {
-            background-color: #d8c3a5;
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            font-size: 18px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
+        button {
+            padding: 8px;
+            font-size: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            background-color: #f5e6cc; 
             font-family: 'Dancing Script', cursive;
-        }
-        #play-button:hover {
-            background-color: #3080e0;
+            color: black;
         }
         .group-middle {
             display: flex;
@@ -64,7 +55,7 @@
             height: auto;
             display: block; 
             margin: 0 auto; /* Optional: centers the image horizontally if needed */
-            margin-top: 10px;
+            margin-top: 0px;
         }
 
         /* Right half: centers the text horizontally and aligns to the top */
@@ -98,7 +89,6 @@
     
     <div id="not-game-container">
         <h1>Flabby Circle</h1>
-        <p>Welcome to Flabby Circle!</p>
         <p>Collect black cubes and avoid red triangles.</p>
         <p>Tap the arrow buttons to jump left and right.</p>
         <div class="group-middle">
@@ -114,7 +104,12 @@
                 </ul>
             </div>
         </div> 
-        <button id="play-button">Play Game</button>
+        <div>
+            <button id="play-button">Play</button>
+            <a href="/">
+            <button id="home-button">Other Slop</button>
+            </a>
+        </div>
     </div>
 </body>
 </html>
