@@ -122,7 +122,7 @@
             Slop Tag
             </label>
             <input name="username" placeholder="SloppyGamer420">
-            <button type="submit">save</button>
+            <button type="submit" id="save-button">save</button>
 
         <hr>
 
@@ -189,4 +189,46 @@
     
     
 </body>
+
+<script>
+    // Wait until the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      const saveButton = document.getElementById('save-button');
+      
+      saveButton.addEventListener('click', async function(event) {
+        event.preventDefault();
+        
+        const slopTagInput = document.querySelector('input[name="username"]');
+        const slopTag = slopTagInput.value;
+        
+        const deviceBlueprint = {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          screenWidth: window.screen.width,
+          screenHeight: window.screen.height
+        };
+        
+        const payload = { slopTag, deviceBlueprint };
+
+        localStorage.setItem('SlopId', payload);
+        slopTagInput.value = slopTag;
+        
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Select the input field by its name attribute
+    const slopTagInput = document.querySelector('input[name="username"]');
+    // Check if a slop tag is stored in local storage
+    const storedSlopId = localStorage.getItem('SlopId');
+    const storedSlopTag = storedSlopId['slopTag'];
+    
+    // If there is a stored tag, update the placeholder or input value
+    if (storedSlopTag) {
+      // Option 2 (alternative): Pre-fill the input value
+      slopTagInput.value = storedSlopTag;
+    }
+  });
+</script>
+
 </html>
