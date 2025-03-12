@@ -221,7 +221,7 @@
     const slopTagInput = document.querySelector('input[name="username"]');
     // Check if a slop tag is stored in local storage
     const storedSlopId = localStorage.getItem('SlopId');
-    const storedSlopTag = storedSlopId['slopTag'];
+    const storedSlopTag = storedSlopId.slopTag;
     
     // If there is a stored tag, update the placeholder or input value
     if (storedSlopTag) {
