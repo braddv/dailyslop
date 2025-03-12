@@ -210,7 +210,7 @@
         
         const payload = { slopTag, deviceBlueprint };
 
-        localStorage.setItem('SlopId', payload);
+        localStorage.setItem('SlopId', JSON.stringify(payload));
         slopTagInput.value = slopTag;
         
       });
@@ -221,12 +221,11 @@
     const slopTagInput = document.querySelector('input[name="username"]');
     // Check if a slop tag is stored in local storage
     const storedSlopId = localStorage.getItem('SlopId');
-    const storedSlopTag = storedSlopId.slopTag;
-    
-    // If there is a stored tag, update the placeholder or input value
-    if (storedSlopTag) {
-      // Option 2 (alternative): Pre-fill the input value
-      slopTagInput.value = storedSlopTag;
+    if (storedSlopId) {
+        payload = JSON.parse(storedPayload)
+        storedSlopTag = payload.slopTag;
+        slopTagInput.value = storedSlopTag;
+
     }
   });
 </script>
