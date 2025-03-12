@@ -222,7 +222,7 @@
     // Check if a slop tag is stored in local storage
     const storedSlopId = localStorage.getItem('SlopId');
     if (storedSlopId) {
-        payload = JSON.parse(storedPayload)
+        payload = JSON.parse(storedSlopId)
         storedSlopTag = payload.slopTag;
         slopTagInput.value = storedSlopTag;
 
