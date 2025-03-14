@@ -8,6 +8,8 @@ let buttonSize = 80;
 let score = 0;
 let gameOver = false;
 let highscore = 0;  // Global highscore variable
+let username = "";
+let deviceBlueprint = "";
 let showInstructions = true;  // Flag to show instructions only until first jump
 
 // New global variables for ground bad enemies.
@@ -20,6 +22,14 @@ function setup() {
   canvas.parent("game-container");
   canvas.style('touch-action', 'none');
   
+  let storedData = localStorage.getItem('SlopId');
+  if (storedData) {
+    // Convert the string to an object
+    let slopData = JSON.parse(storedData);
+    username = slopData.slopTag || "";
+    deviceBlueprint = slopData.deviceBlueprint || "";
+  }
+
   groundLevel = height - 50;
   // Make the player appear in the middle of the screen.
   player = new Player(width / 2, height / 2);
@@ -103,13 +113,6 @@ function drawGameOver() {
   fill(255);
   textSize(48);
   textAlign(CENTER, CENTER);
-  let storedData = localStorage.getItem('SlopId');
-  let username = "";
-  if (storedData) {
-    // Convert the string to an object
-    let slopData = JSON.parse(storedData);
-    username = slopData.slopTag || "";
-  }
   text(`Game Over, ${username}`, width / 2, height / 2 - 60);
   textSize(32);
   text("Score: " + score, width / 2, height / 2 - 20);
@@ -339,9 +342,17 @@ function mousePressed() {
       return;
     }
     
-    // Check if home button is clicked
+      // Check if home button is clicked
     if (mouseX > width / 2 + 20 && mouseX < width / 2 + 180 &&
         mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highscore) {
+        highscore = score;
+      }
+      
+      // Submit the score asynchronously
+      submitScore(username, highscore, deviceBlueprint);
+
       // Toggle visibility of game and not-game containers
       document.getElementById('game-container').style.display = 'none';
       document.getElementById('not-game-container').style.display = 'block';
@@ -425,7 +436,7 @@ function keyPressed() {
   }
 }
 
-
+// Async function to submit score to the backend
 async function submitScore(username, score, deviceBlueprint) {
   // Prepare the data to send to the backend
   const data = { 
