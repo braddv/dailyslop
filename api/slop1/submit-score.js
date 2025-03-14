@@ -10,11 +10,6 @@ export default async function handler(req, res) {
     console.log('API request received:', req.method);
     console.log('Request headers:', req.headers);
     
-    const allowedOrigin = req.headers.origin; // Validate this origin as needed
-    res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-
     // Handle preflight OPTIONS request
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
