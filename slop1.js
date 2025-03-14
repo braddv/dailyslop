@@ -8,8 +8,6 @@ let buttonSize = 80;
 let score = 0;
 let gameOver = false;
 let highscore = 0;  // Global highscore variable
-let username = "";
-let deviceBlueprint = "";
 let showInstructions = true;  // Flag to show instructions only until first jump
 
 // New global variables for ground bad enemies.
@@ -22,14 +20,6 @@ function setup() {
   canvas.parent("game-container");
   canvas.style('touch-action', 'none');
   
-  let storedData = localStorage.getItem('SlopId');
-  if (storedData) {
-    // Convert the string to an object
-    let slopData = JSON.parse(storedData);
-    username = slopData.slopTag || "";
-    deviceBlueprint = slopData.deviceBlueprint || "";
-  }
-
   groundLevel = height - 50;
   // Make the player appear in the middle of the screen.
   player = new Player(width / 2, height / 2);
@@ -113,6 +103,13 @@ function drawGameOver() {
   fill(255);
   textSize(48);
   textAlign(CENTER, CENTER);
+  let storedData = localStorage.getItem('SlopId');
+  let username = "";
+  if (storedData) {
+    // Convert the string to an object
+    let slopData = JSON.parse(storedData);
+    username = slopData.slopTag || "";
+  }
   text(`Game Over, ${username}`, width / 2, height / 2 - 60);
   textSize(32);
   text("Score: " + score, width / 2, height / 2 - 20);
@@ -342,17 +339,9 @@ function mousePressed() {
       return;
     }
     
-      // Check if home button is clicked
+    // Check if home button is clicked
     if (mouseX > width / 2 + 20 && mouseX < width / 2 + 180 &&
         mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
-      // Update highscore if needed
-      if (score > highscore) {
-        highscore = score;
-      }
-      
-      // Submit the score asynchronously
-      submitScore(username, highscore, deviceBlueprint);
-
       // Toggle visibility of game and not-game containers
       document.getElementById('game-container').style.display = 'none';
       document.getElementById('not-game-container').style.display = 'block';
@@ -433,66 +422,5 @@ function keyPressed() {
   // Only the buttons should control game over actions now
   if (!gameOver) {
     // Add any key controls for active gameplay here if needed
-  }
-}
-
-// Async function to submit score to the backend
-async function submitScore(username, score, deviceBlueprint) {
-  // Prepare the data to send to the backend
-  const data = { 
-    username, 
-    highScore: score, 
-    deviceBlueprint 
-  };
-
-  try {
-    const response = await fetch("/api/slop1/submit-score", {
-      method: "POST",
-      credentials: 'include',  // This ensures credentials are sent and matched with your CORS config.
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const responseData = await response.json();
-    console.log("Score submitted successfully:", responseData);
-    
-    // Update the leaderboard with the received data
-    updateLeaderboard(responseData.leaderboard);
-    
-    return responseData;
-  } catch (error) {
-    console.error("Error submitting score:", error);
-    // Show default leaderboard if there's an error
-    updateLeaderboard([]);
-    return null;
-  }
-}
-
-// Function to update the leaderboard UI
-function updateLeaderboard(leaderboardData) {
-  const leaderboardList = document.getElementById('leaderboard-list');
-  if (!leaderboardList) return;
-  
-  // Clear existing entries
-  leaderboardList.innerHTML = '';
-  
-  if (leaderboardData && Array.isArray(leaderboardData) && leaderboardData.length > 0) {
-    // Add new entries from the API response
-    leaderboardData.forEach(entry => {
-      const listItem = document.createElement('li');
-      listItem.textContent = `- ${entry.username} - ${entry.score}`;
-      leaderboardList.appendChild(listItem);
-    });
-  } else {
-    // If no entries were received, show a message
-    const listItem = document.createElement('li');
-    listItem.textContent = '- No scores yet -';
-    leaderboardList.appendChild(listItem);
   }
 }
