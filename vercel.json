@@ -19,12 +19,8 @@
   ],
   "builds": [
     {
-      "src": "*.html",
+      "src": "**/*",
       "use": "@vercel/static"
-    },
-    { 
-     "src": "app/**/*.js",
-     "use": "@vercel/node" 
     }
   ]
 }
