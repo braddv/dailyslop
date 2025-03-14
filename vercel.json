@@ -1,12 +1,16 @@
 {
   "rewrites": [
     {
-      "source": "/:path*",
-      "destination": "index.html"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     },
     {
-        "source": "/slop",
-        "destination": "slop.html"
+      "source": "/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "index.html"
     }
   ],
   "headers": [
@@ -17,10 +21,10 @@
       ]
     }
   ],
-  "builds": [
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
+  "functions": {
+    "api/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
     }
-  ]
+  }
 }
