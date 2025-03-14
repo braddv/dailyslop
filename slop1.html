@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
     <title>Flabby Circle</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script src="slop1.js" defer></script>
@@ -15,6 +14,7 @@
             margin: 0; 
             background-color: #d8c3a5;
             font-family: 'Dancing Script', cursive;
+            font-size: 28px;
         }
         canvas { 
             border: 0px solid black; 
@@ -98,10 +98,10 @@
             </div>
             <div class="right">
                 <span class="title">The Sloppiest</span>
-                <ul class="leaderboard">
+                <ul id="leaderboard-list" class="leaderboard">
                     <li>- Adelina - 99</li>
                     <li>- Brad - 12</li>
-                  <!-- More leaderboard entries here -->
+                    <!-- Leaderboard entries will be updated dynamically -->
                 </ul>
             </div>
         </div> 

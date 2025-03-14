@@ -1,12 +1,29 @@
-{
+{  
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
-      "source": "/:path*",
-      "destination": "index.html"
+      "source": "/slop",
+      "destination": "/slop.html"
     },
     {
-        "source": "/slop",
-        "destination": "slop.html"
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/slop1",
+      "destination": "/slop1.html"
+    },
+    {
+      "source": "/slop2",
+      "destination": "/slop2.html"
+    },
+    {
+      "source": "/slop3",
+      "destination": "/slop3.html"
     }
   ],
   "headers": [
@@ -15,12 +32,6 @@
       "headers": [
         { "key": "Content-Type", "value": "video/mp4" }
       ]
-    }
-  ],
-  "builds": [
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
     }
   ]
 }
