@@ -23,7 +23,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "*/**",
+      "src": "*.html",
       "use": "@vercel/static"
     }
   ]
