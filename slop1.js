@@ -103,7 +103,14 @@ function drawGameOver() {
   fill(255);
   textSize(48);
   textAlign(CENTER, CENTER);
-  text("Game Over", width / 2, height / 2 - 60);
+  let storedData = localStorage.getItem('SlopId');
+  let username = "";
+  if (storedData) {
+    // Convert the string to an object
+    let slopData = JSON.parse(storedData);
+    username = slopData.slopTag || "";
+  }
+  text(`Game Over, ${username}`, width / 2, height / 2 - 60);
   textSize(32);
   text("Score: " + score, width / 2, height / 2 - 20);
   textSize(32);
@@ -159,7 +166,7 @@ class Player {
   }
   
   display() {
-    fill(255, 100, 100);
+    fill(255, 180, 0);
     noStroke();
     ellipse(this.pos.x, this.pos.y, this.size);
   }
