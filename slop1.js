@@ -448,7 +448,7 @@ async function submitScore(username, score, deviceBlueprint) {
   try {
     const response = await fetch("/api/slop1/submit-score", {
       method: "POST",
-      credentials: 'include',  // This ensures credentials are sent and matched with your CORS config.
+      credentials: "include",  // This ensures credentials are sent and matched with your CORS config.
       headers: {
         "Content-Type": "application/json"
       },
