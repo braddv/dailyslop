@@ -7,6 +7,55 @@
     <title>Flabby Circle</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script src="slop1.js" defer></script>
+    <script>
+        // Fetch leaderboard data when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchLeaderboard();
+        });
+
+        // Function to fetch leaderboard data from the API
+        async function fetchLeaderboard() {
+            try {
+                const response = await fetch('/api/get-leaderboard?gameId=1&limit=5');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.success && data.leaderboard) {
+                    updateLeaderboardDisplay(data.leaderboard);
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+                updateLeaderboardDisplay([]);
+            }
+        }
+
+        // Function to update the leaderboard display
+        function updateLeaderboardDisplay(leaderboardData) {
+            const leaderboardList = document.getElementById('leaderboard-list');
+            if (!leaderboardList) return;
+            
+            // Clear existing entries
+            leaderboardList.innerHTML = '';
+            
+            if (leaderboardData && Array.isArray(leaderboardData) && leaderboardData.length > 0) {
+                // Add new entries from the API response
+                leaderboardData.forEach(entry => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `- ${entry.username} - ${entry.score}`;
+                    leaderboardList.appendChild(listItem);
+                });
+            } else {
+                // If no entries were received, show a message
+                const listItem = document.createElement('li');
+                listItem.textContent = '- No scores yet -';
+                leaderboardList.appendChild(listItem);
+            }
+        }
+    </script>
     <style>
         body { 
             flex-direction: column;
@@ -98,10 +147,8 @@
             </div>
             <div class="right">
                 <span class="title">The Sloppiest</span>
-                <ul class="leaderboard">
-                    <li>- Adelina - 99</li>
-                    <li>- Brad - 12</li>
-                  <!-- More leaderboard entries here -->
+                <ul id="leaderboard-list" class="leaderboard">
+                    <li>Loading leaderboard...</li>
                 </ul>
             </div>
         </div> 

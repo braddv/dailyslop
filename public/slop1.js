@@ -462,37 +462,34 @@ async function submitScore(username, score, deviceBlueprint) {
     const responseData = await response.json();
     console.log("Score submitted successfully:", responseData);
     
-    // Update the leaderboard with the received data
-    updateLeaderboard(responseData.leaderboard);
+    // Fetch updated leaderboard after submitting score
+    fetchUpdatedLeaderboard();
     
     return responseData;
   } catch (error) {
     console.error("Error submitting score:", error);
-    // Show default leaderboard if there's an error
-    updateLeaderboard([]);
     return null;
   }
 }
 
-// Function to update the leaderboard UI
-function updateLeaderboard(leaderboardData) {
-  const leaderboardList = document.getElementById('leaderboard-list');
-  if (!leaderboardList) return;
-  
-  // Clear existing entries
-  leaderboardList.innerHTML = '';
-  
-  if (leaderboardData && Array.isArray(leaderboardData) && leaderboardData.length > 0) {
-    // Add new entries from the API response
-    leaderboardData.forEach(entry => {
-      const listItem = document.createElement('li');
-      listItem.textContent = `- ${entry.username} - ${entry.score}`;
-      leaderboardList.appendChild(listItem);
-    });
-  } else {
-    // If no entries were received, show a message
-    const listItem = document.createElement('li');
-    listItem.textContent = '- No scores yet -';
-    leaderboardList.appendChild(listItem);
+// Function to fetch updated leaderboard data
+async function fetchUpdatedLeaderboard() {
+  try {
+    const response = await fetch('/api/get-leaderboard?gameId=1&limit=5');
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    if (data.success && data.leaderboard) {
+      // Use the updateLeaderboardDisplay function from the HTML
+      if (typeof updateLeaderboardDisplay === 'function') {
+        updateLeaderboardDisplay(data.leaderboard);
+      } else {
+        console.log('Updated leaderboard data:', data.leaderboard);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching updated leaderboard:', error);
   }
 }

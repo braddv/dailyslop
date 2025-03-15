@@ -1,3 +1,8 @@
+import { neon } from '@neondatabase/serverless';
+import crypto from 'crypto';
+
+const sql = neon(`${process.env.DATABASE_URL}`);
+
 export default async function handler(req, res) {
     // Set CORS headers to allow browser requests
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -49,6 +54,30 @@ export default async function handler(req, res) {
         
         // Process the data (this is where you'd save to a database, etc.)
         console.log('Processing score submission:', { username, highScore, deviceBlueprint });
+        
+        // Create a hash of the deviceBlueprint
+        // Ensure deviceBlueprint is a string before hashing
+        const deviceBlueprintStr = typeof deviceBlueprint === 'string' 
+          ? deviceBlueprint 
+          : JSON.stringify(deviceBlueprint);
+        const deviceHash = crypto.createHash('sha256').update(deviceBlueprintStr).digest('hex');
+        
+        // Game ID for slop1 is 1
+        const gameId = 1;
+        
+        try {
+          // Insert score data into the database
+          const result = await sql`
+            INSERT INTO leaderboard (tag, hash, gamenumber, score)
+            VALUES (${username}, ${deviceHash}, ${gameId}, ${highScore})
+            RETURNING tag, score
+          `;
+          
+          console.log('Score saved to database with ID:', result[0]?.id);
+        } catch (dbError) {
+          console.error('Database error:', dbError);
+          // Continue execution to return success to client even if DB insert fails
+        }
         
         // Return success response
         return res.status(200).json({
