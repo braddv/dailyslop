@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
     <title>dAily Slop</title>
+    <script src="leaderboard.js"></script>
     <style>
         body {
             font-family: 'Dancing Script', cursive;
@@ -173,10 +174,8 @@
             </div>
             <div class="right">
                 <span class="title">The Sloppiest</span>
-                <ul class="leaderboard">
-                  <li>- Adelina - 99</li>
-                  <li>- Brad - 12</li>
-                  <!-- More leaderboard entries here -->
+                <ul id="flabby-leaderboard" class="leaderboard">
+                  <li>Loading leaderboard...</li>
                 </ul>
             </div>
           </div>
@@ -225,8 +224,10 @@
         payload = JSON.parse(storedSlopId)
         storedSlopTag = payload.slopTag;
         slopTagInput.value = storedSlopTag;
-
     }
+    
+    // Fetch the Flabby Circle leaderboard
+    fetchLeaderboard(1, 5, 'flabby-leaderboard');
   });
 </script>
 

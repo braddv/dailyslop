@@ -463,33 +463,14 @@ async function submitScore(username, score, deviceBlueprint) {
     console.log("Score submitted successfully:", responseData);
     
     // Fetch updated leaderboard after submitting score
-    fetchUpdatedLeaderboard();
+    // Use the shared fetchLeaderboard function from leaderboard.js
+    if (typeof fetchLeaderboard === 'function') {
+      fetchLeaderboard(1, 5, 'leaderboard-list');
+    }
     
     return responseData;
   } catch (error) {
     console.error("Error submitting score:", error);
     return null;
-  }
-}
-
-// Function to fetch updated leaderboard data
-async function fetchUpdatedLeaderboard() {
-  try {
-    const response = await fetch('/api/get-leaderboard?gameId=1&limit=5');
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const data = await response.json();
-    
-    if (data.success && data.leaderboard) {
-      // Use the updateLeaderboardDisplay function from the HTML
-      if (typeof updateLeaderboardDisplay === 'function') {
-        updateLeaderboardDisplay(data.leaderboard);
-      } else {
-        console.log('Updated leaderboard data:', data.leaderboard);
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching updated leaderboard:', error);
   }
 }
