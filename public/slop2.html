@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cypress Hill</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="slop2.js" defer></script>
+    <style>
+        body { display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            margin: 0; 
+            background-color: #f5e6cc; }
+            canvas { 
+            border: 0px solid black; 
+        }
+        #not-game-container {
+            display: none; /* Initially hidden */
+            text-align: center;
+            padding: 20px;
+        }
+        #game-container {
+            display: block; /* Initially hidden */
+            padding: 0px;
+        }
+        button {
+            padding: 8px;
+            font-size: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            background-color: #f5e6cc; 
+            font-family: 'Dancing Script', cursive;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div> 
+    <div id="not-game-container">
+        <h1>Flabby Circle</h1>
+        <p>Collect black cubes and avoid red triangles.</p>
+        <p>Tap the arrow buttons to jump left and right.</p>
+        <div class="group-middle">
+            <div class="left">
+              <img src="/flabbycircle.jpg" alt="Flabby Circle">
+            </div>
+            <div class="right">
+                <span class="title">Top of the Slop</span>
+                <ul class="leaderboard">
+                  <li>1) Wes - Big Score</li>
+                  <li>2) Brad - Score</li>
+                  <!-- More leaderboard entries here -->
+                </ul>
+            </div>
+        </div> 
+        <div>
+            <button id="play-button">Play</button>
+            <a href="/">
+            <button id="home-button">Other Slop</button>
+            </a>
+        </div>
+</body>
+</html>
