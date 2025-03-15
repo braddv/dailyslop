@@ -70,6 +70,9 @@ export default async function handler(req, res) {
           const result = await sql`
             INSERT INTO leaderboard (tag, hash, gamenumber, score)
             VALUES (${username}, ${deviceHash}, ${gameId}, ${highScore})
+            ON CONFLICT (tag, hash, gamenumber)
+            DO UPDATE SET score = EXCLUDED.score
+            WHERE leaderboard.score < EXCLUDED.score
             RETURNING tag, score
           `;
           
