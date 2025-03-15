@@ -75,16 +75,9 @@ function showSlopTagPopup() {
   title.textContent = 'Enter Your Slop Tag';
   title.style.marginBottom = '20px';
   
-  // Create a form element (better for mobile)
-  const form = document.createElement('form');
-  form.style.display = 'flex';
-  form.style.flexDirection = 'column';
-  form.style.alignItems = 'center';
-  
   // Create the input field
   const input = document.createElement('input');
   input.type = 'text';
-  input.name = 'slopTag';
   input.placeholder = 'SloppyGamer420';
   input.style.padding = '10px';
   input.style.fontSize = '20px';
@@ -94,25 +87,23 @@ function showSlopTagPopup() {
   input.style.border = 'none';
   input.style.borderRadius = '4px';
   
-  // Create the submit button
-  const submitButton = document.createElement('input');
-  submitButton.type = 'submit';
-  submitButton.value = 'Save';
-  submitButton.style.padding = '15px 30px';
-  submitButton.style.fontSize = '24px';
-  submitButton.style.backgroundColor = '#f5e6cc';
-  submitButton.style.border = 'none';
-  submitButton.style.borderRadius = '8px';
-  submitButton.style.cursor = 'pointer';
-  submitButton.style.fontFamily = "'Dancing Script', cursive";
-  submitButton.style.width = '80%';
-  submitButton.style.maxWidth = '300px';
-  submitButton.style.WebkitAppearance = 'none'; // Fix for iOS
+  // Create the save button
+  const saveButton = document.createElement('button');
+  saveButton.textContent = 'Save';
+  saveButton.style.padding = '15px 30px'; // Larger padding for better touch target
+  saveButton.style.fontSize = '24px'; // Larger font size
+  saveButton.style.backgroundColor = '#f5e6cc';
+  saveButton.style.border = 'none';
+  saveButton.style.borderRadius = '8px';
+  saveButton.style.cursor = 'pointer';
+  saveButton.style.fontFamily = "'Dancing Script', cursive";
+  saveButton.style.margin = '10px auto'; // Center the button
+  saveButton.style.display = 'block'; // Make it a block element
+  saveButton.style.width = '80%'; // Make it wider
+  saveButton.style.maxWidth = '300px'; // But not too wide
   
-  // Add form submit event handler
-  form.addEventListener('submit', function(e) {
-    e.preventDefault(); // Prevent form submission
-    
+  // Function to save the Slop Tag
+  const saveSlopTag = function() {
     const slopTag = input.value.trim();
     if (slopTag) {
       // Create device blueprint
@@ -137,26 +128,32 @@ function showSlopTagPopup() {
       // Resume the game
       loop();
     }
+  };
+  
+  // Add event listeners for both click and touch events
+  saveButton.addEventListener('click', saveSlopTag);
+  saveButton.addEventListener('touchend', function(e) {
+    e.preventDefault(); // Prevent default touch behavior
+    saveSlopTag();
   });
   
-  // Append elements to the form
-  form.appendChild(input);
-  form.appendChild(submitButton);
+  // Also allow pressing Enter in the input field to save
+  input.addEventListener('keyup', function(e) {
+    if (e.key === 'Enter') {
+      saveSlopTag();
+    }
+  });
   
   // Append elements to the popup
   popup.appendChild(title);
-  popup.appendChild(form);
+  popup.appendChild(input);
+  popup.appendChild(saveButton);
   
   // Append popup to the container
   popupContainer.appendChild(popup);
   
   // Append container to the body
   document.body.appendChild(popupContainer);
-  
-  // Focus the input field
-  setTimeout(() => {
-    input.focus();
-  }, 100);
 }
 
 function draw() {
