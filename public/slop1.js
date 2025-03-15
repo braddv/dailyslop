@@ -90,16 +90,20 @@ function showSlopTagPopup() {
   // Create the save button
   const saveButton = document.createElement('button');
   saveButton.textContent = 'Save';
-  saveButton.style.padding = '10px 20px';
-  saveButton.style.fontSize = '20px';
+  saveButton.style.padding = '15px 30px'; // Larger padding for better touch target
+  saveButton.style.fontSize = '24px'; // Larger font size
   saveButton.style.backgroundColor = '#f5e6cc';
   saveButton.style.border = 'none';
-  saveButton.style.borderRadius = '4px';
+  saveButton.style.borderRadius = '8px';
   saveButton.style.cursor = 'pointer';
   saveButton.style.fontFamily = "'Dancing Script', cursive";
+  saveButton.style.margin = '10px auto'; // Center the button
+  saveButton.style.display = 'block'; // Make it a block element
+  saveButton.style.width = '80%'; // Make it wider
+  saveButton.style.maxWidth = '300px'; // But not too wide
   
-  // Add event listener to the save button
-  saveButton.addEventListener('click', function() {
+  // Function to save the Slop Tag
+  const saveSlopTag = function() {
     const slopTag = input.value.trim();
     if (slopTag) {
       // Create device blueprint
@@ -123,6 +127,20 @@ function showSlopTagPopup() {
       
       // Resume the game
       loop();
+    }
+  };
+  
+  // Add event listeners for both click and touch events
+  saveButton.addEventListener('click', saveSlopTag);
+  saveButton.addEventListener('touchend', function(e) {
+    e.preventDefault(); // Prevent default touch behavior
+    saveSlopTag();
+  });
+  
+  // Also allow pressing Enter in the input field to save
+  input.addEventListener('keyup', function(e) {
+    if (e.key === 'Enter') {
+      saveSlopTag();
     }
   });
   
