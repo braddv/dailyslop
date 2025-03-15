@@ -28,9 +28,6 @@ function setup() {
     let slopData = JSON.parse(storedData);
     username = slopData.slopTag || "";
     deviceBlueprint = slopData.deviceBlueprint || "";
-  } else {
-    // If SlopId is not set, show a popup to enter the SlopTag
-    showSlopTagPopup();
   }
 
   groundLevel = height - 50;
@@ -41,101 +38,6 @@ function setup() {
   document.addEventListener('touchmove', function(e) {
     e.preventDefault();
   }, { passive: false });
-}
-
-// Function to show a popup to enter the SlopTag
-function showSlopTagPopup() {
-  // Pause the game
-  noLoop();
-  
-  // Create a popup container
-  const popupContainer = document.createElement('div');
-  popupContainer.style.position = 'fixed';
-  popupContainer.style.top = '0';
-  popupContainer.style.left = '0';
-  popupContainer.style.width = '100%';
-  popupContainer.style.height = '100%';
-  popupContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-  popupContainer.style.display = 'flex';
-  popupContainer.style.justifyContent = 'center';
-  popupContainer.style.alignItems = 'center';
-  popupContainer.style.zIndex = '1000';
-  
-  // Create the popup content
-  const popup = document.createElement('div');
-  popup.style.backgroundColor = '#d8c3a5';
-  popup.style.padding = '20px';
-  popup.style.borderRadius = '8px';
-  popup.style.maxWidth = '80%';
-  popup.style.textAlign = 'center';
-  popup.style.fontFamily = "'Dancing Script', cursive";
-  
-  // Create the title
-  const title = document.createElement('h2');
-  title.textContent = 'Enter Your Slop Tag';
-  title.style.marginBottom = '20px';
-  
-  // Create the input field
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'SloppyGamer420';
-  input.style.padding = '10px';
-  input.style.fontSize = '20px';
-  input.style.width = '80%';
-  input.style.marginBottom = '20px';
-  input.style.backgroundColor = '#f5e6cc';
-  input.style.border = 'none';
-  input.style.borderRadius = '4px';
-  
-  // Create the save button
-  const saveButton = document.createElement('button');
-  saveButton.textContent = 'Save';
-  saveButton.style.padding = '10px 20px';
-  saveButton.style.fontSize = '20px';
-  saveButton.style.backgroundColor = '#f5e6cc';
-  saveButton.style.border = 'none';
-  saveButton.style.borderRadius = '4px';
-  saveButton.style.cursor = 'pointer';
-  saveButton.style.fontFamily = "'Dancing Script', cursive";
-  
-  // Add event listener to the save button
-  saveButton.addEventListener('click', function() {
-    const slopTag = input.value.trim();
-    if (slopTag) {
-      // Create device blueprint
-      const deviceBlueprint2 = {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        screenWidth: window.screen.width,
-        screenHeight: window.screen.height
-      };
-      
-      // Save to local storage
-      const payload = { slopTag, deviceBlueprint2 };
-      localStorage.setItem('SlopId', JSON.stringify(payload));
-      
-      // Update global variables
-      username = slopTag;
-      deviceBlueprint = deviceBlueprint2;
-      
-      // Remove the popup
-      document.body.removeChild(popupContainer);
-      
-      // Resume the game
-      loop();
-    }
-  });
-  
-  // Append elements to the popup
-  popup.appendChild(title);
-  popup.appendChild(input);
-  popup.appendChild(saveButton);
-  
-  // Append popup to the container
-  popupContainer.appendChild(popup);
-  
-  // Append container to the body
-  document.body.appendChild(popupContainer);
 }
 
 function draw() {
