@@ -323,6 +323,11 @@ function drawButtons() {
   pop();
 }
 
+function navigateHome(e) {
+  e.preventDefault(); // Prevent any default behavior
+  window.location.href = '/';
+}
+
 function mousePressed() {
   // If the game is over, check if either button is clicked
   if (gameOver) {
@@ -385,6 +390,11 @@ function mousePressed() {
         enemies = [];
         showInstructions = true;
       });
+
+      const homeButton = document.getElementById('home-button');
+
+      homeButton.addEventListener('click', navigateHome);
+      homeButton.addEventListener('touchend', navigateHome);
       
       return;
     }
