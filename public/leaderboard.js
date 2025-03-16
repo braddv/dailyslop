@@ -30,7 +30,7 @@ function updateLeaderboardDisplay(leaderboardData, elementId = 'leaderboard-list
     // Add new entries from the API response
     leaderboardData.forEach(entry => {
       const listItem = document.createElement('li');
-      listItem.textContent = `- ${entry.username} - ${entry.score}`;
+      listItem.textContent = `- ${entry.score} - ${entry.username}`;
       leaderboardList.appendChild(listItem);
     });
   } else {
