@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       // Query the database for top scores
       const leaderboardData = await sql`
         SELECT 
-          tag || ' #' || SUBSTRING(hash, 1, 4) as username, 
+          tag || ' #' || SUBSTRING(hash, 1, 3) as username, 
           score
         FROM leaderboard
         WHERE gamenumber = ${gameId}
