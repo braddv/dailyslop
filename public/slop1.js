@@ -371,6 +371,20 @@ function mousePressed() {
         enemies = [];
         showInstructions = true;
       });
+
+      document.getElementById('play-button').addEventListener('touchend', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        if (score > highscore) {
+          highscore = score;
+        }
+        gameOver = false;
+        score = 0;
+        player = new Player(width / 2, height / 2);
+        enemies = [];
+        showInstructions = true;
+      });
       
       return;
     }
