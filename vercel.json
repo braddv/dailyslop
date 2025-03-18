@@ -27,6 +27,10 @@
       "destination": "/public/slop4.html"
     },
     {
+      "source": "/slop5",
+      "destination": "/public/slop5.html"
+    },
+    {
       "source": "/",
       "destination": "/public/index.html"
     },

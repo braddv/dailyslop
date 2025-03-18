@@ -22,19 +22,20 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       try {
         // Extract data from request body
-        let username, highScore, deviceBlueprint;
+        let username, highScore, deviceBlueprint, gameId;
         
         // Handle different content types
         const contentType = req.headers['content-type'] || '';
         
         if (contentType.includes('application/json')) {
           // JSON data
-          ({ username, highScore, deviceBlueprint } = req.body);
+          ({ username, highScore, deviceBlueprint, gameId } = req.body);
         } else if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
           // Form data
           username = req.body.username;
           highScore = parseInt(req.body.highScore);
           deviceBlueprint = req.body.deviceBlueprint;
+          gameId = req.body.gameId;
         } else {
           // Unknown content type
           return res.status(415).json({ 
@@ -52,6 +53,9 @@ export default async function handler(req, res) {
           });
         }
         
+        // Parse gameId as integer, default to 1 if not provided or invalid
+        gameId = parseInt(gameId) || 0;
+        
         // Process the data (this is where you'd save to a database, etc.)
         console.log('Processing score submission:', { username, highScore, deviceBlueprint });
         
@@ -61,9 +65,6 @@ export default async function handler(req, res) {
           ? deviceBlueprint 
           : JSON.stringify(deviceBlueprint);
         const deviceHash = crypto.createHash('sha256').update(deviceBlueprintStr).digest('hex');
-        
-        // Game ID for slop1 is 1
-        const gameId = 1;
         
         try {
           // Insert score data into the database

@@ -466,7 +466,8 @@ async function submitScore(username, score, deviceBlueprint) {
   const data = { 
     username, 
     highScore: score, 
-    deviceBlueprint 
+    deviceBlueprint,
+    gameId: 1  // Specify gameId as 1 for slop1
   };
 
   try {
