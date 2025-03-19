@@ -239,7 +239,7 @@ function drawGameOver() {
   rect(width / 2 - 100, height / 2 + 80, 160, 50, 10);
   fill(255);
   textSize(20);
-  text("Restart?", width / 2 - 100, height / 2 + 80);
+  text("Sloppy Seconds?", width / 2 - 100, height / 2 + 80);
   
   // Draw leaderboard button
   fill(50, 150, 250);
