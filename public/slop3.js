@@ -10,6 +10,8 @@ let numEnemies = 5;  // Total enemy count (5 enemies)
 let score = 0;
 let highscore = 0;
 let gameOver = false;
+let username = "";
+let deviceBlueprint = "";
 
 const buttonSize = 80; // Size for touch buttons
 const margin = 20;     // Margin from canvas edges
@@ -19,6 +21,15 @@ function setup() {
   // Disable default touch actions for compatibility.
   canvas.style('touch-action', 'none');
   canvas.parent("game-container");
+
+  // Retrieve stored user data
+  let storedData = localStorage.getItem('SlopId');
+  if (storedData) {
+    // Convert the string to an object
+    let slopData = JSON.parse(storedData);
+    username = slopData.slopTag || "";
+    deviceBlueprint = slopData.deviceBlueprint || "";
+  }
 
   cols = floor(width / cellSize);
   // Subtract 9 rows from the gameplay area.
@@ -102,12 +113,27 @@ function draw() {
     fill(255);
     textSize(48);
     textAlign(CENTER, CENTER);
-    text("Game Over", width / 2, height / 2 - 40);
+    text("Game Over, " + username, width / 2, height / 2 - 60);
     textSize(32);
-    text("Score: " + score, width / 2, height / 2);
-    text("Highscore: " + highscore, width / 2, height / 2 + 40);
-    textSize(24);
-    text("Tap to restart", width / 2, height / 2 + 80);
+    text("Score: " + score, width / 2, height / 2 - 20);
+    text("Highscore: " + highscore, width / 2, height / 2 + 20);
+    
+    // Draw restart button
+    fill(50, 150, 250);
+    rectMode(CENTER);
+    rect(width / 2 - 100, height / 2 + 80, 160, 50, 10);
+    fill(255);
+    textSize(20);
+    text("Sloppy Seconds?", width / 2 - 100, height / 2 + 80);
+    
+    // Draw leaderboard button
+    fill(50, 150, 250);
+    rect(width / 2 + 100, height / 2 + 80, 160, 50, 10);
+    fill(255);
+    textSize(20);
+    text("Leaderboard", width / 2 + 100, height / 2 + 80);
+    
+    rectMode(CORNER); // Reset rectMode to default
     noLoop();
   }
 }
@@ -147,10 +173,64 @@ function drawButtons() {
 }
 
 function mousePressed() {
-  // Restart if game over.
+  // If game over, check if either button is clicked
   if (gameOver) {
-    restartGame();
-    return;
+    // Check if restart button is clicked
+    if (mouseX > width / 2 - 180 && mouseX < width / 2 - 20 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highscore) {
+        highscore = score;
+      }
+      // Reset the game
+      restartGame();
+      return false;
+    }
+    
+    // Check if leaderboard button is clicked
+    if (mouseX > width / 2 + 20 && mouseX < width / 2 + 180 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highscore) {
+        highscore = score;
+      }
+      
+      // Submit the score asynchronously
+      submitScore(username, score, deviceBlueprint);
+
+      // Toggle visibility of game and not-game containers
+      document.getElementById('game-container').style.display = 'none';
+      document.getElementById('not-game-container').style.display = 'block';
+      
+      // Add event listener to the play button to show the game again
+      document.getElementById('play-button').addEventListener('click', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        if (score > highscore) {
+          highscore = score;
+        }
+        restartGame();
+      });
+      
+      document.getElementById('play-button').addEventListener('touchend', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        if (score > highscore) {
+          highscore = score;
+        }
+        restartGame();
+      });
+      
+      const homeButton = document.getElementById('home-button');
+      homeButton.addEventListener('click', navigateHome);
+      homeButton.addEventListener('touchend', navigateHome);
+      
+      return false;
+    }
+    
+    return false;
   }
   
   // Check if the tap is on one of the control buttons.
@@ -173,6 +253,52 @@ function mousePressed() {
       mouseY >= height - buttonSize - margin && mouseY <= height - margin) {
     handleMove("right");
     return;
+  }
+}
+
+// Function to navigate to the home page
+function navigateHome(e) {
+  e.preventDefault(); // Prevent any default behavior
+  window.location.href = '/';
+}
+
+// Async function to submit score to the backend
+async function submitScore(username, score, deviceBlueprint) {
+  // Prepare the data to send to the backend
+  const data = { 
+    username, 
+    highScore: score, 
+    deviceBlueprint,
+    gameId: 3  // Specify gameId as 3 for slop3
+  };
+
+  try {
+    const response = await fetch("/api/submit-score", {
+      method: "POST",
+      credentials: "include",  // This ensures credentials are sent and matched with your CORS config.
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    console.log("Score submitted successfully:", responseData);
+    
+    // Fetch updated leaderboard after submitting score
+    // Use the shared fetchLeaderboard function from leaderboard.js
+    if (typeof fetchLeaderboard === 'function') {
+      fetchLeaderboard(3, 5, 'leaderboard-list');
+    }
+    
+    return responseData;
+  } catch (error) {
+    console.error("Error submitting score:", error);
+    return null;
   }
 }
 
