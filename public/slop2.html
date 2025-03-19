@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="leaderboard.css">
     <title>Cypress Hill</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script src="leaderboard.js"></script>
@@ -14,82 +15,6 @@
             fetchLeaderboard(2, 5, 'leaderboard-list');
         });
     </script>
-    <style>
-        body { 
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center; 
-            margin: 0; 
-            background-color: #d8c3a5;
-            font-family: 'Dancing Script', cursive;
-        }
-        canvas { 
-            border: 0px solid black; 
-        }
-        #not-game-container {
-            display: none; /* Initially hidden */
-            text-align: center;
-            padding: 20px;
-        }
-        #game-container {
-            display: block; /* Initially hidden */
-            padding: 0px;
-        }
-        button {
-            padding: 8px;
-            font-size: 20px;
-            margin: 20px;
-            border-radius: 8px;
-            background-color: #f5e6cc; 
-            font-family: 'Dancing Script', cursive;
-            color: black;
-        }
-        .group-middle {
-            display: flex;
-            align-items: left; /* vertically centers the image and text */
-            gap: 10px; /* adds some spacing between the image and the text */
-        }
-        /* Left half: centers the image horizontally */
-        .group-middle .left {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        }
-
-        img {
-            max-width: 100%;
-            max-height: 300px;
-            overflow: hidden;
-            height: auto;
-            display: block; 
-            margin: 0 auto; /* Optional: centers the image horizontally if needed */
-            margin-top: 0px;
-        }
-
-        /* Right half: centers the text horizontally and aligns to the top */
-        .group-middle .right {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start; /* Left align everything */
-            justify-content: flex-start;
-            padding-top: 0;        
-        }
-
-
-        /* Style for the title */
-        .group-middle .right .title {
-        font-size: 32px;
-        }
-
-        /* Leaderboard styles */
-        .group-middle .right .leaderboard {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        text-align: left;
-        }
-    </style>
 </head>
 <body>
     <div id="game-container"></div> 
