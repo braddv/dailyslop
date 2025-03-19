@@ -127,19 +127,33 @@
 
         <hr>
 
-        <label>Doug Digs - April 3rd 2025</label>
+        <label>Grey Circles</label>
         <div class="group-middle">
             <div class="left">
-              <img src="/dougdigs.jpg" alt="Doug Digs">
+              <img src="/greycircles.jpg" alt="Grey Circles">
             </div>
             <div class="right">
-                <span class="title">The Sloppiest</span>
-                <ul class="leaderboard">
-                  <li>- xXxGamerxXx 666</li>
-                  <li></li>
-                  <!-- More leaderboard entries here -->
-                </ul>
+              <span class="title">The Sloppiest</span>
+              <ul id="slop4-leaderboard" class="leaderboard">
+                <li>Loading leaderboard...</li>
+              </ul>
+          </div>
+          </div>
+          <a href="/slop4">
+            <button>Play</button>
+          </a>
+
+        <label>Doug Digs</label>
+        <div class="group-middle">
+            <div class="left">
+              <img src="/dougdigs.jpg" alt="Doug Digs" style="filter: grayscale(100%);">
             </div>
+            <div class="right">
+              <span class="title">The Sloppiest</span>
+              <ul id="slop3-leaderboard" class="leaderboard">
+                <li>Loading leaderboard...</li>
+              </ul>
+          </div>
           </div>
           <a href="/slop3">
             <button>Play</button>
@@ -147,40 +161,38 @@
 
         <hr>
 
-        <label>Cypress Hill - April 2nd 2025</label>
+        <label>Cypress Hill</label>
         <div class="group-middle">
             <div class="left">
               <img src="/cypresshill.jpg" alt="Cypress Hill" style="filter: grayscale(100%);">
             </div>
             <div class="right">
-                <span class="title">The Sloppiest</span>
-                <ul class="leaderboard">
-                  <li>- Wes 10001</li>
-                  <li>- Brad 999</li>
-                  <!-- More leaderboard entries here -->
-                </ul>
-            </div>
+              <span class="title">The Sloppiest</span>
+              <ul id="slop2-leaderboard" class="leaderboard">
+                <li>Loading leaderboard...</li>
+              </ul>
+          </div>
           </div>
           <a href="/slop2">
-            <button>Unlock for $1</button>
+            <button>Play</button>
         </a>
 
         <hr>
 
-        <label>Flabby Circle - April 1st 2025</label>
+        <label>Flabby Circle</label>
         <div class="group-middle">
             <div class="left">
               <img src="/flabbycircle.jpg" alt="Flabby Circle" style="filter: grayscale(100%);">
             </div>
             <div class="right">
                 <span class="title">The Sloppiest</span>
-                <ul id="flabby-leaderboard" class="leaderboard">
+                <ul id="slop1-leaderboard" class="leaderboard">
                   <li>Loading leaderboard...</li>
                 </ul>
             </div>
           </div>
           <a href="/slop1">
-          <button>Unlock for $1</button>
+          <button>Play</button>
           </a>
           </div>
 
@@ -226,8 +238,11 @@
         slopTagInput.value = storedSlopTag;
     }
     
-    // Fetch the Flabby Circle leaderboard
-    fetchLeaderboard(1, 5, 'flabby-leaderboard');
+    fetchLeaderboard(1, 5, 'slop1-leaderboard');
+    fetchLeaderboard(2, 5, 'slop2-leaderboard');
+    fetchLeaderboard(3, 5, 'slop3-leaderboard');
+    fetchLeaderboard(4, 5, 'slop4-leaderboard');
+    fetchLeaderboard(5, 5, 'slop5-leaderboard');
   });
 </script>
 
