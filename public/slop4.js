@@ -5,6 +5,8 @@ let bullets = [];
 let score = 0;
 let highScore = 0;
 let gameOver = false;
+let username = "";
+let deviceBlueprint = "";
 
 let joystick; // Left-side on-screen joystick
 let shootButton; // Right-side shoot button area
@@ -15,6 +17,15 @@ function setup() {
   // Safari compatibility: disable default touch actions to prevent scrolling
   cnv.style('touch-action', 'none');
   cnv.parent("game-container");
+
+  // Retrieve stored user data
+  let storedData = localStorage.getItem('SlopId');
+  if (storedData) {
+    // Convert the string to an object
+    let slopData = JSON.parse(storedData);
+    username = slopData.slopTag || "";
+    deviceBlueprint = slopData.deviceBlueprint || "";
+  }
 
   document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
   
@@ -51,11 +62,27 @@ function draw() {
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(48);
-    text("Game Over", width / 2, height / 2 - 60);
+    text("Game Over, " + username, width / 2, height / 2 - 60);
     textSize(24);
-    text("Score: " + score, width / 2, height / 2);
-    text("High Score: " + highScore, width / 2, height / 2 + 30);
-    text("Tap to restart", width / 2, height / 2 + 70);
+    text("Score: " + score, width / 2, height / 2 - 20);
+    text("High Score: " + highScore, width / 2, height / 2 + 20);
+    
+    // Draw restart button
+    fill(50, 150, 250);
+    rectMode(CENTER);
+    rect(width / 2 - 100, height / 2 + 80, 160, 50, 10);
+    fill(255);
+    textSize(20);
+    text("Sloppy Seconds?", width / 2 - 100, height / 2 + 80);
+    
+    // Draw leaderboard button
+    fill(50, 150, 250);
+    rect(width / 2 + 100, height / 2 + 80, 160, 50, 10);
+    fill(255);
+    textSize(20);
+    text("Leaderboard", width / 2 + 100, height / 2 + 80);
+    
+    rectMode(CORNER); // Reset rectMode to default
     noLoop();
     return;
   }
@@ -295,8 +322,61 @@ class Joystick {
 
 // Desktop mouse events:
 function mousePressed() {
-  // If game is over, restart immediately.
+  // If game is over, check if either button is clicked
   if (gameOver) {
+    // Check if restart button is clicked
+    if (mouseX > width / 2 - 180 && mouseX < width / 2 - 20 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highScore) {
+        highScore = score;
+      }
+      // Reset the game
+      resetGame();
+      loop();
+      return;
+    }
+    
+    // Check if leaderboard button is clicked
+    if (mouseX > width / 2 + 20 && mouseX < width / 2 + 180 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highScore) {
+        highScore = score;
+      }
+      
+      // Submit the score asynchronously
+      submitScore(username, score, deviceBlueprint);
+
+      // Toggle visibility of game and not-game containers
+      document.getElementById('game-container').style.display = 'none';
+      document.getElementById('not-game-container').style.display = 'block';
+      
+      // Add event listener to the play button to show the game again
+      document.getElementById('play-button').addEventListener('click', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        resetGame();
+        loop();
+      });
+      
+      document.getElementById('play-button').addEventListener('touchend', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        resetGame();
+        loop();
+      });
+      
+      const homeButton = document.getElementById('home-button');
+      homeButton.addEventListener('click', navigateHome);
+      homeButton.addEventListener('touchend', navigateHome);
+      
+      return;
+    }
+    
+    // If neither button was clicked, restart the game
     resetGame();
     loop();
     return;
@@ -311,20 +391,122 @@ function mousePressed() {
   }
 }
 
+// Function to navigate to the home page
+function navigateHome(e) {
+  e.preventDefault(); // Prevent any default behavior
+  window.location.href = '/';
+}
+
+// Async function to submit score to the backend
+async function submitScore(username, score, deviceBlueprint) {
+  // Prepare the data to send to the backend
+  const data = { 
+    username, 
+    highScore: score, 
+    deviceBlueprint,
+    gameId: 4  // Specify gameId as 4 for slop4
+  };
+
+  try {
+    const response = await fetch("/api/submit-score", {
+      method: "POST",
+      credentials: "include",  // This ensures credentials are sent and matched with your CORS config.
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    console.log("Score submitted successfully:", responseData);
+    
+    // Fetch updated leaderboard after submitting score
+    // Use the shared fetchLeaderboard function from leaderboard.js
+    if (typeof fetchLeaderboard === 'function') {
+      fetchLeaderboard(4, 5, 'leaderboard-list');
+    }
+    
+    return responseData;
+  } catch (error) {
+    console.error("Error submitting score:", error);
+    return null;
+  }
+}
+
 function mouseReleased() {
   joystick.active = false;
 }
 
 // Multi-touch events:
 function touchStarted() {
-  // If game is over, restart immediately.
+  // If game is over, check if either button is clicked
   if (gameOver) {
+    // Check for touches on each button
+    for (let t of touches) {
+      // Check if restart button is touched
+      if (t.x > width / 2 - 180 && t.x < width / 2 - 20 &&
+          t.y > height / 2 + 55 && t.y < height / 2 + 105) {
+        // Update highscore if needed
+        if (score > highScore) {
+          highScore = score;
+        }
+        // Reset the game
+        resetGame();
+        loop();
+        return false;
+      }
+      
+      // Check if leaderboard button is touched
+      if (t.x > width / 2 + 20 && t.x < width / 2 + 180 &&
+          t.y > height / 2 + 55 && t.y < height / 2 + 105) {
+        // Update highscore if needed
+        if (score > highScore) {
+          highScore = score;
+        }
+        
+        // Submit the score asynchronously
+        submitScore(username, score, deviceBlueprint);
+
+        // Toggle visibility of game and not-game containers
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('not-game-container').style.display = 'block';
+        
+        // Add event listener to the play button to show the game again
+        document.getElementById('play-button').addEventListener('click', function() {
+          document.getElementById('not-game-container').style.display = 'none';
+          document.getElementById('game-container').style.display = 'block';
+          // Reset the game
+          resetGame();
+          loop();
+        });
+        
+        document.getElementById('play-button').addEventListener('touchend', function() {
+          document.getElementById('not-game-container').style.display = 'none';
+          document.getElementById('game-container').style.display = 'block';
+          // Reset the game
+          resetGame();
+          loop();
+        });
+        
+        const homeButton = document.getElementById('home-button');
+        homeButton.addEventListener('click', navigateHome);
+        homeButton.addEventListener('touchend', navigateHome);
+        
+        return false;
+      }
+    }
+    
+    // If no buttons were touched, restart the game
     resetGame();
     loop();
     return false;
   }
   
-  // Process each touch point.
+  // Process each touch point for gameplay controls
   for (let t of touches) {
     if (dist(t.x, t.y, joystick.base.x, joystick.base.y) < joystick.r) {
       joystick.active = true;
