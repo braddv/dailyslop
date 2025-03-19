@@ -5,6 +5,9 @@ let gameOver = false;
 let score = 0;
 let highScore = 0;
 let startTime = 0;
+let username = "";
+let deviceBlueprint = "";
+let buttonSize = 80;
 
 function setup() {
   let cnv = createCanvas(windowWidth, windowHeight);
@@ -13,6 +16,15 @@ function setup() {
 
   cnv.style('touch-action', 'none');
   document.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
+  
+  // Retrieve stored user data
+  let storedData = localStorage.getItem('SlopId');
+  if (storedData) {
+    // Convert the string to an object
+    let slopData = JSON.parse(storedData);
+    username = slopData.slopTag || "";
+    deviceBlueprint = slopData.deviceBlueprint || "";
+  }
   
   // Create 5 plants equally spaced along the width.
   for (let i = 0; i < 5; i++) {
@@ -66,15 +78,122 @@ function draw() {
       waterParticles.splice(i, 1);
     }
   }
+  
+  // Display score at the top of the screen
+  fill(0);
+  textSize(32);
+  textAlign(CENTER, TOP);
+  text("Score: " + Math.floor(score / 100), width / 2, 20); // Convert milliseconds to a more readable score
 }
 
 function mousePressed() {
   if (gameOver) {
-    restartGame();
+    // Check if restart button is clicked
+    if (mouseX > width / 2 - 180 && mouseX < width / 2 - 20 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highScore) {
+        highScore = score;
+      }
+      // Reset the game
+      restartGame();
+      return false;
+    }
+    
+    // Check if leaderboard button is clicked
+    if (mouseX > width / 2 + 20 && mouseX < width / 2 + 180 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highScore) {
+        highScore = score;
+      }
+      
+      // Submit the score asynchronously
+      submitScore(username, Math.floor(highScore / 100), deviceBlueprint);
+
+      // Toggle visibility of game and not-game containers
+      document.getElementById('game-container').style.display = 'none';
+      document.getElementById('not-game-container').style.display = 'block';
+      
+      // Add event listener to the play button to show the game again
+      document.getElementById('play-button').addEventListener('click', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        if (score > highScore) {
+          highScore = score;
+        }
+        restartGame();
+      });
+      
+      document.getElementById('play-button').addEventListener('touchend', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        if (score > highScore) {
+          highScore = score;
+        }
+        restartGame();
+      });
+      
+      const homeButton = document.getElementById('home-button');
+      homeButton.addEventListener('click', navigateHome);
+      homeButton.addEventListener('touchend', navigateHome);
+      
+      return false;
+    }
+    
     return false;
   }
+  
   createWaterParticles(mouseX, mouseY);
   return false;
+}
+
+// Function to navigate to the home page
+function navigateHome(e) {
+  e.preventDefault(); // Prevent any default behavior
+  window.location.href = '/';
+}
+
+// Async function to submit score to the backend
+async function submitScore(username, score, deviceBlueprint) {
+  // Prepare the data to send to the backend
+  const data = { 
+    username, 
+    highScore: score, 
+    deviceBlueprint,
+    gameId: 2  // Specify gameId as 2 for slop2
+  };
+
+  try {
+    const response = await fetch("/api/submit-score", {
+      method: "POST",
+      credentials: "include",  // This ensures credentials are sent and matched with your CORS config.
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    console.log("Score submitted successfully:", responseData);
+    
+    // Fetch updated leaderboard after submitting score
+    // Use the shared fetchLeaderboard function from leaderboard.js
+    if (typeof fetchLeaderboard === 'function') {
+      fetchLeaderboard(2, 5, 'leaderboard-list');
+    }
+    
+    return responseData;
+  } catch (error) {
+    console.error("Error submitting score:", error);
+    return null;
+  }
 }
 
 function touchStarted() {
@@ -109,10 +228,27 @@ function drawGameOver() {
   fill(255);
   textSize(48);
   textAlign(CENTER, CENTER);
-  text("Game Over", width / 2, height / 2 - 20);
+  text("Game Over, " + username, width / 2, height / 2 - 60);
   textSize(32);
-  text("Score: " + score, width / 2, height / 2 + 20);
-  text("High Score: " + highScore, width / 2, height / 2 + 60);
+  text("Score: " + Math.floor(score / 100), width / 2, height / 2 - 20);
+  text("High Score: " + Math.floor(highScore / 100), width / 2, height / 2 + 20);
+  
+  // Draw restart button
+  fill(50, 150, 250);
+  rectMode(CENTER);
+  rect(width / 2 - 100, height / 2 + 80, 160, 50, 10);
+  fill(255);
+  textSize(20);
+  text("Restart?", width / 2 - 100, height / 2 + 80);
+  
+  // Draw leaderboard button
+  fill(50, 150, 250);
+  rect(width / 2 + 100, height / 2 + 80, 160, 50, 10);
+  fill(255);
+  textSize(20);
+  text("Leaderboard", width / 2 + 100, height / 2 + 80);
+  
+  rectMode(CORNER); // Reset rectMode to default
 }
 
 
