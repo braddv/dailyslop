@@ -198,9 +198,69 @@ async function submitScore(username, score, deviceBlueprint) {
 
 function touchStarted() {
   if (gameOver) {
+    // Check for touches on each button
+    for (let t of touches) {
+      // Check if restart button is touched
+      if (t.x > width / 2 - 180 && t.x < width / 2 - 20 &&
+          t.y > height / 2 + 55 && t.y < height / 2 + 105) {
+        // Update highscore if needed
+        if (score > highScore) {
+          highScore = score;
+        }
+        // Reset the game
+        restartGame();
+        return false;
+      }
+      
+      // Check if leaderboard button is touched
+      if (t.x > width / 2 + 20 && t.x < width / 2 + 180 &&
+          t.y > height / 2 + 55 && t.y < height / 2 + 105) {
+        // Update highscore if needed
+        if (score > highScore) {
+          highScore = score;
+        }
+        
+        // Submit the score asynchronously
+        submitScore(username, Math.floor(highScore / 100), deviceBlueprint);
+
+        // Toggle visibility of game and not-game containers
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('not-game-container').style.display = 'block';
+        
+        // Add event listener to the play button to show the game again
+        document.getElementById('play-button').addEventListener('click', function() {
+          document.getElementById('not-game-container').style.display = 'none';
+          document.getElementById('game-container').style.display = 'block';
+          // Reset the game
+          if (score > highScore) {
+            highScore = score;
+          }
+          restartGame();
+        });
+        
+        document.getElementById('play-button').addEventListener('touchend', function() {
+          document.getElementById('not-game-container').style.display = 'none';
+          document.getElementById('game-container').style.display = 'block';
+          // Reset the game
+          if (score > highScore) {
+            highScore = score;
+          }
+          restartGame();
+        });
+        
+        const homeButton = document.getElementById('home-button');
+        homeButton.addEventListener('click', navigateHome);
+        homeButton.addEventListener('touchend', navigateHome);
+        
+        return false;
+      }
+    }
+    
+    // If no buttons were touched, restart the game
     restartGame();
     return false;
   }
+  
   if (touches.length > 0) {
     createWaterParticles(touches[0].x, touches[0].y);
   }
