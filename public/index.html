@@ -116,48 +116,42 @@
             <source src="/dailyslop2.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
-        
-        <form action="https://formspree.io/f/mwplevel" method="POST">
-            <label>
-            Serve me dAIly Slop
-            </label>
-            <input type="email" name="email" placeholder="ai@slopmail.com">
-            <button type="submit">please</button>
-        </form>
 
         <hr>
 
             <label>
-            Slop Tag
+            Enter Slop Tag
             </label>
             <input name="username" placeholder="SloppyGamer420">
             <button type="submit" id="save-button">save</button>
 
         <hr>
-
-        <label>Grey Circles</label>
-        <div class="group-middle">
-            <div class="left">
-              <img src="/greycircles.jpg" alt="Grey Circles">
+        <div class="game-card" data-game-number="4">
+          <label>Grey Circles</label>
+          <div class="group-middle">
+              <div class="left">
+                <img src="/greycircles.jpg" alt="Grey Circles">
+              </div>
+              <div class="right">
+                <span class="title">The Sloppiest</span>
+                <ul id="slop4-leaderboard" class="leaderboard">
+                  <li>Loading leaderboard...</li>
+                </ul>
             </div>
-            <div class="right">
-              <span class="title">The Sloppiest</span>
-              <ul id="slop4-leaderboard" class="leaderboard">
-                <li>Loading leaderboard...</li>
-              </ul>
-          </div>
-          </div>
-          <a href="/slop4">
-            <button>Play</button>
-          </a>
+            </div>
+            <a href="/slop4">
+              <button class="play-link">Play</button>
+            </a>
 
-          <hr>
+            <hr>
+        </div>
 
+        <div class="game-card" data-game-number="3">
 
         <label>Doug Digs</label>
         <div class="group-middle">
             <div class="left">
-              <img src="/dougdigs.jpg" alt="Doug Digs" style="filter: grayscale(100%);">
+              <img src="/dougdigs.jpg" alt="Doug Digs">
             </div>
             <div class="right">
               <span class="title">The Sloppiest</span>
@@ -167,15 +161,17 @@
           </div>
           </div>
           <a href="/slop3">
-            <button>Play</button>
+            <button class="play-link">Play</button>
           </a>
 
         <hr>
+        </div>
+        <div class="game-card" data-game-number="2">
 
         <label>Cypress Hill</label>
         <div class="group-middle">
             <div class="left">
-              <img src="/cypresshill.jpg" alt="Cypress Hill" style="filter: grayscale(100%);">
+              <img src="/cypresshill.jpg" alt="Cypress Hill">
             </div>
             <div class="right">
               <span class="title">The Sloppiest</span>
@@ -185,15 +181,18 @@
           </div>
           </div>
           <a href="/slop2">
-            <button>Play</button>
+            <button class="play-link">Play</button>
         </a>
 
         <hr>
+        </div>
+
+        <div class="game-card" data-game-number="1">
 
         <label>Flabby Circle</label>
         <div class="group-middle">
             <div class="left">
-              <img src="/flabbycircle.jpg" alt="Flabby Circle" style="filter: grayscale(100%);">
+              <img src="/flabbycircle.jpg" alt="Flabby Circle">
             </div>
             <div class="right">
                 <span class="title">The Sloppiest</span>
@@ -203,12 +202,22 @@
             </div>
           </div>
           <a href="/slop1">
-          <button>Play</button>
+          <button class="play-link">Play</button>
           </a>
+          <hr>
+          </div>
+          <form action="https://formspree.io/f/mwplevel" method="POST">
+            <label>
+            Serve me dAIly Slop
+            </label>
+            <input type="email" name="email" placeholder="ai@slopmail.com">
+            <button type="submit">please</button>
+        </form>
           </div>
 
     </div>
     
+
     
 </body>
 
@@ -256,5 +265,56 @@
     fetchLeaderboard(5, 5, 'slop5-leaderboard');
   });
 </script>
+
+<script>
+  // Example: compute the current unlocked game based on a launch date.
+  // Adjust the launch date to match when your site started.
+  function getCurrentGameNumber() {
+    const launchDate = new Date('2025-03-24'); // set your actual launch date
+    const now = new Date();
+    const diffTime = now - launchDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays + 1; // game 1 on launch day, game 2 the next day, etc.
+  }
+  
+  function updateGameCards() {
+    const currentGame = getCurrentGameNumber();
+    const gameCards = document.querySelectorAll('.game-card');
+  
+    gameCards.forEach(card => {
+      const gameNumber = parseInt(card.getAttribute('data-game-number'), 10);
+      const playLink = card.querySelector('.play-link');
+      const playButton = playLink
+      
+      // If the game is among the previous three (locked)
+      if (gameNumber < currentGame && gameNumber >= currentGame - 3) {
+        // Grey out the card
+        card.style.opacity = '0.5';
+        // Change button text to indicate payment is required
+        playButton.textContent = 'Unlock for $1';
+        // Optionally, disable the link to prevent accidental play
+        playLink.removeAttribute('href');
+      } else if (gameNumber === currentGame) {
+        // Current game: active and playable
+        card.style.opacity = '1';
+        playButton.textContent = 'Play';
+      } else if (gameNumber > currentGame) {
+        // Future game: hide or display as coming soon
+        card.style.display = 'none';
+      }
+    });
+  
+    // Optionally, if you want to dynamically add the next unlocked game (game number currentGame + 1)
+    // you can create and insert a new game card here.
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Existing leaderboard and localStorage code remains...
+    
+    // Update game cards based on the current game number.
+    updateGameCards();
+  });
+  </script>
+  
 
 </html>
