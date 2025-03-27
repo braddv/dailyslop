@@ -92,21 +92,40 @@
 
         /* Leaderboard styles */
         .group-middle .right .leaderboard {
-
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        text-align: left;
-        font-size: 16px;
-        font-family: 'Roboto Mono', monospace;
-        text-indent: -2.5em;
-        padding-left: 2.5em;
-        /* Ensure the text wraps properly */
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        display: inline-block;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+            font-size: 16px;
+            font-family: 'Roboto Mono', monospace;
+            text-indent: -2.5em;
+            padding-left: 2.5em;
+            /* Ensure the text wraps properly */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            display: inline-block;
         }
 
+        /* Image grid styles */
+        .image-grid {
+            width: 100%;
+            max-width: 400px;
+            margin: 10px auto;
+        }
+        
+        .grid-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .grid-image {
+            width: 125px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin: 0 2px;
+        }
     </style>
 </head>
 <body>
@@ -127,6 +146,20 @@
 
         <hr>
             <h2>Slop Served Daily</h2>
+            
+            <div class="image-grid">
+                <div class="grid-row">
+                    <img src="/flabbycircle.jpg" alt="Flabby Circle" class="grid-image">
+                    <img src="/cypresshill.jpg" alt="Cypress Hill" class="grid-image">
+                    <img src="/dougdigs.jpg" alt="Doug Digs" class="grid-image">
+                </div>
+                <div class="grid-row">
+                    <img src="/greycircles.jpg" alt="Grey Circles" class="grid-image">
+                    <img src="/laneswitcher.jpg" alt="Lane Switcher" class="grid-image">
+                    <img src="/moondefender.jpg" alt="Moon Defender" class="grid-image">
+                </div>
+            </div>
+            
             <h3>Starting April 1st</h3>
             <hr>
         <div class="game-card" data-game-number="6">
@@ -260,8 +293,6 @@
 
     </div>
     
-
-    
 </body>
 
 <script>
@@ -306,7 +337,7 @@
     fetchLeaderboard(3, 5, 'slop3-leaderboard');
     fetchLeaderboard(4, 5, 'slop4-leaderboard');
     fetchLeaderboard(5, 5, 'slop5-leaderboard');
-    fetchLeaderboard(6, 5, 'slop5-leaderboard');
+    fetchLeaderboard(6, 5, 'slop6-leaderboard');
   });
 </script>
 
@@ -359,6 +390,4 @@
     updateGameCards();
   });
   </script>
-  
-
 </html>
