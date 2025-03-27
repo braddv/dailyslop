@@ -126,6 +126,28 @@
             <button type="submit" id="save-button">save</button>
 
         <hr>
+            <h2>Slop Served Daily</h2>
+            <h3>Starting April 1st</h3>
+            <hr>
+        <div class="game-card" data-game-number="6">
+          <label>Moon Defender</label>
+          <div class="group-middle">
+              <div class="left">
+                <img src="/moondefender.jpg" alt="Moon Defender">
+              </div>
+              <div class="right">
+                <span class="title">The Sloppiest</span>
+                <ul id="slop6-leaderboard" class="leaderboard">
+                  <li>Loading leaderboard...</li>
+                </ul>
+            </div>
+            </div>
+            <a class="play-link" href="/slop6">
+              <button class="play-button">Play</button>
+            </a>
+
+            <hr>
+        </div>
 
         <div class="game-card" data-game-number="5">
           <label>Lane Switcher</label>
@@ -140,7 +162,7 @@
                 </ul>
             </div>
             </div>
-            <a href="/slop5">
+            <a class="play-link" href="/slop5">
               <button class="play-button">Play</button>
             </a>
 
@@ -160,7 +182,7 @@
                 </ul>
             </div>
             </div>
-            <a href="/slop4">
+            <a class="play-link" href="/slop4">
               <button class="play-button">Play</button>
             </a>
 
@@ -181,7 +203,7 @@
               </ul>
           </div>
           </div>
-          <a href="/slop3">
+          <a class="play-link" href="/slop3">
             <button class="play-button">Play</button>
           </a>
 
@@ -201,7 +223,7 @@
               </ul>
           </div>
           </div>
-          <a href="/slop2">
+          <a class="play-link" href="/slop2">
             <button class="play-button">Play</button>
         </a>
 
@@ -222,7 +244,7 @@
                 </ul>
             </div>
           </div>
-          <a href="/slop1">
+          <a class="play-link" href="/slop1">
           <button class="play-button">Play</button>
           </a>
           <hr>
@@ -284,6 +306,7 @@
     fetchLeaderboard(3, 5, 'slop3-leaderboard');
     fetchLeaderboard(4, 5, 'slop4-leaderboard');
     fetchLeaderboard(5, 5, 'slop5-leaderboard');
+    fetchLeaderboard(6, 5, 'slop5-leaderboard');
   });
 </script>
 
