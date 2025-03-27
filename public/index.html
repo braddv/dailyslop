@@ -126,6 +126,27 @@
             <button type="submit" id="save-button">save</button>
 
         <hr>
+
+        <div class="game-card" data-game-number="5">
+          <label>Lane Switcher</label>
+          <div class="group-middle">
+              <div class="left">
+                <img src="/laneswitcher.jpg" alt="Lane Switcher">
+              </div>
+              <div class="right">
+                <span class="title">The Sloppiest</span>
+                <ul id="slop5-leaderboard" class="leaderboard">
+                  <li>Loading leaderboard...</li>
+                </ul>
+            </div>
+            </div>
+            <a href="/slop5">
+              <button class="play-button">Play</button>
+            </a>
+
+            <hr>
+        </div>
+
         <div class="game-card" data-game-number="4">
           <label>Grey Circles</label>
           <div class="group-middle">
@@ -140,7 +161,7 @@
             </div>
             </div>
             <a href="/slop4">
-              <button class="play-link">Play</button>
+              <button class="play-button">Play</button>
             </a>
 
             <hr>
@@ -161,7 +182,7 @@
           </div>
           </div>
           <a href="/slop3">
-            <button class="play-link">Play</button>
+            <button class="play-button">Play</button>
           </a>
 
         <hr>
@@ -181,7 +202,7 @@
           </div>
           </div>
           <a href="/slop2">
-            <button class="play-link">Play</button>
+            <button class="play-button">Play</button>
         </a>
 
         <hr>
@@ -202,7 +223,7 @@
             </div>
           </div>
           <a href="/slop1">
-          <button class="play-link">Play</button>
+          <button class="play-button">Play</button>
           </a>
           <hr>
           </div>
@@ -270,7 +291,7 @@
   // Example: compute the current unlocked game based on a launch date.
   // Adjust the launch date to match when your site started.
   function getCurrentGameNumber() {
-    const launchDate = new Date('2025-03-26'); // set your actual launch date
+    const launchDate = new Date('2025-04-01'); // set your actual launch date
     const now = new Date();
     const diffTime = now - launchDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -284,16 +305,16 @@
     gameCards.forEach(card => {
       const gameNumber = parseInt(card.getAttribute('data-game-number'), 10);
       const playLink = card.querySelector('.play-link');
-      const playButton = playLink
+      const playButton = card.querySelector('.play-button');
       
       // If the game is among the previous three (locked)
-      if (gameNumber < currentGame && gameNumber >= currentGame - 3) {
+      if (gameNumber < currentGame) {
         // Grey out the card
         card.style.opacity = '0.5';
         // Change button text to indicate payment is required
         playButton.textContent = 'Unlock for $1';
         // Optionally, disable the link to prevent accidental play
-        playLink.removeAttribute('href');
+        playLink.setAttribute('href', `/payment/${gameNumber}`)
       } else if (gameNumber === currentGame) {
         // Current game: active and playable
         card.style.opacity = '1';
