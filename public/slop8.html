@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="leaderboard.css">
+  <title>Bloomers</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="leaderboard.js"></script>
+  <script src="slop8.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchLeaderboard(8, 5, 'leaderboard-list');
+    });
+  </script>
+  
+</head>
+<body>
+  <div id="game-container"></div>
+  
+  <div id="not-game-container">
+    <h1>Bloomers</h1>
+    <p>Use your limited number of taps</p>
+    <p>To bloom as much as possible</p>
+    <div class="group-middle">
+      <div class="left">
+        <img src="bloomers.jpg" alt="Bloomers">
+      </div>
+      <div class="right">
+        <span class="title">The Sloppiest</span>
+        <ul id="leaderboard-list" class="leaderboard">
+          <li>Loading leaderboard...</li>
+        </ul>
+      </div>
+    </div> 
+    <div>
+      <button id="play-button">Play</button>
+      <a href="/">
+        <button id="home-button">Other Slop</button>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
