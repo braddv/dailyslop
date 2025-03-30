@@ -103,8 +103,62 @@ function getStageColor(stage) {
 }
 
 function mousePressed() {
-  if (gameOver || tapsLeft <= 0) return;
+  // If the game is over, check if either button is clicked
+  if (gameOver) {
+    // Check if restart button is clicked
+    if (mouseX > width / 2 - 180 && mouseX < width / 2 - 20 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highscore) {
+        highscore = score;
+      }
+      // Reset the game
+      resetGame();
+      return;
+    }
+    
+    // Check if leaderboard button is clicked
+    if (mouseX > width / 2 + 20 && mouseX < width / 2 + 180 &&
+        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+      // Update highscore if needed
+      if (score > highscore) {
+        highscore = score;
+      }
+      
+      // Submit the score asynchronously
+      submitScore(username, highscore, deviceBlueprint);
 
+      // Toggle visibility of game and not-game containers
+      document.getElementById('game-container').style.display = 'none';
+      document.getElementById('not-game-container').style.display = 'block';
+      
+      // Add event listener to the play button to show the game again
+      document.getElementById('play-button').addEventListener('click', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        resetGame();
+      });
+
+      document.getElementById('play-button').addEventListener('touchend', function() {
+        document.getElementById('not-game-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        // Reset the game
+        resetGame();
+      });
+
+      const homeButton = document.getElementById('home-button');
+      homeButton.addEventListener('click', navigateHome);
+      homeButton.addEventListener('touchend', navigateHome);
+      
+      return;
+    }
+    
+    // If neither button was clicked, do nothing
+    return;
+  }
+
+  // Game play logic
   const col = floor((mouseX - xOffset) / cellSize);
   const row = floor((mouseY - yOffset) / cellSize);
   if (col >= 0 && col < columns && row >= 0 && row < rows) {
@@ -115,6 +169,11 @@ function mousePressed() {
     }
     if (showInstructions) showInstructions = false;
   }
+}
+
+function navigateHome(e) {
+  e.preventDefault(); // Prevent any default behavior
+  window.location.href = '/';
 }
 
 function growCell(row, col) {
@@ -235,6 +294,23 @@ function drawGameOver() {
   textSize(32);
   text(`Final Score: ${score}`, width / 2, height / 2 - 20);
   text(`Highscore: ${Math.max(score, highscore)}`, width / 2, height / 2 + 20);
+  
+  // Draw restart button
+  fill(50, 150, 250);
+  rectMode(CENTER);
+  rect(width / 2 - 100, height / 2 + 80, 160, 50, 10);
+  fill(255);
+  textSize(20);
+  text("Sloppy Seconds?", width / 2 - 100, height / 2 + 80);
+  
+  // Draw leaderboard button
+  fill(50, 150, 250);
+  rect(width / 2 + 100, height / 2 + 80, 160, 50, 10);
+  fill(255);
+  textSize(20);
+  text("Leaderboard", width / 2 + 100, height / 2 + 80);
+  
+  rectMode(CORNER); // Reset rectMode to default
 }
 
 function resetGame() {
@@ -260,7 +336,7 @@ function touchEnded() {
 }
 
 async function submitScore(username, score, deviceBlueprint) {
-  const data = { username, highScore: score, deviceBlueprint };
+  const data = { username, highScore: score, deviceBlueprint, gameId: 8 };
   try {
     const response = await fetch("/api/submit-score", {
       method: "POST",
@@ -270,7 +346,7 @@ async function submitScore(username, score, deviceBlueprint) {
     });
     const result = await response.json();
     if (typeof fetchLeaderboard === 'function') {
-      fetchLeaderboard(1, 5, 'leaderboard-list');
+      fetchLeaderboard(8, 5, 'leaderboard-list');
     }
     return result;
   } catch (err) {
