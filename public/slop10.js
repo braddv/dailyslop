@@ -283,7 +283,7 @@ function checkHalving() {
     sigma += .001;
     nextHalvingThreshold += 250;
   }
-  if (player.totalMined >= 1000) gameWon = true;
+  if (player.totalMined >= 10000) gameWon = true;
 }
 
 function buyMiner(index) {
