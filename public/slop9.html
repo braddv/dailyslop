@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="leaderboard.css">
+  <title>Hexual Tension</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="leaderboard.js"></script>
+  <script src="slop9.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchLeaderboard(9, 5, 'leaderboard-list');
+    });
+  </script>
+  
+</head>
+<body>
+  <div id="game-container"></div>
+  
+  <div id="not-game-container">
+    <h1>Hexual Tension</h1>
+    <p>Place elemental hexes on the board to build fields, lakes, and lava rivers.</p>
+    <p>
+      Score big for the largest earth patch, multiple 2+ tile lakes, and the longest lava river.</p>
+    <div class="group-middle">
+      <div class="left">
+        <img src="hexualtension.jpg" alt="Hexual Tension">
+      </div>
+      <div class="right">
+        <span class="title">The Sloppiest</span>
+        <ul id="leaderboard-list" class="leaderboard">
+          <li>Loading leaderboard...</li>
+        </ul>
+      </div>
+    </div> 
+    <div>
+      <button id="play-button">Play</button>
+      <a href="/">
+        <button id="home-button">Other Slop</button>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
