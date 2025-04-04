@@ -28,6 +28,7 @@ const updateInterval = 1000, secondsPerInGameDay = 108;
 let lastUpdateTime = 0, rawPriceHistoryComplete = [];
 let miners = [], ownedMiners = [], logs = [], minerColors = [];
 let nextHalvingThreshold = 1000;
+let touchProcessed = false; // Flag to prevent double processing of touch events
 
 // Miner grid layout variables (modified to move the grid up)
 let minerGridStartX = 10;
@@ -38,6 +39,7 @@ let minerGridCols;
 
 // Trade amount constant
 const TRADE_AMOUNT = 10;
+const MAX_MINERS = 18; // Maximum number of miners allowed
 
 // --- p5.js Setup --- //
 function setup() {
@@ -141,6 +143,9 @@ function draw() {
     if (rawPriceHistoryComplete.length > maxHistory) rawPriceHistoryComplete.shift();
     checkHalving();
   }
+  
+  // Reset touch processed flag each frame
+  touchProcessed = false;
 }
 
 // --- Price Graph --- //
@@ -220,7 +225,8 @@ function drawShop() {
     
     noStroke();
     // Subtle "Buy" button for each miner.
-    fill(player.money >= miners[i].cost ? color(80) : color(50));
+    let canBuy = player.money >= miners[i].cost && ownedMiners.length < MAX_MINERS;
+    fill(canBuy ? color(80) : color(50));
     rect(width - 70, y - 25, 60, 25, 5);
     fill(255);
     textAlign(CENTER, CENTER);
@@ -238,6 +244,12 @@ function drawOwnedMiners() {
     fill(ownedMiners[i].displayColor);
     rect(x, y, minerGridSlotSize, minerGridSlotSize);
   }
+  
+  // Display miner count
+  fill(255);
+  textSize(16);
+  textAlign(LEFT, CENTER);
+  text(`Miners: ${ownedMiners.length}/${MAX_MINERS}`, minerGridStartX, minerGridStartY - 20);
 }
 
 // --- Logs --- //
@@ -282,12 +294,16 @@ function checkHalving() {
     sigma += .001;
     nextHalvingThreshold += 250;
   }
-  if (player.bitcoins >= 1000000000000) gameWon = true;
+  if (player.bitcoins >= 10000) gameWon = true;
 }
 
 function buyMiner(index) {
   if (index >= 0 && index < miners.length) {
     let miner = miners[index];
+    if (ownedMiners.length >= MAX_MINERS) {
+      logs.push(`Maximum of ${MAX_MINERS} miners reached!`);
+      return;
+    }
     if (player.money >= miner.cost) {
       player.money -= miner.cost;
       player.totalHashRate += miner.hashRate;
@@ -300,12 +316,12 @@ function buyMiner(index) {
   }
 }
 
-function mousePressed() {
+function handleInteraction(x, y) {
   // If the game is won, check if either button is clicked
   if (gameWon) {
     // Check if restart button is clicked
-    if (mouseX > width / 2 - 180 && mouseX < width / 2 - 20 &&
-        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+    if (x > width / 2 - 180 && x < width / 2 - 20 &&
+        y > height / 2 + 55 && y < height / 2 + 105) {
       // Update highscore if needed
       if (player.money > highscore) {
         highscore = player.money;
@@ -316,11 +332,11 @@ function mousePressed() {
     }
     
     // Check if leaderboard button is clicked
-    if (mouseX > width / 2 + 20 && mouseX < width / 2 + 180 &&
-        mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
+    if (x > width / 2 + 20 && x < width / 2 + 180 &&
+        y > height / 2 + 55 && y < height / 2 + 105) {
       // Update highscore if needed
       if (player.money > highscore) {
-        highscore = player.money;
+        highscore = int(player.money);
       }
       
       // Submit the score asynchronously
@@ -364,11 +380,11 @@ function mousePressed() {
   let buyX = 10;
   let sellX = buyX + btnWidth + 10;
   
-  if (mouseX >= buyX && mouseX <= buyX + btnWidth && mouseY >= tradeY && mouseY <= tradeY + btnHeight) {
+  if (x >= buyX && x <= buyX + btnWidth && y >= tradeY && y <= tradeY + btnHeight) {
     handleBuyBTC();
     return;
   }
-  if (mouseX >= sellX && mouseX <= sellX + btnWidth && mouseY >= tradeY && mouseY <= tradeY + btnHeight) {
+  if (x >= sellX && x <= sellX + btnWidth && y >= tradeY && y <= tradeY + btnHeight) {
     handleSellBTC();
     return;
   }
@@ -377,7 +393,7 @@ function mousePressed() {
   let startY = height - 180;
   for (let i = 0; i < miners.length; i++) {
     let y = startY + i * 30;
-    if (mouseX > width - 70 && mouseX < width - 10 && mouseY > y - 25 && mouseY < y) {
+    if (x > width - 70 && x < width - 10 && y > y - 25 && y < y) {
       buyMiner(i);
       return;
     }
@@ -387,9 +403,9 @@ function mousePressed() {
   for (let i = 0; i < ownedMiners.length; i++) {
     let col = i % minerGridCols;
     let row = floor(i / minerGridCols);
-    let x = minerGridStartX + col * (minerGridSlotSize + minerGridGap);
-    let y = minerGridStartY + row * (minerGridSlotSize + minerGridGap);
-    if (mouseX > x && mouseX < x + minerGridSlotSize && mouseY > y && mouseY < y + minerGridSlotSize) {
+    let mx = minerGridStartX + col * (minerGridSlotSize + minerGridGap);
+    let my = minerGridStartY + row * (minerGridSlotSize + minerGridGap);
+    if (x > mx && x < mx + minerGridSlotSize && y > my && y < my + minerGridSlotSize) {
       let minerSold = ownedMiners.splice(i, 1)[0];
       player.money += minerSold.cost * 0.75;
       player.totalHashRate -= minerSold.hashRate;
@@ -397,6 +413,10 @@ function mousePressed() {
       return;
     }
   }
+}
+
+function mousePressed() {
+  handleInteraction(mouseX, mouseY);
 }
 
 function navigateHome(e) {
@@ -423,54 +443,18 @@ function resetGame() {
 
 // --- Touch Interaction (for mobile) --- //
 function touchStarted() {
-  mousePressed();
+  // Don't do anything in touchStarted to prevent double execution
   return false;
 }
 
 function touchEnded() {
+  // Prevent double processing of touch events
+  if (touchProcessed) return false;
+  touchProcessed = true;
+  
   // Use first touch coordinates if available.
-  let tx = touches.length > 0 ? touches[0].x : mouseX;
-  let ty = touches.length > 0 ? touches[0].y : mouseY;
-  
-  // First, check trade buttons.
-  let btnWidth = (width - 30) / 2;
-  let btnHeight = 40;
-  let tradeY = 100 + 100 + 10; // graphY + graphH + margin
-  let buyX = 10;
-  let sellX = buyX + btnWidth + 10;
-  
-  if (tx >= buyX && tx <= buyX + btnWidth && ty >= tradeY && ty <= tradeY + btnHeight) {
-    handleBuyBTC();
-    return false;
-  }
-  if (tx >= sellX && tx <= sellX + btnWidth && ty >= tradeY && ty <= tradeY + btnHeight) {
-    handleSellBTC();
-    return false;
-  }
-  
-  // Next, check if a shop button was tapped.
-  let startY = height - 180;
-  for (let i = 0; i < miners.length; i++) {
-    let y = startY + i * 30;
-    if (tx > width - 70 && tx < width - 10 && ty > y - 25 && ty < y) {
-      buyMiner(i);
-      return false;
-    }
-  }
-  
-  // Finally, check if an owned miner was tapped to sell it.
-  for (let i = 0; i < ownedMiners.length; i++) {
-    let col = i % minerGridCols;
-    let row = floor(i / minerGridCols);
-    let x = minerGridStartX + col * (minerGridSlotSize + minerGridGap);
-    let y = minerGridStartY + row * (minerGridSlotSize + minerGridGap);
-    if (tx > x && tx < x + minerGridSlotSize && ty > y && ty < y + minerGridSlotSize) {
-      let minerSold = ownedMiners.splice(i, 1)[0];
-      player.money += minerSold.cost * 0.75;
-      player.totalHashRate -= minerSold.hashRate;
-      logs.push(`Sold ${minerSold.name} for $${(minerSold.cost * 0.75).toFixed(0)}`);
-      return false;
-    }
+  if (touches.length > 0) {
+    handleInteraction(touches[0].x, touches[0].y);
   }
   return false;
 }
