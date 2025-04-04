@@ -325,7 +325,7 @@ function mousePressed() {
         mouseY > height / 2 + 55 && mouseY < height / 2 + 105) {
       // Update highscore if needed
       if (player.money > highscore) {
-        highscore = player.money;
+        highscore = int(player.money);
       }
       
       // Submit the score asynchronously
