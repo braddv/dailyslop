@@ -6,8 +6,34 @@ const notesEl = document.getElementById("notes");
 const refreshBtn = document.getElementById("refresh");
 const tooltipEl = document.getElementById("tooltip");
 const capToggle = document.getElementById("capToggle");
+const metricToggle = document.getElementById("metricToggle");
+const metricSubhead = document.getElementById("metricSubhead");
 
 let lastStocks = [];
+let selectedMetric = "changePercent";
+
+const METRICS = {
+  changePercent: {
+    label: "1D",
+    subhead: "Daily percent change by stock, grouped by sector.",
+  },
+  perf1w: {
+    label: "1W",
+    subhead: "1-week performance by stock, grouped by sector.",
+  },
+  perf1m: {
+    label: "1M",
+    subhead: "1-month performance by stock, grouped by sector.",
+  },
+  perf3m: {
+    label: "3M",
+    subhead: "3-month performance by stock, grouped by sector.",
+  },
+  pctFrom52wHigh: {
+    label: "52W High",
+    subhead: "% from 52-week high by stock, grouped by sector.",
+  },
+};
 
 const SECTORS = [
   { gics: "Materials", label: "XLB" },
@@ -26,7 +52,7 @@ const SECTORS = [
 const SECTOR_COLORS = {
   "Materials": "#f7b267",
   "Communication Services": "#f79d65",
-  "Technology": "#5c7cfa",
+  "Information Technology": "#5c7cfa",
   "Consumer Discretionary": "#8bc34a",
   "Consumer Staples": "#7ed957",
   "Energy": "#4dd0e1",
@@ -78,7 +104,7 @@ function buildTicks(min, max) {
 
 function radiusScale(cap, minCap, maxCap) {
   if (!Number.isFinite(cap) || !Number.isFinite(minCap) || !Number.isFinite(maxCap)) {
-    return 2.0;
+    return 4.0;
   }
   const minR = 3;
   const maxR = 14;
@@ -119,8 +145,14 @@ function buildYAxis(ticks) {
   });
 }
 
-function showTooltip(event, text) {
-  tooltipEl.textContent = text;
+function formatPerf(value) {
+  if (!Number.isFinite(value)) return "--";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}%`;
+}
+
+function showTooltip(event, html) {
+  tooltipEl.innerHTML = html;
   tooltipEl.classList.add("visible");
   const pad = 16;
   const x = Math.min(window.innerWidth - 220, event.clientX + pad);
@@ -142,14 +174,14 @@ function buildChart(stocks) {
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
 
-  const filtered = stocks.filter((stock) => Number.isFinite(stock.changePercent));
+  const filtered = stocks.filter((stock) => Number.isFinite(stock[selectedMetric]));
   if (!filtered.length) {
     chartEl.innerHTML = "<div class=\"notes\">No stock data to render.</div>";
     return;
   }
 
-  const minChange = Math.min(...filtered.map((s) => s.changePercent));
-  const maxChange = Math.max(...filtered.map((s) => s.changePercent));
+  const minChange = Math.min(...filtered.map((s) => s[selectedMetric]));
+  const maxChange = Math.max(...filtered.map((s) => s[selectedMetric]));
   const range = niceRange(minChange, maxChange);
   const ticks = buildTicks(range.min, range.max);
 
@@ -158,7 +190,7 @@ function buildChart(stocks) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-  // Grid lines and labels
+  // Grid lines
   const minLog = symLog(range.min);
   const maxLog = symLog(range.max);
 
@@ -217,7 +249,7 @@ function buildChart(stocks) {
       padding.left + sectorWidth * sectorIndex + sectorWidth / 2 + jitter;
     const y =
       padding.top +
-      ((maxLog - symLog(stock.changePercent)) / (maxLog - minLog)) *
+      ((maxLog - symLog(stock[selectedMetric])) / (maxLog - minLog)) *
         innerHeight +
       verticalJitter(stock.symbol);
 
@@ -229,7 +261,12 @@ function buildChart(stocks) {
     dot.setAttribute("fill", SECTOR_COLORS[stock.sector] || "#7aa5ff");
     dot.setAttribute("class", "dot");
 
-    const label = `${stock.symbol} • ${stock.security} • ${stock.changePercent.toFixed(2)}%`;
+    const label = `
+      <div><strong>${stock.symbol}</strong> • ${stock.security}</div>
+      <div>1W ${formatPerf(stock.perf1w)} · 1M ${formatPerf(stock.perf1m)} · 3M ${formatPerf(stock.perf3m)}</div>
+      <div>From 52W High ${formatPerf(stock.pctFrom52wHigh)}</div>
+      <div>Today ${formatPerf(stock.changePercent)}</div>
+    `;
     dot.addEventListener("mouseenter", (event) => {
       showTooltip(event, label);
     });
@@ -242,6 +279,20 @@ function buildChart(stocks) {
   });
 
   chartEl.appendChild(svg);
+}
+
+function setMetric(metric) {
+  if (!METRICS[metric]) return;
+  selectedMetric = metric;
+  if (metricSubhead) {
+    metricSubhead.textContent = METRICS[metric].subhead;
+  }
+  if (metricToggle) {
+    metricToggle.querySelectorAll(".toggle-btn").forEach((button) => {
+      button.classList.toggle("active", button.dataset.metric === metric);
+    });
+  }
+  buildChart(lastStocks);
 }
 
 async function loadData() {
@@ -284,8 +335,17 @@ if (capToggle) {
   });
 }
 
+if (metricToggle) {
+  metricToggle.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-metric]");
+    if (!button) return;
+    setMetric(button.dataset.metric);
+  });
+}
+
 window.addEventListener("resize", () => {
-  loadData();
+  buildChart(lastStocks);
 });
 
+setMetric("changePercent");
 loadData();

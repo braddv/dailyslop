@@ -48,7 +48,7 @@ body {
   justify-content: space-between;
   gap: 24px;
   align-items: flex-end;
-  margin-bottom: 32px;
+  margin-bottom: 18px;
 }
 
 .eyebrow {
@@ -96,6 +96,45 @@ h1 {
   margin-top: 6px;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.controls {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 18px;
+}
+
+.toggle-group {
+  display: inline-flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(10, 14, 22, 0.7);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 24px var(--shadow);
+  flex-wrap: wrap;
+}
+
+.toggle-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.toggle-btn.active {
+  background: rgba(86, 194, 255, 0.2);
+  border-color: rgba(86, 194, 255, 0.6);
+  color: var(--text);
 }
 
 .chart-shell {
@@ -241,5 +280,9 @@ h1 {
 
   .meta-card {
     min-width: 140px;
+  }
+
+  .controls {
+    justify-content: flex-start;
   }
 }
