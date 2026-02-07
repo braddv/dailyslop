@@ -78,10 +78,10 @@ function buildTicks(min, max) {
 
 function radiusScale(cap, minCap, maxCap) {
   if (!Number.isFinite(cap) || !Number.isFinite(minCap) || !Number.isFinite(maxCap)) {
-    return 5.5;
+    return 4.5;
   }
-  const minR = 3.5;
-  const maxR = 11;
+  const minR = 3;
+  const maxR = 14;
   if (maxCap === minCap) return (minR + maxR) / 2;
   const t =
     (Math.sqrt(cap) - Math.sqrt(minCap)) /
@@ -217,7 +217,7 @@ function buildChart(stocks) {
     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     dot.setAttribute("cx", x);
     dot.setAttribute("cy", y);
-    const radius = useMarketCap ? radiusScale(stock.marketCap, minCap, maxCap) : 5.5;
+    const radius = useMarketCap ? radiusScale(stock.marketCap, minCap, maxCap) : 4.5;
     dot.setAttribute("r", radius);
     dot.setAttribute("fill", SECTOR_COLORS[stock.sector] || "#7aa5ff");
     dot.setAttribute("class", "dot");
