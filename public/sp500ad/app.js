@@ -29,6 +29,10 @@ const METRICS = {
     label: "3M",
     subhead: "3-month performance by stock, grouped by sector.",
   },
+  pctFrom12wHigh: {
+    label: "12W High",
+    subhead: "% from 12-week high by stock, grouped by sector.",
+  },
   pctFrom52wHigh: {
     label: "52W High",
     subhead: "% from 52-week high by stock, grouped by sector.",
@@ -232,12 +236,13 @@ function buildChart(stocks) {
     svg.appendChild(label);
   });
 
-  if (selectedMetric === "pctFrom52wHigh") {
+  if (selectedMetric === "pctFrom52wHigh" || selectedMetric === "pctFrom12wHigh") {
+    const field = selectedMetric;
     SECTORS.forEach((sector, index) => {
       const sectorStocks = filtered.filter((stock) => stock.sector === sector.gics);
       if (!sectorStocks.length) return;
       const atHigh = sectorStocks.filter(
-        (stock) => Number.isFinite(stock.pctFrom52wHigh) && stock.pctFrom52wHigh >= -1
+        (stock) => Number.isFinite(stock[field]) && stock[field] >= -1
       ).length;
       const pct = Math.round((atHigh / sectorStocks.length) * 100);
       const stat = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -282,6 +287,7 @@ function buildChart(stocks) {
     const label = `
       <div><strong>${stock.symbol}</strong> • ${stock.security}</div>
       <div>1W ${formatPerf(stock.perf1w)} · 1M ${formatPerf(stock.perf1m)} · 3M ${formatPerf(stock.perf3m)}</div>
+      <div>From 12W High ${formatPerf(stock.pctFrom12wHigh)}</div>
       <div>From 52W High ${formatPerf(stock.pctFrom52wHigh)}</div>
       <div>Today ${formatPerf(stock.changePercent)}</div>
     `;
