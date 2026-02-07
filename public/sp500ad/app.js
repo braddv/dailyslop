@@ -78,7 +78,7 @@ function buildTicks(min, max) {
 
 function radiusScale(cap, minCap, maxCap) {
   if (!Number.isFinite(cap) || !Number.isFinite(minCap) || !Number.isFinite(maxCap)) {
-    return 3.5;
+    return 2.0;
   }
   const minR = 3;
   const maxR = 14;
