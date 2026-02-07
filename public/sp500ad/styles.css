@@ -193,6 +193,12 @@ h1 {
   text-anchor: middle;
 }
 
+.sector-stat {
+  fill: rgba(230, 233, 242, 0.85);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
 .dot {
   opacity: 0.9;
   transition: transform 0.15s ease, opacity 0.15s ease;

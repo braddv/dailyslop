@@ -232,6 +232,24 @@ function buildChart(stocks) {
     svg.appendChild(label);
   });
 
+  if (selectedMetric === "pctFrom52wHigh") {
+    SECTORS.forEach((sector, index) => {
+      const sectorStocks = filtered.filter((stock) => stock.sector === sector.gics);
+      if (!sectorStocks.length) return;
+      const atHigh = sectorStocks.filter(
+        (stock) => Number.isFinite(stock.pctFrom52wHigh) && stock.pctFrom52wHigh >= -1
+      ).length;
+      const pct = Math.round((atHigh / sectorStocks.length) * 100);
+      const stat = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const x = padding.left + sectorWidth * index + sectorWidth / 2;
+      stat.setAttribute("x", x);
+      stat.setAttribute("y", padding.top + 14);
+      stat.setAttribute("class", "sector-stat");
+      stat.textContent = `${pct}%`;
+      svg.appendChild(stat);
+    });
+  }
+
   const useMarketCap = capToggle && capToggle.checked;
   const caps = filtered
     .map((s) => s.marketCap)
