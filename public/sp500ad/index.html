@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>S&P 500 Sector Bubble Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="glow"></div>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">S&P 500 market internals</p>
+          <h1>Sector bubble map</h1>
+          <p class="subhead">Daily percent change by stock, grouped by sector.</p>
+        </div>
+        <div class="meta">
+          <div class="meta-card">
+            <span class="meta-label">As of</span>
+            <span id="asOf" class="meta-value">--</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Cache</span>
+            <span id="cache" class="meta-value">--</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="chart-shell">
+        <div class="y-axis" id="yAxis"></div>
+        <div class="chart" id="chart"></div>
+      </section>
+
+      <footer class="footer">
+        <button class="refresh" id="refresh">Refresh</button>
+        <label class="toggle">
+          <input type="checkbox" id="capToggle" checked />
+          Scale by market cap
+        </label>
+        <div class="notes" id="notes"></div>
+      </footer>
+    </main>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

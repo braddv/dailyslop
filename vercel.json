@@ -7,6 +7,14 @@
       "destination": "/api/:path*"
     },
     {
+      "source": "/sp500ad",
+      "destination": "/public/sp500ad/index.html"
+    },
+    {
+      "source": "/sp500ad/:path*",
+      "destination": "/public/sp500ad/:path*"
+    },
+    {
       "source": "/slop",
       "destination": "/public/slop.html"
     },

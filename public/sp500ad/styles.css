@@ -1,0 +1,245 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0d13;
+  --bg-soft: #121621;
+  --panel: #151a27;
+  --panel-strong: #1d2334;
+  --text: #e6e9f2;
+  --muted: #9aa3b4;
+  --accent: #56c2ff;
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow: rgba(0, 0, 0, 0.45);
+  --grid: rgba(255, 255, 255, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Space Grotesk", sans-serif;
+  background: radial-gradient(circle at top, #1b2338, #0b0d13 60%);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+}
+
+.glow {
+  position: fixed;
+  inset: -20% 10% auto 10%;
+  height: 40vh;
+  background: radial-gradient(circle, rgba(86, 194, 255, 0.25), transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.shell {
+  width: min(1280px, 94vw);
+  padding: 40px 0 60px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin: 0;
+}
+
+.subhead {
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+
+.meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.meta-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  min-width: 160px;
+  box-shadow: 0 20px 40px var(--shadow);
+}
+
+.meta-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.meta-value {
+  display: block;
+  margin-top: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.chart-shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 0 40px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.chart {
+  position: relative;
+  height: clamp(420px, 60vh, 620px);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(27, 34, 52, 0.85), rgba(16, 20, 32, 0.95));
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 36px var(--shadow);
+  overflow: hidden;
+}
+
+.chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.grid-line {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+
+.grid-line.zero {
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1.5;
+}
+
+.grid-label {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.sector-label {
+  fill: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+}
+
+.dot {
+  opacity: 0.9;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.dot:hover {
+  opacity: 1;
+}
+
+.footer {
+  margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  color: var(--muted);
+}
+
+.refresh {
+  background: var(--accent);
+  color: #05111d;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 24px rgba(86, 194, 255, 0.35);
+}
+
+.refresh:hover {
+  transform: translateY(-2px);
+}
+
+.notes {
+  font-size: 0.85rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.tooltip {
+  position: fixed;
+  background: rgba(12, 16, 24, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  pointer-events: none;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+}
+
+.tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 900px) {
+  .chart-shell {
+    grid-template-columns: 50px 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .hero {
+    align-items: flex-start;
+  }
+
+  .meta-card {
+    min-width: 140px;
+  }
+}
