@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-02-07T06:38:11.150Z",
+  "asOf": "2026-02-07T07:18:24.883Z",
   "source": {
     "constituents": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
     "quotes": "https://finnhub.io"
@@ -90,3514 +90,4016 @@
       "security": "3M",
       "sector": "Industrials",
       "change": 7.57,
-      "changePercent": 4.5857
+      "changePercent": 4.5857,
+      "marketCap": 90934.75811665252
     },
     {
       "symbol": "AOS",
       "security": "A. O. Smith",
       "sector": "Industrials",
       "change": 0.87,
-      "changePercent": 1.1138
+      "changePercent": 1.1138,
+      "marketCap": 10997.002563329917
     },
     {
       "symbol": "ABT",
       "security": "Abbott Laboratories",
       "sector": "Health Care",
       "change": 1.75,
-      "changePercent": 1.6043
+      "changePercent": 1.6043,
+      "marketCap": 192719.18125850146
     },
     {
       "symbol": "ABBV",
       "security": "AbbVie",
       "sector": "Health Care",
       "change": 4.41,
-      "changePercent": 2.0135
+      "changePercent": 2.0135,
+      "marketCap": 394886.7586121097
     },
     {
       "symbol": "ACN",
       "security": "Accenture",
       "sector": "Information Technology",
       "change": 7.04,
-      "changePercent": 3.014
+      "changePercent": 3.014,
+      "marketCap": 148055.11440033108
     },
     {
       "symbol": "ADBE",
       "security": "Adobe Inc.",
       "sector": "Information Technology",
       "change": -1.01,
-      "changePercent": -0.3749
+      "changePercent": -0.3749,
+      "marketCap": 110169.99599045601
     },
     {
       "symbol": "AMD",
       "security": "Advanced Micro Devices",
       "sector": "Information Technology",
       "change": 15.94,
-      "changePercent": 8.2805
+      "changePercent": 8.2805,
+      "marketCap": 339842.8456344019
     },
     {
       "symbol": "AES",
       "security": "AES Corporation",
       "sector": "Utilities",
       "change": 0.46,
-      "changePercent": 2.9506
+      "changePercent": 2.9506,
+      "marketCap": 11429.540728114178
     },
     {
       "symbol": "AFL",
       "security": "Aflac",
       "sector": "Financials",
       "change": -0.32,
-      "changePercent": -0.2724
+      "changePercent": -0.2724,
+      "marketCap": 61399.94303894526
     },
     {
       "symbol": "A",
       "security": "Agilent Technologies",
       "sector": "Health Care",
       "change": -0.06,
-      "changePercent": -0.0463
+      "changePercent": -0.0463,
+      "marketCap": 36650.359099272304
     },
     {
       "symbol": "APD",
       "security": "Air Products",
       "sector": "Materials",
       "change": -0.38,
-      "changePercent": -0.134
+      "changePercent": -0.134,
+      "marketCap": 63038.3726989751
     },
     {
       "symbol": "ABNB",
       "security": "Airbnb",
       "sector": "Consumer Discretionary",
       "change": 0.91,
-      "changePercent": 0.7504
+      "changePercent": 0.7504,
+      "marketCap": 75207.8681351175
     },
     {
       "symbol": "AKAM",
       "security": "Akamai Technologies",
       "sector": "Information Technology",
       "change": 3.59,
-      "changePercent": 3.9239
+      "changePercent": 3.9239,
+      "marketCap": 13678.706165361027
     },
     {
       "symbol": "ALB",
       "security": "Albemarle Corporation",
       "sector": "Materials",
       "change": 6.89,
-      "changePercent": 4.4031
+      "changePercent": 4.4031,
+      "marketCap": 19228.246631424914
     },
     {
       "symbol": "ARE",
       "security": "Alexandria Real Estate Equities",
       "sector": "Real Estate",
       "change": 0.76,
-      "changePercent": 1.3783
+      "changePercent": 1.3783,
+      "marketCap": 9555.781414
     },
     {
       "symbol": "ALGN",
       "security": "Align Technology",
       "sector": "Health Care",
       "change": 11.98,
-      "changePercent": 6.8215
+      "changePercent": 6.8215,
+      "marketCap": 13460.29819471586
     },
     {
       "symbol": "ALLE",
       "security": "Allegion",
       "sector": "Industrials",
       "change": 3.94,
-      "changePercent": 2.2408
+      "changePercent": 2.2408,
+      "marketCap": 15465.964155035945
     },
     {
       "symbol": "LNT",
       "security": "Alliant Energy",
       "sector": "Utilities",
       "change": -0.14,
-      "changePercent": -0.2095
+      "changePercent": -0.2095,
+      "marketCap": 17142.904311571896
     },
     {
       "symbol": "ALL",
       "security": "Allstate",
       "sector": "Financials",
       "change": -7.64,
-      "changePercent": -3.5504
+      "changePercent": -3.5504,
+      "marketCap": 54312.037795638505
     },
     {
       "symbol": "GOOGL",
       "security": "Alphabet Inc. (Class A)",
       "sector": "Communication Services",
       "change": -8.39,
-      "changePercent": -2.5328
+      "changePercent": -2.5328,
+      "marketCap": 3894758.853224672
     },
     {
       "symbol": "GOOG",
       "security": "Alphabet Inc. (Class C)",
       "sector": "Communication Services",
       "change": -8.23,
-      "changePercent": -2.4839
+      "changePercent": -2.4839,
+      "marketCap": 3894758.853224672
     },
     {
       "symbol": "MO",
       "security": "Altria",
       "sector": "Consumer Staples",
       "change": 0.01,
-      "changePercent": 0.0153
+      "changePercent": 0.0153,
+      "marketCap": 109785.11564993118
     },
     {
       "symbol": "AMZN",
       "security": "Amazon",
       "sector": "Consumer Discretionary",
       "change": -12.37,
-      "changePercent": -5.5548
+      "changePercent": -5.5548,
+      "marketCap": 2248366.215977952
     },
     {
       "symbol": "AMCR",
       "security": "Amcor",
       "sector": "Materials",
       "change": 1.39,
-      "changePercent": 2.9714
+      "changePercent": 2.9714,
+      "marketCap": 22256.740057144936
     },
     {
       "symbol": "AEE",
       "security": "Ameren",
       "sector": "Utilities",
       "change": 0.28,
-      "changePercent": 0.2672
+      "changePercent": 0.2672,
+      "marketCap": 28426.30875323328
     },
     {
       "symbol": "AEP",
       "security": "American Electric Power",
       "sector": "Utilities",
       "change": 0.19,
-      "changePercent": 0.1575
+      "changePercent": 0.1575,
+      "marketCap": 64518.61380317386
     },
     {
       "symbol": "AXP",
       "security": "American Express",
       "sector": "Financials",
       "change": 4.53,
-      "changePercent": 1.2774
+      "changePercent": 1.2774,
+      "marketCap": 247401.05718665398
     },
     {
       "symbol": "AIG",
       "security": "American International Group",
       "sector": "Financials",
       "change": 0.76,
-      "changePercent": 1.0005
+      "changePercent": 1.0005,
+      "marketCap": 41396.274041907316
     },
     {
       "symbol": "AMT",
       "security": "American Tower",
       "sector": "Real Estate",
       "change": -0.22,
-      "changePercent": -0.1283
+      "changePercent": -0.1283,
+      "marketCap": 80282.469344
     },
     {
       "symbol": "AWK",
       "security": "American Water Works",
       "sector": "Utilities",
       "change": -1.35,
-      "changePercent": -1.0742
+      "changePercent": -1.0742,
+      "marketCap": 24266.375682732814
     },
     {
       "symbol": "AMP",
       "security": "Ameriprise Financial",
       "sector": "Financials",
       "change": 7.97,
-      "changePercent": 1.4897
+      "changePercent": 1.4897,
+      "marketCap": 50446.87239828276
     },
     {
       "symbol": "AME",
       "security": "Ametek",
       "sector": "Industrials",
       "change": 2.12,
-      "changePercent": 0.9226
+      "changePercent": 0.9226,
+      "marketCap": 53386.57855382645
     },
     {
       "symbol": "AMGN",
       "security": "Amgen",
       "sector": "Health Care",
       "change": 16.52,
-      "changePercent": 4.4916
+      "changePercent": 4.4916,
+      "marketCap": 206948.9007097144
     },
     {
       "symbol": "APH",
       "security": "Amphenol",
       "sector": "Information Technology",
       "change": 8.6,
-      "changePercent": 6.7382
+      "changePercent": 6.7382,
+      "marketCap": 166753.0828965624
     },
     {
       "symbol": "ADI",
       "security": "Analog Devices",
       "sector": "Information Technology",
       "change": -1.67,
-      "changePercent": -0.5184
+      "changePercent": -0.5184,
+      "marketCap": 156581.03284057617
     },
     {
       "symbol": "AON",
       "security": "Aon plc",
       "sector": "Financials",
       "change": -1.32,
-      "changePercent": -0.3844
+      "changePercent": -0.3844,
+      "marketCap": 73516.45737277725
     },
     {
       "symbol": "APA",
       "security": "APA Corporation",
       "sector": "Energy",
       "change": 0.98,
-      "changePercent": 3.7009
+      "changePercent": 3.7009,
+      "marketCap": 9739.217450485648
     },
     {
       "symbol": "APO",
       "security": "Apollo Global Management",
       "sector": "Financials",
       "change": 6.95,
-      "changePercent": 5.5124
+      "changePercent": 5.5124,
+      "marketCap": 77213.61246696011
     },
     {
       "symbol": "AAPL",
       "security": "Apple Inc.",
       "sector": "Information Technology",
       "change": 2.21,
-      "changePercent": 0.801
+      "changePercent": 0.801,
+      "marketCap": 4083118.6132176854
     },
     {
       "symbol": "AMAT",
       "security": "Applied Materials",
       "sector": "Information Technology",
       "change": 18.52,
-      "changePercent": 6.0923
+      "changePercent": 6.0923,
+      "marketCap": 255732.15461687298
     },
     {
       "symbol": "APP",
       "security": "AppLovin",
       "sector": "Information Technology",
       "change": 31.49,
-      "changePercent": 8.3922
+      "changePercent": 8.3922,
+      "marketCap": 137453.0554679257
     },
     {
       "symbol": "APTV",
       "security": "Aptiv",
       "sector": "Consumer Discretionary",
       "change": 2.66,
-      "changePercent": 3.3367
+      "changePercent": 3.3367,
+      "marketCap": 17800.621799726792
     },
     {
       "symbol": "ACGL",
       "security": "Arch Capital Group",
       "sector": "Financials",
       "change": -1.03,
-      "changePercent": -1.01
+      "changePercent": -1.01,
+      "marketCap": 36607.09045827859
     },
     {
       "symbol": "ADM",
       "security": "Archer Daniels Midland",
       "sector": "Consumer Staples",
       "change": 0.9,
-      "changePercent": 1.3755
+      "changePercent": 1.3755,
+      "marketCap": 31876.19254088583
     },
     {
       "symbol": "ARES",
       "security": "Ares Management",
       "sector": "Financials",
       "change": 8.59,
-      "changePercent": 7.0485
+      "changePercent": 7.0485,
+      "marketCap": 28290.557004543858
     },
     {
       "symbol": "ANET",
       "security": "Arista Networks",
       "sector": "Information Technology",
       "change": 8.82,
-      "changePercent": 6.8547
+      "changePercent": 6.8547,
+      "marketCap": 173139.11366907606
     },
     {
       "symbol": "AJG",
       "security": "Arthur J. Gallagher & Co.",
       "sector": "Financials",
       "change": -1.17,
-      "changePercent": -0.482
+      "changePercent": -0.482,
+      "marketCap": 62037.74105128099
     },
     {
       "symbol": "AIZ",
       "security": "Assurant",
       "sector": "Financials",
       "change": 0.85,
-      "changePercent": 0.3506
+      "changePercent": 0.3506,
+      "marketCap": 12185.234748059682
     },
     {
       "symbol": "T",
       "security": "AT&T",
       "sector": "Communication Services",
       "change": -0.18,
-      "changePercent": -0.6591
+      "changePercent": -0.6591,
+      "marketCap": 192336.76679068804
     },
     {
       "symbol": "ATO",
       "security": "Atmos Energy",
       "sector": "Utilities",
       "change": -0.12,
-      "changePercent": -0.07
+      "changePercent": -0.07,
+      "marketCap": 28352.92718004968
     },
     {
       "symbol": "ADSK",
       "security": "Autodesk",
       "sector": "Information Technology",
       "change": 2.34,
-      "changePercent": 0.9829
+      "changePercent": 0.9829,
+      "marketCap": 50964.79947690834
     },
     {
       "symbol": "ADP",
       "security": "Automatic Data Processing",
       "sector": "Industrials",
       "change": -2.63,
-      "changePercent": -1.124
+      "changePercent": -1.124,
+      "marketCap": 93155.80563425788
     },
     {
       "symbol": "AZO",
       "security": "AutoZone",
       "sector": "Consumer Discretionary",
       "change": 76.23,
-      "changePercent": 2.1145
+      "changePercent": 2.1145,
+      "marketCap": 60990.45205901278
     },
     {
       "symbol": "AVB",
       "security": "AvalonBay Communities",
       "sector": "Real Estate",
       "change": 4.13,
-      "changePercent": 2.4337
+      "changePercent": 2.4337,
+      "marketCap": 24028.660917
     },
     {
       "symbol": "AVY",
       "security": "Avery Dennison",
       "sector": "Materials",
       "change": -1.37,
-      "changePercent": -0.7103
+      "changePercent": -0.7103,
+      "marketCap": 14802.839990759747
     },
     {
       "symbol": "AXON",
       "security": "Axon Enterprise",
       "sector": "Industrials",
       "change": 14.55,
-      "changePercent": 3.6407
+      "changePercent": 3.6407,
+      "marketCap": 32684.71578320831
     },
     {
       "symbol": "BKR",
       "security": "Baker Hughes",
       "sector": "Energy",
       "change": 1.56,
-      "changePercent": 2.7197
+      "changePercent": 2.7197,
+      "marketCap": 58140.71672938076
     },
     {
       "symbol": "BALL",
       "security": "Ball Corporation",
       "sector": "Materials",
       "change": 0.28,
-      "changePercent": 0.423
+      "changePercent": 0.423,
+      "marketCap": 17813.110714446895
     },
     {
       "symbol": "BAC",
       "security": "Bank of America",
       "sector": "Financials",
       "change": 1.59,
-      "changePercent": 2.8941
+      "changePercent": 2.8941,
+      "marketCap": 407720.5998235539
     },
     {
       "symbol": "BAX",
       "security": "Baxter International",
       "sector": "Health Care",
       "change": -0.04,
-      "changePercent": -0.1837
+      "changePercent": -0.1837,
+      "marketCap": 11170.432467123108
     },
     {
       "symbol": "BDX",
       "security": "Becton Dickinson",
       "sector": "Health Care",
       "change": 3.51,
-      "changePercent": 1.6997
+      "changePercent": 1.6997,
+      "marketCap": 59836.39359190878
     },
     {
       "symbol": "BRK.B",
       "security": "Berkshire Hathaway",
       "sector": "Financials",
       "change": 4.2,
-      "changePercent": 0.8335
+      "changePercent": 0.8335,
+      "marketCap": 1095723.9077093825
     },
     {
       "symbol": "BBY",
       "security": "Best Buy",
       "sector": "Consumer Discretionary",
       "change": 2.23,
-      "changePercent": 3.2708
+      "changePercent": 3.2708,
+      "marketCap": 14753.367194446464
     },
     {
       "symbol": "TECH",
       "security": "Bio-Techne",
       "sector": "Health Care",
       "change": 0.92,
-      "changePercent": 1.3969
+      "changePercent": 1.3969,
+      "marketCap": 10447.950992747648
     },
     {
       "symbol": "BIIB",
       "security": "Biogen",
       "sector": "Health Care",
       "change": 15.82,
-      "changePercent": 8.5347
+      "changePercent": 8.5347,
+      "marketCap": 29513.562878086857
     },
     {
       "symbol": "BLK",
       "security": "BlackRock",
       "sector": "Financials",
       "change": 1.58,
-      "changePercent": 0.1498
+      "changePercent": 0.1498,
+      "marketCap": 172336.70284736107
     },
     {
       "symbol": "BX",
       "security": "Blackstone Inc.",
       "sector": "Financials",
       "change": 2.86,
-      "changePercent": 2.255
+      "changePercent": 2.255,
+      "marketCap": 159359.09324823073
     },
     {
       "symbol": "XYZ",
       "security": "Block, Inc.",
       "sector": "Financials",
       "change": 2.59,
-      "changePercent": 4.852
+      "changePercent": 4.852,
+      "marketCap": 43430.032143
     },
     {
       "symbol": "BK",
       "security": "BNY Mellon",
       "sector": "Financials",
       "change": 3.81,
-      "changePercent": 3.1616
+      "changePercent": 3.1616,
+      "marketCap": 85561.50388992383
     },
     {
       "symbol": "BA",
       "security": "Boeing",
       "sector": "Industrials",
       "change": 6.08,
-      "changePercent": 2.5659
+      "changePercent": 2.5659,
+      "marketCap": 190862.9049396528
     },
     {
       "symbol": "BKNG",
       "security": "Booking Holdings",
       "sector": "Consumer Discretionary",
       "change": 13.75,
-      "changePercent": 0.3094
+      "changePercent": 0.3094,
+      "marketCap": 143671.587288001
     },
     {
       "symbol": "BSX",
       "security": "Boston Scientific",
       "sector": "Health Care",
       "change": -1.37,
-      "changePercent": -1.7646
+      "changePercent": -1.7646,
+      "marketCap": 113109.91737968987
     },
     {
       "symbol": "BMY",
       "security": "Bristol Myers Squibb",
       "sector": "Health Care",
       "change": 2.47,
-      "changePercent": 4.1499
+      "changePercent": 4.1499,
+      "marketCap": 126196.33264953409
     },
     {
       "symbol": "AVGO",
       "security": "Broadcom",
       "sector": "Information Technology",
       "change": 22.41,
-      "changePercent": 7.2172
+      "changePercent": 7.2172,
+      "marketCap": 1578464.9650144225
     },
     {
       "symbol": "BR",
       "security": "Broadridge Financial Solutions",
       "sector": "Industrials",
       "change": -11.63,
-      "changePercent": -6.0091
+      "changePercent": -6.0091,
+      "marketCap": 21237.758602689835
     },
     {
       "symbol": "BRO",
       "security": "Brown & Brown",
       "sector": "Financials",
       "change": 1.11,
-      "changePercent": 1.5275
+      "changePercent": 1.5275,
+      "marketCap": 25190.024245211778
     },
     {
       "symbol": "BF.B",
       "security": "Brown–Forman",
       "sector": "Consumer Staples",
       "change": 0.48,
-      "changePercent": 1.6569
+      "changePercent": 1.6569,
+      "marketCap": 13718.652616649984
     },
     {
       "symbol": "BLDR",
       "security": "Builders FirstSource",
       "sector": "Industrials",
       "change": 4.36,
-      "changePercent": 3.6315
+      "changePercent": 3.6315,
+      "marketCap": 13758.4356912652
     },
     {
       "symbol": "BG",
       "security": "Bunge Global",
       "sector": "Consumer Staples",
       "change": 1.92,
-      "changePercent": 1.6851
+      "changePercent": 1.6851,
+      "marketCap": 22402.812134609794
     },
     {
       "symbol": "BXP",
       "security": "BXP, Inc.",
       "sector": "Real Estate",
       "change": 1.55,
-      "changePercent": 2.4537
+      "changePercent": 2.4537,
+      "marketCap": 10010.466792
     },
     {
       "symbol": "CHRW",
       "security": "C.H. Robinson",
       "sector": "Industrials",
       "change": 3.15,
-      "changePercent": 1.5954
+      "changePercent": 1.5954,
+      "marketCap": 23697.136529615123
     },
     {
       "symbol": "CDNS",
       "security": "Cadence Design Systems",
       "sector": "Information Technology",
       "change": 13.38,
-      "changePercent": 4.953
+      "changePercent": 4.953,
+      "marketCap": 77174.42852125151
     },
     {
       "symbol": "CPT",
       "security": "Camden Property Trust",
       "sector": "Real Estate",
       "change": 0.06,
-      "changePercent": 0.0563
+      "changePercent": 0.0563,
+      "marketCap": 15036.528711
     },
     {
       "symbol": "CPB",
       "security": "Campbell's Company (The)",
       "sector": "Consumer Staples",
       "change": 0.12,
-      "changePercent": 0.418
+      "changePercent": 0.418,
+      "marketCap": 8595.210061476488
     },
     {
       "symbol": "COF",
       "security": "Capital One",
       "sector": "Financials",
       "change": 5.86,
-      "changePercent": 2.7013
+      "changePercent": 2.7013,
+      "marketCap": 141635.093447721
     },
     {
       "symbol": "CAH",
       "security": "Cardinal Health",
       "sector": "Health Care",
       "change": -0.86,
-      "changePercent": -0.3786
+      "changePercent": -0.3786,
+      "marketCap": 53772.509303168576
     },
     {
       "symbol": "CCL",
       "security": "Carnival",
       "sector": "Consumer Discretionary",
       "change": 2.54,
-      "changePercent": 8.0763
+      "changePercent": 8.0763,
+      "marketCap": 46991.109046430836
     },
     {
       "symbol": "CARR",
       "security": "Carrier Global",
       "sector": "Industrials",
       "change": 0.82,
-      "changePercent": 1.2995
+      "changePercent": 1.2995,
+      "marketCap": 53834.04769712076
     },
     {
       "symbol": "CVNA",
       "security": "Carvana",
       "sector": "Consumer Discretionary",
       "change": 19.98,
-      "changePercent": 5.2073
+      "changePercent": 5.2073,
+      "marketCap": 87815.25528801254
     },
     {
       "symbol": "CAT",
       "security": "Caterpillar Inc.",
       "sector": "Industrials",
       "change": 47.89,
-      "changePercent": 7.0602
+      "changePercent": 7.0602,
+      "marketCap": 339846.7724886333
     },
     {
       "symbol": "CBOE",
       "security": "Cboe Global Markets",
       "sector": "Financials",
       "change": -1.92,
-      "changePercent": -0.6975
+      "changePercent": -0.6975,
+      "marketCap": 28605.624764190066
     },
     {
       "symbol": "CBRE",
       "security": "CBRE Group",
       "sector": "Real Estate",
       "change": 3.49,
-      "changePercent": 2.1001
+      "changePercent": 2.1001,
+      "marketCap": 50492.59988906425
     },
     {
       "symbol": "CDW",
       "security": "CDW Corporation",
       "sector": "Information Technology",
       "change": 1.85,
-      "changePercent": 1.3142
+      "changePercent": 1.3142,
+      "marketCap": 18568.218825499323
     },
     {
       "symbol": "COR",
       "security": "Cencora",
       "sector": "Health Care",
       "change": 7.09,
-      "changePercent": 2.0133
+      "changePercent": 2.0133,
+      "marketCap": 69885.1494660126
     },
     {
       "symbol": "CNC",
       "security": "Centene Corporation",
       "sector": "Health Care",
       "change": -1.46,
-      "changePercent": -3.6573
+      "changePercent": -3.6573,
+      "marketCap": 18903.781619089175
     },
     {
       "symbol": "CNP",
       "security": "CenterPoint Energy",
       "sector": "Utilities",
       "change": -0.17,
-      "changePercent": -0.4227
+      "changePercent": -0.4227,
+      "marketCap": 26147.373208366484
     },
     {
       "symbol": "CF",
       "security": "CF Industries",
       "sector": "Materials",
       "change": 1.32,
-      "changePercent": 1.4455
+      "changePercent": 1.4455,
+      "marketCap": 14449.490590964522
     },
     {
       "symbol": "CRL",
       "security": "Charles River Laboratories",
       "sector": "Health Care",
       "change": 5.51,
-      "changePercent": 2.9995
+      "changePercent": 2.9995,
+      "marketCap": 9312.059524687646
     },
     {
       "symbol": "SCHW",
       "security": "Charles Schwab Corporation",
       "sector": "Financials",
       "change": 3.08,
-      "changePercent": 3.0196
+      "changePercent": 3.0196,
+      "marketCap": 186720.5155371416
     },
     {
       "symbol": "CHTR",
       "security": "Charter Communications",
       "sector": "Communication Services",
       "change": 7.61,
-      "changePercent": 3.4045
+      "changePercent": 3.4045,
+      "marketCap": 32852.285598919516
     },
     {
       "symbol": "CVX",
       "security": "Chevron Corporation",
       "sector": "Energy",
       "change": 1.63,
-      "changePercent": 0.9094
+      "changePercent": 0.9094,
+      "marketCap": 364165.5090612736
     },
     {
       "symbol": "CMG",
       "security": "Chipotle Mexican Grill",
       "sector": "Consumer Discretionary",
       "change": 0.94,
-      "changePercent": 2.4447
+      "changePercent": 2.4447,
+      "marketCap": 51302.44194951105
     },
     {
       "symbol": "CB",
       "security": "Chubb Limited",
       "sector": "Financials",
       "change": -0.31,
-      "changePercent": -0.0936
+      "changePercent": -0.0936,
+      "marketCap": 130253.52179134099
     },
     {
       "symbol": "CHD",
       "security": "Church & Dwight",
       "sector": "Consumer Staples",
       "change": -0.07,
-      "changePercent": -0.0696
+      "changePercent": -0.0696,
+      "marketCap": 24140.276694572567
     },
     {
       "symbol": "CI",
       "security": "Cigna",
       "sector": "Health Care",
       "change": 7.52,
-      "changePercent": 2.643
+      "changePercent": 2.643,
+      "marketCap": 78014.09655665995
     },
     {
       "symbol": "CINF",
       "security": "Cincinnati Financial",
       "sector": "Financials",
       "change": 1.15,
-      "changePercent": 0.6706
+      "changePercent": 0.6706,
+      "marketCap": 26936.595563246065
     },
     {
       "symbol": "CTAS",
       "security": "Cintas",
       "sector": "Industrials",
       "change": 1.76,
-      "changePercent": 0.9067
+      "changePercent": 0.9067,
+      "marketCap": 78326.38568546051
     },
     {
       "symbol": "CSCO",
       "security": "Cisco",
       "sector": "Information Technology",
       "change": 2.46,
-      "changePercent": 2.9869
+      "changePercent": 2.9869,
+      "marketCap": 335131.83648279356
     },
     {
       "symbol": "C",
       "security": "Citigroup",
       "sector": "Financials",
       "change": 6.95,
-      "changePercent": 6.0048
+      "changePercent": 6.0048,
+      "marketCap": 219525.05538678946
     },
     {
       "symbol": "CFG",
       "security": "Citizens Financial Group",
       "sector": "Financials",
       "change": 1.5,
-      "changePercent": 2.2516
+      "changePercent": 2.2516,
+      "marketCap": 29256.599483867903
     },
     {
       "symbol": "CLX",
       "security": "Clorox",
       "sector": "Consumer Staples",
       "change": 1.75,
-      "changePercent": 1.488
+      "changePercent": 1.488,
+      "marketCap": 14432.039398910976
     },
     {
       "symbol": "CME",
       "security": "CME Group",
       "sector": "Financials",
       "change": 4.89,
-      "changePercent": 1.6444
+      "changePercent": 1.6444,
+      "marketCap": 108998.4994572084
     },
     {
       "symbol": "CMS",
       "security": "CMS Energy",
       "sector": "Utilities",
       "change": -0.02,
-      "changePercent": -0.0274
+      "changePercent": -0.0274,
+      "marketCap": 22166.651735685424
     },
     {
       "symbol": "KO",
       "security": "Coca-Cola Company (The)",
       "sector": "Consumer Staples",
       "change": 0.52,
-      "changePercent": 0.6623
+      "changePercent": 0.6623,
+      "marketCap": 339956.1595679604
     },
     {
       "symbol": "CTSH",
       "security": "Cognizant",
       "sector": "Information Technology",
       "change": 0.24,
-      "changePercent": 0.3123
+      "changePercent": 0.3123,
+      "marketCap": 37202.38689040552
     },
     {
       "symbol": "COIN",
       "security": "Coinbase",
       "sector": "Financials",
       "change": 19,
-      "changePercent": 13.003
+      "changePercent": 13.003,
+      "marketCap": 44525.82113664
     },
     {
       "symbol": "CL",
       "security": "Colgate-Palmolive",
       "sector": "Consumer Staples",
       "change": -0.47,
-      "changePercent": -0.4954
+      "changePercent": -0.4954,
+      "marketCap": 76100.58891550454
     },
     {
       "symbol": "CMCSA",
       "security": "Comcast",
       "sector": "Communication Services",
       "change": 0.52,
-      "changePercent": 1.6856
+      "changePercent": 1.6856,
+      "marketCap": 112864.42998702981
     },
     {
       "symbol": "FIX",
       "security": "Comfort Systems USA",
       "sector": "Industrials",
       "change": 82.29,
-      "changePercent": 7.1683
+      "changePercent": 7.1683,
+      "marketCap": 43393.66781434787
     },
     {
       "symbol": "CAG",
       "security": "Conagra Brands",
       "sector": "Consumer Staples",
       "change": -0.2,
-      "changePercent": -1.023
+      "changePercent": -1.023,
+      "marketCap": 9256.44900547059
     },
     {
       "symbol": "COP",
       "security": "ConocoPhillips",
       "sector": "Energy",
       "change": 2.64,
-      "changePercent": 2.5148
+      "changePercent": 2.5148,
+      "marketCap": 132988.00357824407
     },
     {
       "symbol": "ED",
       "security": "Consolidated Edison",
       "sector": "Utilities",
       "change": -1.53,
-      "changePercent": -1.4053
+      "changePercent": -1.4053,
+      "marketCap": 38742.82913095894
     },
     {
       "symbol": "STZ",
       "security": "Constellation Brands",
       "sector": "Consumer Staples",
       "change": -1.24,
-      "changePercent": -0.7489
+      "changePercent": -0.7489,
+      "marketCap": 28496.17168654606
     },
     {
       "symbol": "CEG",
       "security": "Constellation Energy",
       "sector": "Utilities",
       "change": 14.36,
-      "changePercent": 5.8124
+      "changePercent": 5.8124,
+      "marketCap": 94726.96570484701
     },
     {
       "symbol": "COO",
       "security": "Cooper Companies (The)",
       "sector": "Health Care",
       "change": 2,
-      "changePercent": 2.4969
+      "changePercent": 2.4969,
+      "marketCap": 16089.79573821598
     },
     {
       "symbol": "CPRT",
       "security": "Copart",
       "sector": "Industrials",
       "change": 0.48,
-      "changePercent": 1.2036
+      "changePercent": 1.2036,
+      "marketCap": 39069.19542654162
     },
     {
       "symbol": "GLW",
       "security": "Corning Inc.",
       "sector": "Information Technology",
       "change": 9.37,
-      "changePercent": 8.3075
+      "changePercent": 8.3075,
+      "marketCap": 104735.14139737636
     },
     {
       "symbol": "CPAY",
       "security": "Corpay",
       "sector": "Financials",
       "change": 19.19,
-      "changePercent": 5.7284
+      "changePercent": 5.7284,
+      "marketCap": 24778.443000354862
     },
     {
       "symbol": "CTVA",
       "security": "Corteva",
       "sector": "Materials",
       "change": 0.13,
-      "changePercent": 0.1794
+      "changePercent": 0.1794,
+      "marketCap": 49058.14363678212
     },
     {
       "symbol": "CSGP",
       "security": "CoStar Group",
       "sector": "Real Estate",
       "change": -0.71,
-      "changePercent": -1.3924
+      "changePercent": -1.3924,
+      "marketCap": 21309.810302155714
     },
     {
       "symbol": "COST",
       "security": "Costco",
       "sector": "Consumer Staples",
       "change": 11.87,
-      "changePercent": 1.1999
+      "changePercent": 1.1999,
+      "marketCap": 444384.293935396
     },
     {
       "symbol": "CTRA",
       "security": "Coterra",
       "sector": "Energy",
       "change": 0.35,
-      "changePercent": 1.1547
+      "changePercent": 1.1547,
+      "marketCap": 23260.025947357968
     },
     {
       "symbol": "CRH",
       "security": "CRH plc",
       "sector": "Materials",
       "change": 5.36,
-      "changePercent": 4.4017
+      "changePercent": 4.4017,
+      "marketCap": 85073.26913086466
     },
     {
       "symbol": "CRWD",
       "security": "CrowdStrike",
       "sector": "Information Technology",
       "change": 18.34,
-      "changePercent": 4.8627
+      "changePercent": 4.8627,
+      "marketCap": 99704.93179268745
     },
     {
       "symbol": "CCI",
       "security": "Crown Castle",
       "sector": "Real Estate",
       "change": 2.51,
-      "changePercent": 3.2028
+      "changePercent": 3.2028,
+      "marketCap": 34128.490732
     },
     {
       "symbol": "CSX",
       "security": "CSX Corporation",
       "sector": "Industrials",
       "change": 0.74,
-      "changePercent": 1.856
+      "changePercent": 1.856,
+      "marketCap": 75621.38003661425
     },
     {
       "symbol": "CMI",
       "security": "Cummins",
       "sector": "Industrials",
       "change": 37.08,
-      "changePercent": 6.8584
+      "changePercent": 6.8584,
+      "marketCap": 79747.68913415622
     },
     {
       "symbol": "CVS",
       "security": "CVS Health",
       "sector": "Health Care",
       "change": 2.02,
-      "changePercent": 2.6464
+      "changePercent": 2.6464,
+      "marketCap": 99460.0383786578
     },
     {
       "symbol": "DHR",
       "security": "Danaher Corporation",
       "sector": "Health Care",
       "change": 0.86,
-      "changePercent": 0.3986
+      "changePercent": 0.3986,
+      "marketCap": 153002.37566557102
     },
     {
       "symbol": "DRI",
       "security": "Darden Restaurants",
       "sector": "Consumer Discretionary",
       "change": 2.71,
-      "changePercent": 1.269
+      "changePercent": 1.269,
+      "marketCap": 24901.16568256593
     },
     {
       "symbol": "DDOG",
       "security": "Datadog",
       "sector": "Information Technology",
       "change": 4.96,
-      "changePercent": 4.6472
+      "changePercent": 4.6472,
+      "marketCap": 39166.419074538455
     },
     {
       "symbol": "DVA",
       "security": "DaVita",
       "sector": "Health Care",
       "change": -8.39,
-      "changePercent": -5.6226
+      "changePercent": -5.6226,
+      "marketCap": 9942.597865984051
     },
     {
       "symbol": "DECK",
       "security": "Deckers Brands",
       "sector": "Consumer Discretionary",
       "change": 4.28,
-      "changePercent": 3.85
+      "changePercent": 3.85,
+      "marketCap": 16388.123354309617
     },
     {
       "symbol": "DE",
       "security": "Deere & Company",
       "sector": "Industrials",
       "change": 17.38,
-      "changePercent": 3.0721
+      "changePercent": 3.0721,
+      "marketCap": 158066.22459939664
     },
     {
       "symbol": "DELL",
       "security": "Dell Technologies",
       "sector": "Information Technology",
       "change": 5.66,
-      "changePercent": 4.9051
+      "changePercent": 4.9051,
+      "marketCap": 80218.5773703328
     },
     {
       "symbol": "DAL",
       "security": "Delta Air Lines",
       "sector": "Industrials",
       "change": 5.57,
-      "changePercent": 7.9822
+      "changePercent": 7.9822,
+      "marketCap": 49200.7437502515
     },
     {
       "symbol": "DVN",
       "security": "Devon Energy",
       "sector": "Energy",
       "change": 0.64,
-      "changePercent": 1.4825
+      "changePercent": 1.4825,
+      "marketCap": 26975.463543592778
     },
     {
       "symbol": "DXCM",
       "security": "Dexcom",
       "sector": "Health Care",
       "change": 0.08,
-      "changePercent": 0.1145
+      "changePercent": 0.1145,
+      "marketCap": 27289.440019437974
     },
     {
       "symbol": "FANG",
       "security": "Diamondback Energy",
       "sector": "Energy",
       "change": 2.15,
-      "changePercent": 1.3048
+      "changePercent": 1.3048,
+      "marketCap": 47829.72385718357
     },
     {
       "symbol": "DLR",
       "security": "Digital Realty",
       "sector": "Real Estate",
       "change": 6.97,
-      "changePercent": 4.2332
+      "changePercent": 4.2332,
+      "marketCap": 56557.529164
     },
     {
       "symbol": "DG",
       "security": "Dollar General",
       "sector": "Consumer Staples",
       "change": 1.75,
-      "changePercent": 1.2077
+      "changePercent": 1.2077,
+      "marketCap": 32280.432571917878
     },
     {
       "symbol": "DLTR",
       "security": "Dollar Tree",
       "sector": "Consumer Staples",
       "change": 4.23,
-      "changePercent": 3.5368
+      "changePercent": 3.5368,
+      "marketCap": 24623.988956365214
     },
     {
       "symbol": "D",
       "security": "Dominion Energy",
       "sector": "Utilities",
       "change": -0.19,
-      "changePercent": -0.3039
+      "changePercent": -0.3039,
+      "marketCap": 53224.414448695294
     },
     {
       "symbol": "DPZ",
       "security": "Domino's",
       "sector": "Consumer Discretionary",
       "change": 1.45,
-      "changePercent": 0.3686
+      "changePercent": 0.3686,
+      "marketCap": 13342.764164637774
     },
     {
       "symbol": "DASH",
       "security": "DoorDash",
       "sector": "Consumer Discretionary",
       "change": -1.39,
-      "changePercent": -0.756
+      "changePercent": -0.756,
+      "marketCap": 78644.30152714314
     },
     {
       "symbol": "DOV",
       "security": "Dover Corporation",
       "sector": "Industrials",
       "change": 6.11,
-      "changePercent": 2.8085
+      "changePercent": 2.8085,
+      "marketCap": 30675.68816225493
     },
     {
       "symbol": "DOW",
       "security": "Dow Inc.",
       "sector": "Materials",
       "change": 1.18,
-      "changePercent": 3.8562
+      "changePercent": 3.8562,
+      "marketCap": 22803.23263555098
     },
     {
       "symbol": "DHI",
       "security": "D. R. Horton",
       "sector": "Consumer Discretionary",
       "change": -1.86,
-      "changePercent": -1.1762
+      "changePercent": -1.1762,
+      "marketCap": 45271.95166299127
     },
     {
       "symbol": "DTE",
       "security": "DTE Energy",
       "sector": "Utilities",
       "change": -1.32,
-      "changePercent": -0.9696
+      "changePercent": -0.9696,
+      "marketCap": 27999.82381085765
     },
     {
       "symbol": "DUK",
       "security": "Duke Energy",
       "sector": "Utilities",
       "change": -1.55,
-      "changePercent": -1.256
+      "changePercent": -1.256,
+      "marketCap": 94765.80333216256
     },
     {
       "symbol": "DD",
       "security": "DuPont",
       "sector": "Materials",
       "change": 1.05,
-      "changePercent": 2.2986
+      "changePercent": 2.2986,
+      "marketCap": 19578.71642677999
     },
     {
       "symbol": "ETN",
       "security": "Eaton Corporation",
       "sector": "Industrials",
       "change": 19.15,
-      "changePercent": 5.3994
+      "changePercent": 5.3994,
+      "marketCap": 145191.69121573522
     },
     {
       "symbol": "EBAY",
       "security": "eBay Inc.",
       "sector": "Consumer Discretionary",
       "change": 0.03,
-      "changePercent": 0.0347
+      "changePercent": 0.0347,
+      "marketCap": 39120.59848247399
     },
     {
       "symbol": "ECL",
       "security": "Ecolab",
       "sector": "Materials",
       "change": 3.14,
-      "changePercent": 1.0934
+      "changePercent": 1.0934,
+      "marketCap": 82231.80891971692
     },
     {
       "symbol": "EIX",
       "security": "Edison International",
       "sector": "Utilities",
       "change": 0.3,
-      "changePercent": 0.4709
+      "changePercent": 0.4709,
+      "marketCap": 24630.218609841
     },
     {
       "symbol": "EW",
       "security": "Edwards Lifesciences",
       "sector": "Health Care",
       "change": 0.61,
-      "changePercent": 0.781
+      "changePercent": 0.781,
+      "marketCap": 45675.41114663649
     },
     {
       "symbol": "EA",
       "security": "Electronic Arts",
       "sector": "Communication Services",
       "change": 2.07,
-      "changePercent": 1.0458
+      "changePercent": 1.0458,
+      "marketCap": 50050.742776739244
     },
     {
       "symbol": "ELV",
       "security": "Elevance Health",
       "sector": "Health Care",
       "change": 6.73,
-      "changePercent": 2.0256
+      "changePercent": 2.0256,
+      "marketCap": 75334.49809595023
     },
     {
       "symbol": "EME",
       "security": "Emcor",
       "sector": "Industrials",
       "change": 46.67,
-      "changePercent": 6.5029
+      "changePercent": 6.5029,
+      "marketCap": 34216.78589743994
     },
     {
       "symbol": "EMR",
       "security": "Emerson Electric",
       "sector": "Industrials",
       "change": 6.44,
-      "changePercent": 4.2666
+      "changePercent": 4.2666,
+      "marketCap": 88495.10010420565
     },
     {
       "symbol": "ETR",
       "security": "Entergy",
       "sector": "Utilities",
       "change": 1.07,
-      "changePercent": 1.1043
+      "changePercent": 1.1043,
+      "marketCap": 43748.63139282898
     },
     {
       "symbol": "EOG",
       "security": "EOG Resources",
       "sector": "Energy",
       "change": 1.21,
-      "changePercent": 1.0757
+      "changePercent": 1.0757,
+      "marketCap": 61693.44255967287
     },
     {
       "symbol": "EPAM",
       "security": "EPAM Systems",
       "sector": "Information Technology",
       "change": 9.21,
-      "changePercent": 5.1896
+      "changePercent": 5.1896,
+      "marketCap": 10312.692103422778
     },
     {
       "symbol": "EQT",
       "security": "EQT Corporation",
       "sector": "Energy",
       "change": 1.46,
-      "changePercent": 2.6387
+      "changePercent": 2.6387,
+      "marketCap": 35440.98194929514
     },
     {
       "symbol": "EFX",
       "security": "Equifax",
       "sector": "Industrials",
       "change": 4.61,
-      "changePercent": 2.4135
+      "changePercent": 2.4135,
+      "marketCap": 23942.720504691693
     },
     {
       "symbol": "EQIX",
       "security": "Equinix",
       "sector": "Real Estate",
       "change": 40.56,
-      "changePercent": 5.0225
+      "changePercent": 5.0225,
+      "marketCap": 79291.151278
     },
     {
       "symbol": "EQR",
       "security": "Equity Residential",
       "sector": "Real Estate",
       "change": 2.12,
-      "changePercent": 3.4321
+      "changePercent": 3.4321,
+      "marketCap": 23501.924336
     },
     {
       "symbol": "ERIE",
       "security": "Erie Indemnity",
       "sector": "Financials",
       "change": 2.09,
-      "changePercent": 0.7317
+      "changePercent": 0.7317,
+      "marketCap": 13398.760302121174
     },
     {
       "symbol": "ESS",
       "security": "Essex Property Trust",
       "sector": "Real Estate",
       "change": 6.57,
-      "changePercent": 2.6124
+      "changePercent": 2.6124,
+      "marketCap": 16196.967901
     },
     {
       "symbol": "EL",
       "security": "Estée Lauder Companies (The)",
       "sector": "Consumer Staples",
       "change": 2.81,
-      "changePercent": 2.9071
+      "changePercent": 2.9071,
+      "marketCap": 35845.035529809844
     },
     {
       "symbol": "EG",
       "security": "Everest Group",
       "sector": "Financials",
       "change": 2.5,
-      "changePercent": 0.7671
+      "changePercent": 0.7671,
+      "marketCap": 13785.175040367885
     },
     {
       "symbol": "EVRG",
       "security": "Evergy",
       "sector": "Utilities",
       "change": -0.82,
-      "changePercent": -1.0571
+      "changePercent": -1.0571,
+      "marketCap": 17668.935317426196
     },
     {
       "symbol": "ES",
       "security": "Eversource Energy",
       "sector": "Utilities",
       "change": -0.37,
-      "changePercent": -0.5463
+      "changePercent": -0.5463,
+      "marketCap": 25272.742258378858
     },
     {
       "symbol": "EXC",
       "security": "Exelon",
       "sector": "Utilities",
       "change": 0.27,
-      "changePercent": 0.6128
+      "changePercent": 0.6128,
+      "marketCap": 44786.169649964824
     },
     {
       "symbol": "EXE",
       "security": "Expand Energy",
       "sector": "Energy",
       "change": 1,
-      "changePercent": 0.9143
+      "changePercent": 0.9143,
+      "marketCap": 26286.79136023608
     },
     {
       "symbol": "EXPE",
       "security": "Expedia Group",
       "sector": "Consumer Discretionary",
       "change": 5.55,
-      "changePercent": 2.3995
+      "changePercent": 2.3995,
+      "marketCap": 29021.826731219193
     },
     {
       "symbol": "EXPD",
       "security": "Expeditors International",
       "sector": "Industrials",
       "change": 1.26,
-      "changePercent": 0.7693
+      "changePercent": 0.7693,
+      "marketCap": 22118.814956912935
     },
     {
       "symbol": "EXR",
       "security": "Extra Space Storage",
       "sector": "Real Estate",
       "change": 1.47,
-      "changePercent": 1.0611
+      "changePercent": 1.0611,
+      "marketCap": 29404.777457
     },
     {
       "symbol": "XOM",
       "security": "ExxonMobil",
       "sector": "Energy",
       "change": 2.97,
-      "changePercent": 2.0331
+      "changePercent": 2.0331,
+      "marketCap": 506987.6305567703
     },
     {
       "symbol": "FFIV",
       "security": "F5, Inc.",
       "sector": "Information Technology",
       "change": 5.36,
-      "changePercent": 1.9763
+      "changePercent": 1.9763,
+      "marketCap": 15712.24226808934
     },
     {
       "symbol": "FDS",
       "security": "FactSet",
       "sector": "Financials",
       "change": -1.86,
-      "changePercent": -0.8892
+      "changePercent": -0.8892,
+      "marketCap": 7691.417986751122
     },
     {
       "symbol": "FICO",
       "security": "Fair Isaac",
       "sector": "Information Technology",
       "change": 33.66,
-      "changePercent": 2.4799
+      "changePercent": 2.4799,
+      "marketCap": 32997.4897102922
     },
     {
       "symbol": "FAST",
       "security": "Fastenal",
       "sector": "Industrials",
       "change": 0.4,
-      "changePercent": 0.8451
+      "changePercent": 0.8451,
+      "marketCap": 54796.78636181238
     },
     {
       "symbol": "FRT",
       "security": "Federal Realty Investment Trust",
       "sector": "Real Estate",
       "change": 0.91,
-      "changePercent": 0.8679
+      "changePercent": 0.8679,
+      "marketCap": 9100.660053
     },
     {
       "symbol": "FDX",
       "security": "FedEx",
       "sector": "Industrials",
       "change": 5.27,
-      "changePercent": 1.448
+      "changePercent": 1.448,
+      "marketCap": 86814.39604973745
     },
     {
       "symbol": "FIS",
       "security": "Fidelity National Information Services",
       "sector": "Financials",
       "change": 1.11,
-      "changePercent": 2.1842
+      "changePercent": 2.1842,
+      "marketCap": 26891.990275191853
     },
     {
       "symbol": "FITB",
       "security": "Fifth Third Bancorp",
       "sector": "Financials",
       "change": 1.29,
-      "changePercent": 2.3982
+      "changePercent": 2.3982,
+      "marketCap": 50199.39984099052
     },
     {
       "symbol": "FSLR",
       "security": "First Solar",
       "sector": "Information Technology",
       "change": -15.63,
-      "changePercent": -6.6692
+      "changePercent": -6.6692,
+      "marketCap": 23471.510313936633
     },
     {
       "symbol": "FE",
       "security": "FirstEnergy",
       "sector": "Utilities",
       "change": -0.36,
-      "changePercent": -0.7661
+      "changePercent": -0.7661,
+      "marketCap": 26936.54734875165
     },
     {
       "symbol": "FISV",
       "security": "Fiserv",
       "sector": "Financials",
       "change": 1.56,
-      "changePercent": 2.6694
+      "changePercent": 2.6694,
+      "marketCap": 32271.11130184805
     },
     {
       "symbol": "F",
       "security": "Ford Motor Company",
       "sector": "Consumer Discretionary",
       "change": 0.08,
-      "changePercent": 0.5831
+      "changePercent": 0.5831,
+      "marketCap": 54988.12255495627
     },
     {
       "symbol": "FTNT",
       "security": "Fortinet",
       "sector": "Information Technology",
       "change": 3.83,
-      "changePercent": 4.8524
+      "changePercent": 4.8524,
+      "marketCap": 61544.31966879969
     },
     {
       "symbol": "FTV",
       "security": "Fortive",
       "sector": "Industrials",
       "change": -0.08,
-      "changePercent": -0.1329
+      "changePercent": -0.1329,
+      "marketCap": 19094.81163601395
     },
     {
       "symbol": "FOXA",
       "security": "Fox Corporation (Class A)",
       "sector": "Communication Services",
       "change": -1.14,
-      "changePercent": -1.7294
+      "changePercent": -1.7294,
+      "marketCap": 26062.232221743932
     },
     {
       "symbol": "FOX",
       "security": "Fox Corporation (Class B)",
       "sector": "Communication Services",
       "change": -0.8,
-      "changePercent": -1.3525
+      "changePercent": -1.3525,
+      "marketCap": 26062.232221743932
     },
     {
       "symbol": "BEN",
       "security": "Franklin Resources",
       "sector": "Financials",
       "change": 0.29,
-      "changePercent": 1.0777
+      "changePercent": 1.0777,
+      "marketCap": 14164.765154188033
     },
     {
       "symbol": "FCX",
       "security": "Freeport-McMoRan",
       "sector": "Materials",
       "change": 1.45,
-      "changePercent": 2.4485
+      "changePercent": 2.4485,
+      "marketCap": 87117.91518481815
     },
     {
       "symbol": "GRMN",
       "security": "Garmin",
       "sector": "Consumer Discretionary",
       "change": 3.64,
-      "changePercent": 1.832
+      "changePercent": 1.832,
+      "marketCap": 38915.10225200327
     },
     {
       "symbol": "IT",
       "security": "Gartner",
       "sector": "Information Technology",
       "change": 4.3,
-      "changePercent": 2.8284
+      "changePercent": 2.8284,
+      "marketCap": 11267.820524793595
     },
     {
       "symbol": "GE",
       "security": "GE Aerospace",
       "sector": "Industrials",
       "change": 14.63,
-      "changePercent": 4.7753
+      "changePercent": 4.7753,
+      "marketCap": 336669.1597954499
     },
     {
       "symbol": "GEHC",
       "security": "GE HealthCare",
       "sector": "Health Care",
       "change": -1.66,
-      "changePercent": -2.0168
+      "changePercent": -2.0168,
+      "marketCap": 36756.21918105455
     },
     {
       "symbol": "GEV",
       "security": "GE Vernova",
       "sector": "Industrials",
       "change": 41.82,
-      "changePercent": 5.6703
+      "changePercent": 5.6703,
+      "marketCap": 210057.80856650864
     },
     {
       "symbol": "GEN",
       "security": "Gen Digital",
       "sector": "Information Technology",
       "change": 1.82,
-      "changePercent": 8.1141
+      "changePercent": 8.1141,
+      "marketCap": 14955.36624666741
     },
     {
       "symbol": "GNRC",
       "security": "Generac",
       "sector": "Industrials",
       "change": 11.16,
-      "changePercent": 6.4744
+      "changePercent": 6.4744,
+      "marketCap": 10770.286469626908
     },
     {
       "symbol": "GD",
       "security": "General Dynamics",
       "sector": "Industrials",
       "change": 8.02,
-      "changePercent": 2.2781
+      "changePercent": 2.2781,
+      "marketCap": 97359.23030253204
     },
     {
       "symbol": "GIS",
       "security": "General Mills",
       "sector": "Consumer Staples",
       "change": -0.5,
-      "changePercent": -1.0337
+      "changePercent": -1.0337,
+      "marketCap": 25542.57419374778
     },
     {
       "symbol": "GM",
       "security": "General Motors",
       "sector": "Consumer Discretionary",
       "change": 0.94,
-      "changePercent": 1.1285
+      "changePercent": 1.1285,
+      "marketCap": 76150.25830690228
     },
     {
       "symbol": "GPC",
       "security": "Genuine Parts Company",
       "sector": "Consumer Discretionary",
       "change": 2.3,
-      "changePercent": 1.5731
+      "changePercent": 1.5731,
+      "marketCap": 20659.301920241156
     },
     {
       "symbol": "GILD",
       "security": "Gilead Sciences",
       "sector": "Health Care",
       "change": 3.13,
-      "changePercent": 2.0955
+      "changePercent": 2.0955,
+      "marketCap": 189203.62754284663
     },
     {
       "symbol": "GPN",
       "security": "Global Payments",
       "sector": "Financials",
       "change": 1.6,
-      "changePercent": 2.2453
+      "changePercent": 2.2453,
+      "marketCap": 20401.656663259328
     },
     {
       "symbol": "GL",
       "security": "Globe Life",
       "sector": "Financials",
       "change": -0.44,
-      "changePercent": -0.2994
+      "changePercent": -0.2994,
+      "marketCap": 11663.045049128887
     },
     {
       "symbol": "GDDY",
       "security": "GoDaddy",
       "sector": "Information Technology",
       "change": 1.07,
-      "changePercent": 1.1128
+      "changePercent": 1.1128,
+      "marketCap": 13138.465228636298
     },
     {
       "symbol": "GS",
       "security": "Goldman Sachs",
       "sector": "Financials",
       "change": 38.34,
-      "changePercent": 4.3059
+      "changePercent": 4.3059,
+      "marketCap": 278558.58347920765
     },
     {
       "symbol": "HAL",
       "security": "Halliburton",
       "sector": "Energy",
       "change": 1.14,
-      "changePercent": 3.3688
+      "changePercent": 3.3688,
+      "marketCap": 29440.100277987585
     },
     {
       "symbol": "HIG",
       "security": "Hartford (The)",
       "sector": "Financials",
       "change": 0.26,
-      "changePercent": 0.1827
+      "changePercent": 0.1827,
+      "marketCap": 39724.38313737849
     },
     {
       "symbol": "HAS",
       "security": "Hasbro",
       "sector": "Consumer Discretionary",
       "change": -1.59,
-      "changePercent": -1.6661
+      "changePercent": -1.6661,
+      "marketCap": 13169.226081093995
     },
     {
       "symbol": "HCA",
       "security": "HCA Healthcare",
       "sector": "Health Care",
       "change": -12.07,
-      "changePercent": -2.3493
+      "changePercent": -2.3493,
+      "marketCap": 114482.60422773479
     },
     {
       "symbol": "DOC",
       "security": "Healthpeak Properties",
       "sector": "Real Estate",
       "change": 0.17,
-      "changePercent": 1.0192
+      "changePercent": 1.0192,
+      "marketCap": 11876.894243
     },
     {
       "symbol": "HSIC",
       "security": "Henry Schein",
       "sector": "Health Care",
       "change": 2.72,
-      "changePercent": 3.5325
+      "changePercent": 3.5325,
+      "marketCap": 9385.021673053507
     },
     {
       "symbol": "HSY",
       "security": "Hershey Company (The)",
       "sector": "Consumer Staples",
       "change": 7.15,
-      "changePercent": 3.1866
+      "changePercent": 3.1866,
+      "marketCap": 46950.902970650066
     },
     {
       "symbol": "HPE",
       "security": "Hewlett Packard Enterprise",
       "sector": "Information Technology",
       "change": 0.9,
-      "changePercent": 3.963
+      "changePercent": 3.963,
+      "marketCap": 31508.32477353104
     },
     {
       "symbol": "HLT",
       "security": "Hilton Worldwide",
       "sector": "Consumer Discretionary",
       "change": 5.66,
-      "changePercent": 1.8334
+      "changePercent": 1.8334,
+      "marketCap": 73072.96758940216
     },
     {
       "symbol": "HOLX",
       "security": "Hologic",
       "sector": "Health Care",
       "change": 0.11,
-      "changePercent": 0.1473
+      "changePercent": 0.1473,
+      "marketCap": 16700.950553388888
     },
     {
       "symbol": "HD",
       "security": "Home Depot (The)",
       "sector": "Consumer Discretionary",
       "change": 2.78,
-      "changePercent": 0.727
+      "changePercent": 0.727,
+      "marketCap": 383421.2395490696
     },
     {
       "symbol": "HON",
       "security": "Honeywell",
       "sector": "Industrials",
       "change": 4.53,
-      "changePercent": 1.9371
+      "changePercent": 1.9371,
+      "marketCap": 151344.4163619107
     },
     {
       "symbol": "HRL",
       "security": "Hormel Foods",
       "sector": "Consumer Staples",
       "change": -0.16,
-      "changePercent": -0.6377
+      "changePercent": -0.6377,
+      "marketCap": 13714.175067496213
     },
     {
       "symbol": "HST",
       "security": "Host Hotels & Resorts",
       "sector": "Real Estate",
       "change": 0.35,
-      "changePercent": 1.8421
+      "changePercent": 1.8421,
+      "marketCap": 13066.100769
     },
     {
       "symbol": "HWM",
       "security": "Howmet Aerospace",
       "sector": "Industrials",
       "change": 13.53,
-      "changePercent": 6.4542
+      "changePercent": 6.4542,
+      "marketCap": 89724.21510748671
     },
     {
       "symbol": "HPQ",
       "security": "HP Inc.",
       "sector": "Information Technology",
       "change": 0.5,
-      "changePercent": 2.611
+      "changePercent": 2.611,
+      "marketCap": 18038.39500839948
     },
     {
       "symbol": "HUBB",
       "security": "Hubbell Incorporated",
       "sector": "Industrials",
       "change": 16.4,
-      "changePercent": 3.3648
+      "changePercent": 3.3648,
+      "marketCap": 26774.325975114898
     },
     {
       "symbol": "HUM",
       "security": "Humana",
       "sector": "Health Care",
       "change": 0.39,
-      "changePercent": 0.2015
+      "changePercent": 0.2015,
+      "marketCap": 23325.759813542238
     },
     {
       "symbol": "HBAN",
       "security": "Huntington Bancshares",
       "sector": "Financials",
       "change": 0.25,
-      "changePercent": 1.3144
+      "changePercent": 1.3144,
+      "marketCap": 39249.19669340799
     },
     {
       "symbol": "HII",
       "security": "Huntington Ingalls Industries",
       "sector": "Industrials",
       "change": 28.39,
-      "changePercent": 7.6859
+      "changePercent": 7.6859,
+      "marketCap": 15609.064688604632
     },
     {
       "symbol": "IBM",
       "security": "IBM",
       "sector": "Information Technology",
       "change": 9.04,
-      "changePercent": 3.1184
+      "changePercent": 3.1184,
+      "marketCap": 279420.39802582597
     },
     {
       "symbol": "IEX",
       "security": "IDEX Corporation",
       "sector": "Industrials",
       "change": -1.57,
-      "changePercent": -0.7373
+      "changePercent": -0.7373,
+      "marketCap": 15820.92502443266
     },
     {
       "symbol": "IDXX",
       "security": "Idexx Laboratories",
       "sector": "Health Care",
       "change": 1.02,
-      "changePercent": 0.1585
+      "changePercent": 0.1585,
+      "marketCap": 51472.96539390789
     },
     {
       "symbol": "ITW",
       "security": "Illinois Tool Works",
       "sector": "Industrials",
       "change": 5.28,
-      "changePercent": 1.8315
+      "changePercent": 1.8315,
+      "marketCap": 85164.66131561849
     },
     {
       "symbol": "INCY",
       "security": "Incyte",
       "sector": "Health Care",
       "change": 5.63,
-      "changePercent": 5.4788
+      "changePercent": 5.4788,
+      "marketCap": 21279.418776758757
     },
     {
       "symbol": "IR",
       "security": "Ingersoll Rand",
       "sector": "Industrials",
       "change": 2.5,
-      "changePercent": 2.6042
+      "changePercent": 2.6042,
+      "marketCap": 38918.37564048437
     },
     {
       "symbol": "PODD",
       "security": "Insulet Corporation",
       "sector": "Health Care",
       "change": -1.22,
-      "changePercent": -0.5017
+      "changePercent": -0.5017,
+      "marketCap": 17019.025317008513
     },
     {
       "symbol": "INTC",
       "security": "Intel",
       "sector": "Information Technology",
       "change": 2.35,
-      "changePercent": 4.8715
+      "changePercent": 4.8715,
+      "marketCap": 252697.05879242456
     },
     {
       "symbol": "IBKR",
       "security": "Interactive Brokers",
       "sector": "Financials",
       "change": 5.1,
-      "changePercent": 7.3392
+      "changePercent": 7.3392,
+      "marketCap": 126512.099
     },
     {
       "symbol": "ICE",
       "security": "Intercontinental Exchange",
       "sector": "Financials",
       "change": 0.71,
-      "changePercent": 0.4219
+      "changePercent": 0.4219,
+      "marketCap": 95974.5020308218
     },
     {
       "symbol": "IFF",
       "security": "International Flavors & Fragrances",
       "sector": "Materials",
       "change": 1.39,
-      "changePercent": 1.893
+      "changePercent": 1.893,
+      "marketCap": 19161.130821059236
     },
     {
       "symbol": "IP",
       "security": "International Paper",
       "sector": "Materials",
       "change": 2.21,
-      "changePercent": 4.9808
+      "changePercent": 4.9808,
+      "marketCap": 24596.024823402302
     },
     {
       "symbol": "INTU",
       "security": "Intuit",
       "sector": "Information Technology",
       "change": 8.86,
-      "changePercent": 2.0372
+      "changePercent": 2.0372,
+      "marketCap": 123489.67525472144
     },
     {
       "symbol": "ISRG",
       "security": "Intuitive Surgical",
       "sector": "Health Care",
       "change": 11.83,
-      "changePercent": 2.4836
+      "changePercent": 2.4836,
+      "marketCap": 173356.8337265502
     },
     {
       "symbol": "IVZ",
       "security": "Invesco",
       "sector": "Financials",
       "change": 1.05,
-      "changePercent": 4.0745
+      "changePercent": 4.0745,
+      "marketCap": 11937.391669585566
     },
     {
       "symbol": "INVH",
       "security": "Invitation Homes",
       "sector": "Real Estate",
       "change": -0.07,
-      "changePercent": -0.2651
+      "changePercent": -0.2651,
+      "marketCap": 16189.87313
     },
     {
       "symbol": "IQV",
       "security": "IQVIA",
       "sector": "Health Care",
       "change": 6.53,
-      "changePercent": 3.6085
+      "changePercent": 3.6085,
+      "marketCap": 31929.54875720071
     },
     {
       "symbol": "IRM",
       "security": "Iron Mountain",
       "sector": "Real Estate",
       "change": 6.83,
-      "changePercent": 7.6785
+      "changePercent": 7.6785,
+      "marketCap": 26292.68584
     },
     {
       "symbol": "JBHT",
       "security": "J.B. Hunt",
       "sector": "Industrials",
       "change": 2.66,
-      "changePercent": 1.1809
+      "changePercent": 1.1809,
+      "marketCap": 21701.213155409365
     },
     {
       "symbol": "JBL",
       "security": "Jabil",
       "sector": "Information Technology",
       "change": 16.42,
-      "changePercent": 6.7899
+      "changePercent": 6.7899,
+      "marketCap": 27269.97823177645
     },
     {
       "symbol": "JKHY",
       "security": "Jack Henry & Associates",
       "sector": "Financials",
       "change": -3.6,
-      "changePercent": -2.0344
+      "changePercent": -2.0344,
+      "marketCap": 12547.300812690324
     },
     {
       "symbol": "J",
       "security": "Jacobs Solutions",
       "sector": "Industrials",
       "change": 5.08,
-      "changePercent": 3.5344
+      "changePercent": 3.5344,
+      "marketCap": 17477.24419936666
     },
     {
       "symbol": "JNJ",
       "security": "Johnson & Johnson",
       "sector": "Health Care",
       "change": 2.2,
-      "changePercent": 0.9252
+      "changePercent": 0.9252,
+      "marketCap": 578206.6719754703
     },
     {
       "symbol": "JCI",
       "security": "Johnson Controls",
       "sector": "Industrials",
       "change": 5.13,
-      "changePercent": 3.8711
+      "changePercent": 3.8711,
+      "marketCap": 84250.909930861
     },
     {
       "symbol": "JPM",
       "security": "JPMorgan Chase",
       "sector": "Financials",
       "change": 12.24,
-      "changePercent": 3.9464
+      "changePercent": 3.9464,
+      "marketCap": 877657.3459094814
     },
     {
       "symbol": "KVUE",
       "security": "Kenvue",
       "sector": "Consumer Staples",
       "change": 0.06,
-      "changePercent": 0.332
+      "changePercent": 0.332,
+      "marketCap": 34737.28966085833
     },
     {
       "symbol": "KDP",
       "security": "Keurig Dr Pepper",
       "sector": "Consumer Staples",
       "change": 0.4,
-      "changePercent": 1.4281
+      "changePercent": 1.4281,
+      "marketCap": 38597.34703539415
     },
     {
       "symbol": "KEY",
       "security": "KeyCorp",
       "sector": "Financials",
       "change": 0.51,
-      "changePercent": 2.2467
+      "changePercent": 2.2467,
+      "marketCap": 25203.935907709692
     },
     {
       "symbol": "KEYS",
       "security": "Keysight Technologies",
       "sector": "Information Technology",
       "change": 9.43,
-      "changePercent": 4.257
+      "changePercent": 4.257,
+      "marketCap": 39612.02772061642
     },
     {
       "symbol": "KMB",
       "security": "Kimberly-Clark",
       "sector": "Consumer Staples",
       "change": 0.07,
-      "changePercent": 0.0671
+      "changePercent": 0.0671,
+      "marketCap": 34622.787418366584
     },
     {
       "symbol": "KIM",
       "security": "Kimco Realty",
       "sector": "Real Estate",
       "change": 0.14,
-      "changePercent": 0.6455
+      "changePercent": 0.6455,
+      "marketCap": 14688.340213
     },
     {
       "symbol": "KMI",
       "security": "Kinder Morgan",
       "sector": "Energy",
       "change": 0.17,
-      "changePercent": 0.5605
+      "changePercent": 0.5605,
+      "marketCap": 67855.19501971646
     },
     {
       "symbol": "KKR",
       "security": "KKR & Co.",
       "sector": "Financials",
       "change": 4.03,
-      "changePercent": 4.0637
+      "changePercent": 4.0637,
+      "marketCap": 91987.67481569023
     },
     {
       "symbol": "KLAC",
       "security": "KLA Corporation",
       "sector": "Information Technology",
       "change": 111.92,
-      "changePercent": 8.4085
+      "changePercent": 8.4085,
+      "marketCap": 189137.0048822792
     },
     {
       "symbol": "KHC",
       "security": "Kraft Heinz",
       "sector": "Consumer Staples",
       "change": 0.195,
-      "changePercent": 0.7977
+      "changePercent": 0.7977,
+      "marketCap": 29167.34697960646
     },
     {
       "symbol": "KR",
       "security": "Kroger",
       "sector": "Consumer Staples",
       "change": 0.83,
-      "changePercent": 1.2449
+      "changePercent": 1.2449,
+      "marketCap": 42717.31862074396
     },
     {
       "symbol": "LHX",
       "security": "L3Harris",
       "sector": "Industrials",
       "change": 7.44,
-      "changePercent": 2.174
+      "changePercent": 2.174,
+      "marketCap": 65404.896682387756
     },
     {
       "symbol": "LH",
       "security": "Labcorp",
       "sector": "Health Care",
       "change": -1.03,
-      "changePercent": -0.3702
+      "changePercent": -0.3702,
+      "marketCap": 22979.881330057866
     },
     {
       "symbol": "LRCX",
       "security": "Lam Research",
       "sector": "Information Technology",
       "change": 17.7,
-      "changePercent": 8.2978
+      "changePercent": 8.2978,
+      "marketCap": 288478.58450588
     },
     {
       "symbol": "LW",
       "security": "Lamb Weston",
       "sector": "Consumer Staples",
       "change": 2.64,
-      "changePercent": 5.5602
+      "changePercent": 5.5602,
+      "marketCap": 6960.660424381635
     },
     {
       "symbol": "LVS",
       "security": "Las Vegas Sands",
       "sector": "Consumer Discretionary",
       "change": 0.86,
-      "changePercent": 1.5104
+      "changePercent": 1.5104,
+      "marketCap": 39080.57439945557
     },
     {
       "symbol": "LDOS",
       "security": "Leidos",
       "sector": "Industrials",
       "change": 6.91,
-      "changePercent": 3.7135
+      "changePercent": 3.7135,
+      "marketCap": 24674.769733722485
     },
     {
       "symbol": "LEN",
       "security": "Lennar",
       "sector": "Consumer Discretionary",
       "change": -1.35,
-      "changePercent": -1.1701
+      "changePercent": -1.1701,
+      "marketCap": 27886.540194454883
     },
     {
       "symbol": "LII",
       "security": "Lennox International",
       "sector": "Industrials",
       "change": 12.83,
-      "changePercent": 2.4809
+      "changePercent": 2.4809,
+      "marketCap": 18587.873144451398
     },
     {
       "symbol": "LLY",
       "security": "Lilly (Eli)",
       "sector": "Health Care",
       "change": 37.34,
-      "changePercent": 3.6578
+      "changePercent": 3.6578,
+      "marketCap": 1000386.1796411969
     },
     {
       "symbol": "LIN",
       "security": "Linde plc",
       "sector": "Materials",
       "change": -11.45,
-      "changePercent": -2.4908
+      "changePercent": -2.4908,
+      "marketCap": 209305.1958117427
     },
     {
       "symbol": "LYV",
       "security": "Live Nation Entertainment",
       "sector": "Communication Services",
       "change": 2.56,
-      "changePercent": 1.8513
+      "changePercent": 1.8513,
+      "marketCap": 32704.34960482094
     },
     {
       "symbol": "LMT",
       "security": "Lockheed Martin",
       "sector": "Industrials",
       "change": 14.4,
-      "changePercent": 2.3638
+      "changePercent": 2.3638,
+      "marketCap": 143473.42854344263
     },
     {
       "symbol": "L",
       "security": "Loews Corporation",
       "sector": "Financials",
       "change": 0.38,
-      "changePercent": 0.3427
+      "changePercent": 0.3427,
+      "marketCap": 22995.009243808905
     },
     {
       "symbol": "LOW",
       "security": "Lowe's",
       "sector": "Consumer Discretionary",
       "change": 3.49,
-      "changePercent": 1.2696
+      "changePercent": 1.2696,
+      "marketCap": 156157.66351222337
     },
     {
       "symbol": "LULU",
       "security": "Lululemon Athletica",
       "sector": "Consumer Discretionary",
       "change": 2.76,
-      "changePercent": 1.6227
+      "changePercent": 1.6227,
+      "marketCap": 21160.649259743375
     },
     {
       "symbol": "LYB",
       "security": "LyondellBasell",
       "sector": "Materials",
       "change": 1.22,
-      "changePercent": 2.2643
+      "changePercent": 2.2643,
+      "marketCap": 17735.200190287676
     },
     {
       "symbol": "MTB",
       "security": "M&T Bank",
       "sector": "Financials",
       "change": 4.07,
-      "changePercent": 1.7398
+      "changePercent": 1.7398,
+      "marketCap": 36581.810507946095
     },
     {
       "symbol": "MPC",
       "security": "Marathon Petroleum",
       "sector": "Energy",
       "change": 7.17,
-      "changePercent": 3.6613
+      "changePercent": 3.6613,
+      "marketCap": 61022.30361062657
     },
     {
       "symbol": "MAR",
       "security": "Marriott International",
       "sector": "Consumer Discretionary",
       "change": 6.79,
-      "changePercent": 2.08
+      "changePercent": 2.08,
+      "marketCap": 89425.54921900702
     },
     {
       "symbol": "MRSH",
       "security": "Marsh McLennan",
       "sector": "Financials",
       "change": -2.48,
-      "changePercent": -1.3226
+      "changePercent": -1.3226,
+      "marketCap": 90647.98885534724
     },
     {
       "symbol": "MLM",
       "security": "Martin Marietta Materials",
       "sector": "Materials",
       "change": 19.05,
-      "changePercent": 2.8393
+      "changePercent": 2.8393,
+      "marketCap": 41611.93023125419
     },
     {
       "symbol": "MAS",
       "security": "Masco",
       "sector": "Industrials",
       "change": 1.76,
-      "changePercent": 2.475
+      "changePercent": 2.475,
+      "marketCap": 15134.779790254537
     },
     {
       "symbol": "MA",
       "security": "Mastercard",
       "sector": "Financials",
       "change": -3.15,
-      "changePercent": -0.5708
+      "changePercent": -0.5708,
+      "marketCap": 492910.20606895786
     },
     {
       "symbol": "MTCH",
       "security": "Match Group",
       "sector": "Communication Services",
       "change": 0.78,
-      "changePercent": 2.5284
+      "changePercent": 2.5284,
+      "marketCap": 7466.900215816855
     },
     {
       "symbol": "MKC",
       "security": "McCormick & Company",
       "sector": "Consumer Staples",
       "change": 0.44,
-      "changePercent": 0.6569
+      "changePercent": 0.6569,
+      "marketCap": 18088.09132537743
     },
     {
       "symbol": "MCD",
       "security": "McDonald's",
       "sector": "Consumer Discretionary",
       "change": 3.68,
-      "changePercent": 1.1376
+      "changePercent": 1.1376,
+      "marketCap": 232988.42764711997
     },
     {
       "symbol": "MCK",
       "security": "McKesson Corporation",
       "sector": "Health Care",
       "change": -9.12,
-      "changePercent": -0.9522
+      "changePercent": -0.9522,
+      "marketCap": 116201.39224946301
     },
     {
       "symbol": "MDT",
       "security": "Medtronic",
       "sector": "Health Care",
       "change": -0.05,
-      "changePercent": -0.0486
+      "changePercent": -0.0486,
+      "marketCap": 131919.26573078873
     },
     {
       "symbol": "MRK",
       "security": "Merck & Co.",
       "sector": "Health Care",
       "change": 2.18,
-      "changePercent": 1.8205
+      "changePercent": 1.8205,
+      "marketCap": 302632.998661839
     },
     {
       "symbol": "META",
       "security": "Meta Platforms",
       "sector": "Communication Services",
       "change": -8.75,
-      "changePercent": -1.3056
+      "changePercent": -1.3056,
+      "marketCap": 1673611.4190483983
     },
     {
       "symbol": "MET",
       "security": "MetLife",
       "sector": "Financials",
       "change": 1.06,
-      "changePercent": 1.4073
+      "changePercent": 1.4073,
+      "marketCap": 50326.140323831925
     },
     {
       "symbol": "MTD",
       "security": "Mettler Toledo",
       "sector": "Health Care",
       "change": -9.28,
-      "changePercent": -0.6711
+      "changePercent": -0.6711,
+      "marketCap": 28059.899824173885
     },
     {
       "symbol": "MGM",
       "security": "MGM Resorts",
       "sector": "Consumer Discretionary",
       "change": 1.21,
-      "changePercent": 3.3352
+      "changePercent": 3.3352,
+      "marketCap": 10253.756061320011
     },
     {
       "symbol": "MCHP",
       "security": "Microchip Technology",
       "sector": "Information Technology",
       "change": -2.03,
-      "changePercent": -2.6012
+      "changePercent": -2.6012,
+      "marketCap": 41079.36466721707
     },
     {
       "symbol": "MU",
       "security": "Micron Technology",
       "sector": "Information Technology",
       "change": 11.8,
-      "changePercent": 3.0818
+      "changePercent": 3.0818,
+      "marketCap": 444227.2736697522
     },
     {
       "symbol": "MSFT",
       "security": "Microsoft",
       "sector": "Information Technology",
       "change": 7.47,
-      "changePercent": 1.8975
+      "changePercent": 1.8975,
+      "marketCap": 2978716.8810547045
     },
     {
       "symbol": "MAA",
       "security": "Mid-America Apartment Communities",
       "sector": "Real Estate",
       "change": 1.41,
-      "changePercent": 1.0786
+      "changePercent": 1.0786,
+      "marketCap": 15304.92537
     },
     {
       "symbol": "MRNA",
       "security": "Moderna",
       "sector": "Health Care",
       "change": 0.14,
-      "changePercent": 0.3425
+      "changePercent": 0.3425,
+      "marketCap": 16023.985012260338
     },
     {
       "symbol": "MOH",
       "security": "Molina Healthcare",
       "sector": "Health Care",
       "change": -45.12,
-      "changePercent": -25.5146
+      "changePercent": -25.5146,
+      "marketCap": 6770.408061078037
     },
     {
       "symbol": "TAP",
       "security": "Molson Coors Beverage Company",
       "sector": "Consumer Staples",
       "change": 0.63,
-      "changePercent": 1.2322
+      "changePercent": 1.2322,
+      "marketCap": 10229.333062885977
     },
     {
       "symbol": "MDLZ",
       "security": "Mondelez International",
       "sector": "Consumer Staples",
       "change": -0.29,
-      "changePercent": -0.4808
+      "changePercent": -0.4808,
+      "marketCap": 76936.37352702835
     },
     {
       "symbol": "MPWR",
       "security": "Monolithic Power Systems",
       "sector": "Information Technology",
       "change": 73.83,
-      "changePercent": 6.3867
+      "changePercent": 6.3867,
+      "marketCap": 58916.98808153671
     },
     {
       "symbol": "MNST",
       "security": "Monster Beverage",
       "sector": "Consumer Staples",
       "change": 0.79,
-      "changePercent": 0.9664
+      "changePercent": 0.9664,
+      "marketCap": 80643.32813157186
     },
     {
       "symbol": "MCO",
       "security": "Moody's Corporation",
       "sector": "Financials",
       "change": -5.21,
-      "changePercent": -1.1383
+      "changePercent": -1.1383,
+      "marketCap": 80724.21539101195
     },
     {
       "symbol": "MS",
       "security": "Morgan Stanley",
       "sector": "Financials",
       "change": 4.12,
-      "changePercent": 2.343
+      "changePercent": 2.343,
+      "marketCap": 286012.07841352845
     },
     {
       "symbol": "MOS",
       "security": "Mosaic Company (The)",
       "sector": "Materials",
       "change": 0.84,
-      "changePercent": 3.0259
+      "changePercent": 3.0259,
+      "marketCap": 9077.865083854467
     },
     {
       "symbol": "MSI",
       "security": "Motorola Solutions",
       "sector": "Information Technology",
       "change": 5.03,
-      "changePercent": 1.2058
+      "changePercent": 1.2058,
+      "marketCap": 70316.18577889977
     },
     {
       "symbol": "MSCI",
       "security": "MSCI Inc.",
       "sector": "Financials",
       "change": -8.12,
-      "changePercent": -1.4349
+      "changePercent": -1.4349,
+      "marketCap": 41911.335336668984
     },
     {
       "symbol": "NDAQ",
       "security": "Nasdaq, Inc.",
       "sector": "Financials",
       "change": -0.68,
-      "changePercent": -0.7952
+      "changePercent": -0.7952,
+      "marketCap": 48437.542889093434
     },
     {
       "symbol": "NTAP",
       "security": "NetApp",
       "sector": "Information Technology",
       "change": 3.75,
-      "changePercent": 3.7654
+      "changePercent": 3.7654,
+      "marketCap": 20467.5556626089
     },
     {
       "symbol": "NFLX",
       "security": "Netflix",
       "sector": "Communication Services",
       "change": 1.33,
-      "changePercent": 1.6446
+      "changePercent": 1.6446,
+      "marketCap": 347061.7371781921
     },
     {
       "symbol": "NEM",
       "security": "Newmont",
       "sector": "Materials",
       "change": 6.79,
-      "changePercent": 6.2563
+      "changePercent": 6.2563,
+      "marketCap": 125844.44076256186
     },
     {
       "symbol": "NWSA",
       "security": "News Corp (Class A)",
       "sector": "Communication Services",
       "change": -1.71,
-      "changePercent": -7.0632
+      "changePercent": -7.0632,
+      "marketCap": 13186.701671003717
     },
     {
       "symbol": "NWS",
       "security": "News Corp (Class B)",
       "sector": "Communication Services",
       "change": -1.74,
-      "changePercent": -6.3527
+      "changePercent": -6.3527,
+      "marketCap": 13186.701671003717
     },
     {
       "symbol": "NEE",
       "security": "NextEra Energy",
       "sector": "Utilities",
       "change": 0.26,
-      "changePercent": 0.2914
+      "changePercent": 0.2914,
+      "marketCap": 186331.08071242005
     },
     {
       "symbol": "NKE",
       "security": "Nike, Inc.",
       "sector": "Consumer Discretionary",
       "change": 1.22,
-      "changePercent": 1.9458
+      "changePercent": 1.9458,
+      "marketCap": 94626.12121264178
     },
     {
       "symbol": "NI",
       "security": "NiSource",
       "sector": "Utilities",
       "change": 0.17,
-      "changePercent": 0.387
+      "changePercent": 0.387,
+      "marketCap": 21044.32284800364
     },
     {
       "symbol": "NDSN",
       "security": "Nordson Corporation",
       "sector": "Industrials",
       "change": 7.61,
-      "changePercent": 2.6931
+      "changePercent": 2.6931,
+      "marketCap": 16164.024001695936
     },
     {
       "symbol": "NSC",
       "security": "Norfolk Southern",
       "sector": "Industrials",
       "change": -0.43,
-      "changePercent": -0.1401
+      "changePercent": -0.1401,
+      "marketCap": 74998.24674810804
     },
     {
       "symbol": "NTRS",
       "security": "Northern Trust",
       "sector": "Financials",
       "change": 4.67,
-      "changePercent": 3.1665
+      "changePercent": 3.1665,
+      "marketCap": 28774.207104145313
     },
     {
       "symbol": "NOC",
       "security": "Northrop Grumman",
       "sector": "Industrials",
       "change": 12.61,
-      "changePercent": 1.8105
+      "changePercent": 1.8105,
+      "marketCap": 100638.0476591448
     },
     {
       "symbol": "NCLH",
       "security": "Norwegian Cruise Line Holdings",
       "sector": "Consumer Discretionary",
       "change": 1.62,
-      "changePercent": 7.4654
+      "changePercent": 7.4654,
+      "marketCap": 10616.605443775114
     },
     {
       "symbol": "NRG",
       "security": "NRG Energy",
       "sector": "Utilities",
       "change": 8.88,
-      "changePercent": 6.1479
+      "changePercent": 6.1479,
+      "marketCap": 29382.153963950426
     },
     {
       "symbol": "NUE",
       "security": "Nucor",
       "sector": "Materials",
       "change": 6.34,
-      "changePercent": 3.3995
+      "changePercent": 3.3995,
+      "marketCap": 44133.10357770016
     },
     {
       "symbol": "NVDA",
       "security": "Nvidia",
       "sector": "Information Technology",
       "change": 13.53,
-      "changePercent": 7.8718
+      "changePercent": 7.8718,
+      "marketCap": 4505463.1279920135
     },
     {
       "symbol": "NVR",
       "security": "NVR, Inc.",
       "sector": "Consumer Discretionary",
       "change": -34.95,
-      "changePercent": -0.4344
+      "changePercent": -0.4344,
+      "marketCap": 22743.39613007989
     },
     {
       "symbol": "NXPI",
       "security": "NXP Semiconductors",
       "sector": "Information Technology",
       "change": 2.19,
-      "changePercent": 0.9859
+      "changePercent": 0.9859,
+      "marketCap": 56455.61812621726
     },
     {
       "symbol": "ORLY",
       "security": "O’Reilly Automotive",
       "sector": "Consumer Discretionary",
       "change": 1.36,
-      "changePercent": 1.4646
+      "changePercent": 1.4646,
+      "marketCap": 79531.48552187077
     },
     {
       "symbol": "OXY",
       "security": "Occidental Petroleum",
       "sector": "Energy",
       "change": 1.22,
-      "changePercent": 2.7057
+      "changePercent": 2.7057,
+      "marketCap": 45625.09605812508
     },
     {
       "symbol": "ODFL",
       "security": "Old Dominion",
       "sector": "Industrials",
       "change": 0.33,
-      "changePercent": 0.1633
+      "changePercent": 0.1633,
+      "marketCap": 42336.15989515999
     },
     {
       "symbol": "OMC",
       "security": "Omnicom Group",
       "sector": "Communication Services",
       "change": 0.75,
-      "changePercent": 1.0851
+      "changePercent": 1.0851,
+      "marketCap": 21981.359171536027
     },
     {
       "symbol": "ON",
       "security": "ON Semiconductor",
       "sector": "Information Technology",
       "change": 2.1,
-      "changePercent": 3.3281
+      "changePercent": 3.3281,
+      "marketCap": 26235.072217305868
     },
     {
       "symbol": "OKE",
       "security": "Oneok",
       "sector": "Energy",
       "change": 1.38,
-      "changePercent": 1.7151
+      "changePercent": 1.7151,
+      "marketCap": 51496.31088911559
     },
     {
       "symbol": "ORCL",
       "security": "Oracle Corporation",
       "sector": "Information Technology",
       "change": 6.34,
-      "changePercent": 4.6454
+      "changePercent": 4.6454,
+      "marketCap": 410477.6729752018
     },
     {
       "symbol": "OTIS",
       "security": "Otis Worldwide",
       "sector": "Industrials",
       "change": -1.39,
-      "changePercent": -1.5235
+      "changePercent": -1.5235,
+      "marketCap": 35015.96837703255
     },
     {
       "symbol": "PCAR",
       "security": "Paccar",
       "sector": "Industrials",
       "change": -0.07,
-      "changePercent": -0.0549
+      "changePercent": -0.0549,
+      "marketCap": 66884.772464329
     },
     {
       "symbol": "PKG",
       "security": "Packaging Corporation of America",
       "sector": "Materials",
       "change": 6.95,
-      "changePercent": 2.9969
+      "changePercent": 2.9969,
+      "marketCap": 21491.92415587185
     },
     {
       "symbol": "PLTR",
       "security": "Palantir Technologies",
       "sector": "Information Technology",
       "change": 5.89,
-      "changePercent": 4.5304
+      "changePercent": 4.5304,
+      "marketCap": 323909.2083908192
     },
     {
       "symbol": "PANW",
       "security": "Palo Alto Networks",
       "sector": "Information Technology",
       "change": 4.55,
-      "changePercent": 2.9398
+      "changePercent": 2.9398,
+      "marketCap": 111046.04306554861
     },
     {
       "symbol": "PSKY",
       "security": "Paramount Skydance Corporation",
       "sector": "Communication Services",
       "change": 0.04,
-      "changePercent": 0.3802
+      "changePercent": 0.3802,
+      "marketCap": 11654.723944608364
     },
     {
       "symbol": "PH",
       "security": "Parker Hannifin",
       "sector": "Industrials",
       "change": 8.87,
-      "changePercent": 0.9167
+      "changePercent": 0.9167,
+      "marketCap": 123249.17860708188
     },
     {
       "symbol": "PAYX",
       "security": "Paychex",
       "sector": "Industrials",
       "change": 0.36,
-      "changePercent": 0.3667
+      "changePercent": 0.3667,
+      "marketCap": 35369.06098117735
     },
     {
       "symbol": "PAYC",
       "security": "Paycom",
       "sector": "Industrials",
       "change": -0.62,
-      "changePercent": -0.4712
+      "changePercent": -0.4712,
+      "marketCap": 7369.5513559834335
     },
     {
       "symbol": "PYPL",
       "security": "PayPal",
       "sector": "Financials",
       "change": 0.52,
-      "changePercent": 1.3033
+      "changePercent": 1.3033,
+      "marketCap": 37213.26256571479
     },
     {
       "symbol": "PNR",
       "security": "Pentair",
       "sector": "Industrials",
       "change": 2.38,
-      "changePercent": 2.5061
+      "changePercent": 2.5061,
+      "marketCap": 15930.536854400336
     },
     {
       "symbol": "PEP",
       "security": "PepsiCo",
       "sector": "Consumer Staples",
       "change": 2.96,
-      "changePercent": 1.7668
+      "changePercent": 1.7668,
+      "marketCap": 232999.9944701595
     },
     {
       "symbol": "PFE",
       "security": "Pfizer",
       "sector": "Health Care",
       "change": 0.73,
-      "changePercent": 2.7558
+      "changePercent": 2.7558,
+      "marketCap": 154764.95734439488
     },
     {
       "symbol": "PCG",
       "security": "PG&E Corporation",
       "sector": "Utilities",
       "change": 0.12,
-      "changePercent": 0.7371
+      "changePercent": 0.7371,
+      "marketCap": 36045.73208717444
     },
     {
       "symbol": "PM",
       "security": "Philip Morris International",
       "sector": "Consumer Staples",
       "change": 0.81,
-      "changePercent": 0.4451
+      "changePercent": 0.4451,
+      "marketCap": 284569.13792109553
     },
     {
       "symbol": "PSX",
       "security": "Phillips 66",
       "sector": "Energy",
       "change": 3.37,
-      "changePercent": 2.1822
+      "changePercent": 2.1822,
+      "marketCap": 63580.94846723564
     },
     {
       "symbol": "PNW",
       "security": "Pinnacle West Capital",
       "sector": "Utilities",
       "change": -1.07,
-      "changePercent": -1.1312
+      "changePercent": -1.1312,
+      "marketCap": 11193.445696848292
     },
     {
       "symbol": "PNC",
       "security": "PNC Financial Services",
       "sector": "Financials",
       "change": 3.97,
-      "changePercent": 1.6645
+      "changePercent": 1.6645,
+      "marketCap": 94567.19782234641
     },
     {
       "symbol": "POOL",
       "security": "Pool Corporation",
       "sector": "Consumer Discretionary",
       "change": 8.62,
-      "changePercent": 3.3471
+      "changePercent": 3.3471,
+      "marketCap": 9914.323260480856
     },
     {
       "symbol": "PPG",
       "security": "PPG Industries",
       "sector": "Materials",
       "change": 2.09,
-      "changePercent": 1.6798
+      "changePercent": 1.6798,
+      "marketCap": 28388.842810346407
     },
     {
       "symbol": "PPL",
       "security": "PPL Corporation",
       "sector": "Utilities",
       "change": 0.25,
-      "changePercent": 0.7009
+      "changePercent": 0.7009,
+      "marketCap": 26571.43058470423
     },
     {
       "symbol": "PFG",
       "security": "Principal Financial Group",
       "sector": "Financials",
       "change": 1.84,
-      "changePercent": 1.9267
+      "changePercent": 1.9267,
+      "marketCap": 21384.999130684184
     },
     {
       "symbol": "PG",
       "security": "Procter & Gamble",
       "sector": "Consumer Staples",
       "change": 0.56,
-      "changePercent": 0.3531
+      "changePercent": 0.3531,
+      "marketCap": 369911.19800316467
     },
     {
       "symbol": "PGR",
       "security": "Progressive Corporation",
       "sector": "Financials",
       "change": -5.27,
-      "changePercent": -2.539
+      "changePercent": -2.539,
+      "marketCap": 118622.30393717937
     },
     {
       "symbol": "PLD",
       "security": "Prologis",
       "sector": "Real Estate",
       "change": 0.81,
-      "changePercent": 0.595
+      "changePercent": 0.595,
+      "marketCap": 129458.384958
     },
     {
       "symbol": "PRU",
       "security": "Prudential Financial",
       "sector": "Financials",
       "change": 2.98,
-      "changePercent": 2.9854
+      "changePercent": 2.9854,
+      "marketCap": 35979.99988980565
     },
     {
       "symbol": "PEG",
       "security": "Public Service Enterprise Group",
       "sector": "Utilities",
       "change": 0.86,
-      "changePercent": 1.0778
+      "changePercent": 1.0778,
+      "marketCap": 40256.767431545304
     },
     {
       "symbol": "PTC",
       "security": "PTC Inc.",
       "sector": "Information Technology",
       "change": 1.78,
-      "changePercent": 1.1563
+      "changePercent": 1.1563,
+      "marketCap": 18518.177263049758
     },
     {
       "symbol": "PSA",
       "security": "Public Storage",
       "sector": "Real Estate",
       "change": 4.18,
-      "changePercent": 1.478
+      "changePercent": 1.478,
+      "marketCap": 49624.450536
     },
     {
       "symbol": "PHM",
       "security": "PulteGroup",
       "sector": "Consumer Discretionary",
       "change": 1.04,
-      "changePercent": 0.7758
+      "changePercent": 0.7758,
+      "marketCap": 25981.576078519807
     },
     {
       "symbol": "PWR",
       "security": "Quanta Services",
       "sector": "Industrials",
       "change": 30.39,
-      "changePercent": 6.3615
+      "changePercent": 6.3615,
+      "marketCap": 75767.27531695813
     },
     {
       "symbol": "QCOM",
       "security": "Qualcomm",
       "sector": "Information Technology",
       "change": 1.04,
-      "changePercent": 0.763
+      "changePercent": 0.763,
+      "marketCap": 146541.78328084399
     },
     {
       "symbol": "DGX",
       "security": "Quest Diagnostics",
       "sector": "Health Care",
       "change": -1.59,
-      "changePercent": -0.8268
+      "changePercent": -0.8268,
+      "marketCap": 21215.03138005928
     },
     {
       "symbol": "Q",
       "security": "Qnity Electronics",
       "sector": "Information Technology",
       "change": 5.45,
-      "changePercent": 5.8747
+      "changePercent": 5.8747,
+      "marketCap": 20573.472848661422
     },
     {
       "symbol": "RL",
       "security": "Ralph Lauren Corporation",
       "sector": "Consumer Discretionary",
       "change": 4.23,
-      "changePercent": 1.249
+      "changePercent": 1.249,
+      "marketCap": 20793.076185227368
     },
     {
       "symbol": "RJF",
       "security": "Raymond James Financial",
       "sector": "Financials",
       "change": 4.7,
-      "changePercent": 2.807
+      "changePercent": 2.807,
+      "marketCap": 33992.47074597456
     },
     {
       "symbol": "RTX",
       "security": "RTX Corporation",
       "sector": "Industrials",
       "change": 2.69,
-      "changePercent": 1.3727
+      "changePercent": 1.3727,
+      "marketCap": 266357.76174690964
     },
     {
       "symbol": "O",
       "security": "Realty Income",
       "sector": "Real Estate",
       "change": -0.13,
-      "changePercent": -0.2052
+      "changePercent": -0.2052,
+      "marketCap": 58285.229624
     },
     {
       "symbol": "REG",
       "security": "Regency Centers",
       "sector": "Real Estate",
       "change": -0.26,
-      "changePercent": -0.3445
+      "changePercent": -0.3445,
+      "marketCap": 13805.367016
     },
     {
       "symbol": "REGN",
       "security": "Regeneron Pharmaceuticals",
       "sector": "Health Care",
       "change": 18.88,
-      "changePercent": 2.4627
+      "changePercent": 2.4627,
+      "marketCap": 83030.49427947198
     },
     {
       "symbol": "RF",
       "security": "Regions Financial Corporation",
       "sector": "Financials",
       "change": 0.43,
-      "changePercent": 1.4098
+      "changePercent": 1.4098,
+      "marketCap": 27121.79094512361
     },
     {
       "symbol": "RSG",
       "security": "Republic Services",
       "sector": "Industrials",
       "change": 1.22,
-      "changePercent": 0.5578
+      "changePercent": 0.5578,
+      "marketCap": 68085.41826344066
     },
     {
       "symbol": "RMD",
       "security": "ResMed",
       "sector": "Health Care",
       "change": 4.58,
-      "changePercent": 1.715
+      "changePercent": 1.715,
+      "marketCap": 39570.623547883915
     },
     {
       "symbol": "RVTY",
       "security": "Revvity",
       "sector": "Health Care",
       "change": 2.07,
-      "changePercent": 2.08
+      "changePercent": 2.08,
+      "marketCap": 11517.828642306975
     },
     {
       "symbol": "HOOD",
       "security": "Robinhood Markets",
       "sector": "Financials",
       "change": 10.14,
-      "changePercent": 13.9516
+      "changePercent": 13.9516,
+      "marketCap": 74470.82186858254
     },
     {
       "symbol": "ROK",
       "security": "Rockwell Automation",
       "sector": "Industrials",
       "change": 8.32,
-      "changePercent": 2.0457
+      "changePercent": 2.0457,
+      "marketCap": 46662.023661814506
     },
     {
       "symbol": "ROL",
       "security": "Rollins, Inc.",
       "sector": "Industrials",
       "change": 0.37,
-      "changePercent": 0.5739
+      "changePercent": 0.5739,
+      "marketCap": 31423.332939832482
     },
     {
       "symbol": "ROP",
       "security": "Roper Technologies",
       "sector": "Information Technology",
       "change": 11.42,
-      "changePercent": 3.2536
+      "changePercent": 3.2536,
+      "marketCap": 39009.95675901356
     },
     {
       "symbol": "ROST",
       "security": "Ross Stores",
       "sector": "Consumer Discretionary",
       "change": 1.51,
-      "changePercent": 0.798
+      "changePercent": 0.798,
+      "marketCap": 61693.88766186631
     },
     {
       "symbol": "RCL",
       "security": "Royal Caribbean Group",
       "sector": "Consumer Discretionary",
       "change": 21.91,
-      "changePercent": 6.719
+      "changePercent": 6.719,
+      "marketCap": 94904.11673243582
     },
     {
       "symbol": "SPGI",
       "security": "S&P Global",
       "sector": "Financials",
       "change": -12.43,
-      "changePercent": -2.7518
+      "changePercent": -2.7518,
+      "marketCap": 133013.9761219205
     },
     {
       "symbol": "CRM",
       "security": "Salesforce",
       "sector": "Information Technology",
       "change": 1.38,
-      "changePercent": 0.7264
+      "changePercent": 0.7264,
+      "marketCap": 179294.95115231036
     },
     {
       "symbol": "SNDK",
       "security": "Sandisk",
       "sector": "Information Technology",
       "change": 21.75,
-      "changePercent": 3.7747
+      "changePercent": 3.7747,
+      "marketCap": 88237.8363062644
     },
     {
       "symbol": "SBAC",
       "security": "SBA Communications",
       "sector": "Real Estate",
       "change": 0.23,
-      "changePercent": 0.1274
+      "changePercent": 0.1274,
+      "marketCap": 19232.774444
     },
     {
       "symbol": "SLB",
       "security": "Schlumberger",
       "sector": "Energy",
       "change": 1.19,
-      "changePercent": 2.4036
+      "changePercent": 2.4036,
+      "marketCap": 75813.30665881843
     },
     {
       "symbol": "STX",
       "security": "Seagate Technology",
       "sector": "Information Technology",
       "change": 23.87,
-      "changePercent": 5.8873
+      "changePercent": 5.8873,
+      "marketCap": 93623.12854401882
     },
     {
       "symbol": "SRE",
       "security": "Sempra",
       "sector": "Utilities",
       "change": 0.7,
-      "changePercent": 0.8078
+      "changePercent": 0.8078,
+      "marketCap": 57018.25987029403
     },
     {
       "symbol": "NOW",
       "security": "ServiceNow",
       "sector": "Information Technology",
       "change": -1.89,
-      "changePercent": -1.8416
+      "changePercent": -1.8416,
+      "marketCap": 105374.03717990822
     },
     {
       "symbol": "SHW",
       "security": "Sherwin-Williams",
       "sector": "Materials",
       "change": 0.94,
-      "changePercent": 0.2604
+      "changePercent": 0.2604,
+      "marketCap": 89732.49447989275
     },
     {
       "symbol": "SPG",
       "security": "Simon Property Group",
       "sector": "Real Estate",
       "change": 2.34,
-      "changePercent": 1.1863
+      "changePercent": 1.1863,
+      "marketCap": 64397.905474
     },
     {
       "symbol": "SWKS",
       "security": "Skyworks Solutions",
       "sector": "Information Technology",
       "change": 1.18,
-      "changePercent": 1.937
+      "changePercent": 1.937,
+      "marketCap": 9311.001919023309
     },
     {
       "symbol": "SJM",
       "security": "J.M. Smucker Company (The)",
       "sector": "Consumer Staples",
       "change": 0.23,
-      "changePercent": 0.2105
+      "changePercent": 0.2105,
+      "marketCap": 11684.095762236182
     },
     {
       "symbol": "SW",
       "security": "Smurfit Westrock",
       "sector": "Materials",
       "change": 0.97,
-      "changePercent": 2.2469
+      "changePercent": 2.2469,
+      "marketCap": 22977.191332517952
     },
     {
       "symbol": "SNA",
       "security": "Snap-on",
       "sector": "Industrials",
       "change": -1.46,
-      "changePercent": -0.3937
+      "changePercent": -0.3937,
+      "marketCap": 19208.470438404693
     },
     {
       "symbol": "SOLV",
       "security": "Solventum",
       "sector": "Health Care",
       "change": 1.14,
-      "changePercent": 1.4809
+      "changePercent": 1.4809,
+      "marketCap": 13549.723629942324
     },
     {
       "symbol": "SO",
       "security": "Southern Company",
       "sector": "Utilities",
       "change": -1,
-      "changePercent": -1.0979
+      "changePercent": -1.0979,
+      "marketCap": 99187.52763846642
     },
     {
       "symbol": "LUV",
       "security": "Southwest Airlines",
       "sector": "Industrials",
       "change": 1.75,
-      "changePercent": 3.3327
+      "changePercent": 3.3327,
+      "marketCap": 28060.834304142067
     },
     {
       "symbol": "SWK",
       "security": "Stanley Black & Decker",
       "sector": "Industrials",
       "change": 3.82,
-      "changePercent": 4.4642
+      "changePercent": 4.4642,
+      "marketCap": 13845.166881315767
     },
     {
       "symbol": "SBUX",
       "security": "Starbucks",
       "sector": "Consumer Discretionary",
       "change": 3.38,
-      "changePercent": 3.5183
+      "changePercent": 3.5183,
+      "marketCap": 113303.38949579839
     },
     {
       "symbol": "STT",
       "security": "State Street Corporation",
       "sector": "Financials",
       "change": 3.64,
-      "changePercent": 2.8281
+      "changePercent": 2.8281,
+      "marketCap": 36935.96349740075
     },
     {
       "symbol": "STLD",
       "security": "Steel Dynamics",
       "sector": "Materials",
       "change": 9.37,
-      "changePercent": 4.8544
+      "changePercent": 4.8544,
+      "marketCap": 29555.99725185141
     },
     {
       "symbol": "STE",
       "security": "Steris",
       "sector": "Health Care",
       "change": 8.35,
-      "changePercent": 3.4248
+      "changePercent": 3.4248,
+      "marketCap": 24748.749995989663
     },
     {
       "symbol": "SYK",
       "security": "Stryker Corporation",
       "sector": "Health Care",
       "change": -4.13,
-      "changePercent": -1.1396
+      "changePercent": -1.1396,
+      "marketCap": 137018.5728505526
     },
     {
       "symbol": "SMCI",
       "security": "Supermicro",
       "sector": "Information Technology",
       "change": 3.53,
-      "changePercent": 11.4425
+      "changePercent": 11.4425,
+      "marketCap": 20523.867716304703
     },
     {
       "symbol": "SYF",
       "security": "Synchrony Financial",
       "sector": "Financials",
       "change": 1.17,
-      "changePercent": 1.5813
+      "changePercent": 1.5813,
+      "marketCap": 27070.457707239355
     },
     {
       "symbol": "SNPS",
       "security": "Synopsys",
       "sector": "Information Technology",
       "change": 16.44,
-      "changePercent": 4.0055
+      "changePercent": 4.0055,
+      "marketCap": 81669.91659929753
     },
     {
       "symbol": "SYY",
       "security": "Sysco",
       "sector": "Consumer Staples",
       "change": 1.91,
-      "changePercent": 2.2571
+      "changePercent": 2.2571,
+      "marketCap": 41441.871706041595
     },
     {
       "symbol": "TMUS",
       "security": "T-Mobile US",
       "sector": "Communication Services",
       "change": -4.47,
-      "changePercent": -2.2144
+      "changePercent": -2.2144,
+      "marketCap": 220782.0168225461
     },
     {
       "symbol": "TROW",
       "security": "T. Rowe Price",
       "sector": "Financials",
       "change": 2.56,
-      "changePercent": 2.782
+      "changePercent": 2.782,
+      "marketCap": 20640.85466035601
     },
     {
       "symbol": "TTWO",
       "security": "Take-Two Interactive",
       "sector": "Communication Services",
       "change": 2.35,
-      "changePercent": 1.2161
+      "changePercent": 1.2161,
+      "marketCap": 36218.46642643361
     },
     {
       "symbol": "TPR",
       "security": "Tapestry, Inc.",
       "sector": "Consumer Discretionary",
       "change": 8.91,
-      "changePercent": 6.2225
+      "changePercent": 6.2225,
+      "marketCap": 31127.227468403522
     },
     {
       "symbol": "TRGP",
       "security": "Targa Resources",
       "sector": "Energy",
       "change": 5.89,
-      "changePercent": 2.8655
+      "changePercent": 2.8655,
+      "marketCap": 45387.408574157525
     },
     {
       "symbol": "TGT",
       "security": "Target Corporation",
       "sector": "Consumer Staples",
       "change": 4.7,
-      "changePercent": 4.24
+      "changePercent": 4.24,
+      "marketCap": 52321.77839316599
     },
     {
       "symbol": "TEL",
       "security": "TE Connectivity",
       "sector": "Information Technology",
       "change": 7.22,
-      "changePercent": 3.4597
+      "changePercent": 3.4597,
+      "marketCap": 63355.39951539201
     },
     {
       "symbol": "TDY",
       "security": "Teledyne Technologies",
       "sector": "Information Technology",
       "change": 19.09,
-      "changePercent": 3.0375
+      "changePercent": 3.0375,
+      "marketCap": 30403.580869814243
     },
     {
       "symbol": "TER",
       "security": "Teradyne",
       "sector": "Information Technology",
       "change": 28.98,
-      "changePercent": 10.6886
+      "changePercent": 10.6886,
+      "marketCap": 46999.71524602969
     },
     {
       "symbol": "TSLA",
       "security": "Tesla, Inc.",
       "sector": "Consumer Discretionary",
       "change": 13.9,
-      "changePercent": 3.4994
+      "changePercent": 3.4994,
+      "marketCap": 1542662.2389602007
     },
     {
       "symbol": "TXN",
       "security": "Texas Instruments",
       "sector": "Information Technology",
       "change": -2.54,
-      "changePercent": -1.134
+      "changePercent": -1.134,
+      "marketCap": 201205.47014599448
     },
     {
       "symbol": "TPL",
       "security": "Texas Pacific Land Corporation",
       "sector": "Energy",
       "change": 20.68,
-      "changePercent": 5.9881
+      "changePercent": 5.9881,
+      "marketCap": 25233.458866913537
     },
     {
       "symbol": "TXT",
       "security": "Textron",
       "sector": "Industrials",
       "change": 2.59,
-      "changePercent": 2.7894
+      "changePercent": 2.7894,
+      "marketCap": 16818.824016063758
     },
     {
       "symbol": "TMO",
       "security": "Thermo Fisher Scientific",
       "sector": "Health Care",
       "change": 0.47,
-      "changePercent": 0.0867
+      "changePercent": 0.0867,
+      "marketCap": 203945.60550458945
     },
     {
       "symbol": "TJX",
       "security": "TJX Companies",
       "sector": "Consumer Discretionary",
       "change": 0.46,
-      "changePercent": 0.296
+      "changePercent": 0.296,
+      "marketCap": 173077.40524095728
     },
     {
       "symbol": "TKO",
       "security": "TKO Group Holdings",
       "sector": "Communication Services",
       "change": 3.74,
-      "changePercent": 1.7967
+      "changePercent": 1.7967,
+      "marketCap": 41337.65840806832
     },
     {
       "symbol": "TTD",
       "security": "Trade Desk (The)",
       "sector": "Communication Services",
       "change": 0.8,
-      "changePercent": 3.0488
+      "changePercent": 3.0488,
+      "marketCap": 13076.407041987806
     },
     {
       "symbol": "TSCO",
       "security": "Tractor Supply",
       "sector": "Consumer Discretionary",
       "change": 1.13,
-      "changePercent": 2.0742
+      "changePercent": 2.0742,
+      "marketCap": 29384.525366790567
     },
     {
       "symbol": "TT",
       "security": "Trane Technologies",
       "sector": "Industrials",
       "change": 18.61,
-      "changePercent": 4.2669
+      "changePercent": 4.2669,
+      "marketCap": 100838.02550669962
     },
     {
       "symbol": "TDG",
       "security": "TransDigm Group",
       "sector": "Industrials",
       "change": 22.27,
-      "changePercent": 1.7629
+      "changePercent": 1.7629,
+      "marketCap": 72598.46148029654
     },
     {
       "symbol": "TRV",
       "security": "Travelers Companies (The)",
       "sector": "Financials",
       "change": 1.18,
-      "changePercent": 0.3929
+      "changePercent": 0.3929,
+      "marketCap": 67251.38860018074
     },
     {
       "symbol": "TRMB",
       "security": "Trimble Inc.",
       "sector": "Information Technology",
       "change": 2.17,
-      "changePercent": 3.3917
+      "changePercent": 3.3917,
+      "marketCap": 15738.47236545952
     },
     {
       "symbol": "TFC",
       "security": "Truist Financial",
       "sector": "Financials",
       "change": 0.67,
-      "changePercent": 1.2151
+      "changePercent": 1.2151,
+      "marketCap": 71394.73051511787
     },
     {
       "symbol": "TYL",
       "security": "Tyler Technologies",
       "sector": "Information Technology",
       "change": 7.49,
-      "changePercent": 2.1974
+      "changePercent": 2.1974,
+      "marketCap": 14988.707436043536
     },
     {
       "symbol": "TSN",
       "security": "Tyson Foods",
       "sector": "Consumer Staples",
       "change": 0.06,
-      "changePercent": 0.092
+      "changePercent": 0.092,
+      "marketCap": 22519.794531909203
     },
     {
       "symbol": "USB",
       "security": "U.S. Bancorp",
       "sector": "Financials",
       "change": 1.58,
-      "changePercent": 2.673
+      "changePercent": 2.673,
+      "marketCap": 94338.60541297952
     },
     {
       "symbol": "UBER",
       "security": "Uber",
       "sector": "Industrials",
       "change": -0.44,
-      "changePercent": -0.585
+      "changePercent": -0.585,
+      "marketCap": 155359.37130433388
     },
     {
       "symbol": "UDR",
       "security": "UDR, Inc.",
       "sector": "Real Estate",
       "change": 0.42,
-      "changePercent": 1.1312
+      "changePercent": 1.1312,
+      "marketCap": 12270.938453
     },
     {
       "symbol": "ULTA",
       "security": "Ulta Beauty",
       "sector": "Consumer Discretionary",
       "change": 12.46,
-      "changePercent": 1.838
+      "changePercent": 1.838,
+      "marketCap": 30626.31089992703
     },
     {
       "symbol": "UNP",
       "security": "Union Pacific Corporation",
       "sector": "Industrials",
       "change": 1.17,
-      "changePercent": 0.4653
+      "changePercent": 0.4653,
+      "marketCap": 149844.3018773216
     },
     {
       "symbol": "UAL",
       "security": "United Airlines Holdings",
       "sector": "Industrials",
       "change": 9.82,
-      "changePercent": 9.2563
+      "changePercent": 9.2563,
+      "marketCap": 37524.47104901442
     },
     {
       "symbol": "UPS",
       "security": "United Parcel Service",
       "sector": "Industrials",
       "change": 0.79,
-      "changePercent": 0.6778
+      "changePercent": 0.6778,
+      "marketCap": 99549.56847260027
     },
     {
       "symbol": "URI",
       "security": "United Rentals",
       "sector": "Industrials",
       "change": 51.78,
-      "changePercent": 6.1078
+      "changePercent": 6.1078,
+      "marketCap": 56669.98702249885
     },
     {
       "symbol": "UNH",
       "security": "UnitedHealth Group",
       "sector": "Health Care",
       "change": 8.1,
-      "changePercent": 3.0162
+      "changePercent": 3.0162,
+      "marketCap": 250600.24367517146
     },
     {
       "symbol": "UHS",
       "security": "Universal Health Services",
       "sector": "Health Care",
       "change": 2.09,
-      "changePercent": 0.9655
+      "changePercent": 0.9655,
+      "marketCap": 13653.440610235137
     },
     {
       "symbol": "VLO",
       "security": "Valero Energy",
       "sector": "Energy",
       "change": 8.54,
-      "changePercent": 4.3989
+      "changePercent": 4.3989,
+      "marketCap": 58406.27435232243
     },
     {
       "symbol": "VTR",
       "security": "Ventas",
       "sector": "Real Estate",
       "change": 2.71,
-      "changePercent": 3.3943
+      "changePercent": 3.3943,
+      "marketCap": 37377.35214
     },
     {
       "symbol": "VLTO",
       "security": "Veralto",
       "sector": "Industrials",
       "change": -0.22,
-      "changePercent": -0.2423
+      "changePercent": -0.2423,
+      "marketCap": 22247.443274075045
     },
     {
       "symbol": "VRSN",
       "security": "Verisign",
       "sector": "Information Technology",
       "change": -18.45,
-      "changePercent": -7.6045
+      "changePercent": -7.6045,
+      "marketCap": 23234.327235098644
     },
     {
       "symbol": "VRSK",
       "security": "Verisk Analytics",
       "sector": "Industrials",
       "change": -5.58,
-      "changePercent": -3.0214
+      "changePercent": -3.0214,
+      "marketCap": 27846.636413194494
     },
     {
       "symbol": "VZ",
       "security": "Verizon",
       "sector": "Communication Services",
       "change": -0.79,
-      "changePercent": -1.6773
+      "changePercent": -1.6773,
+      "marketCap": 187715.255973
     },
     {
       "symbol": "VRTX",
       "security": "Vertex Pharmaceuticals",
       "sector": "Health Care",
       "change": 19.11,
-      "changePercent": 4.1651
+      "changePercent": 4.1651,
+      "marketCap": 118268.49613583776
     },
     {
       "symbol": "VTRS",
       "security": "Viatris",
       "sector": "Health Care",
       "change": 0.24,
-      "changePercent": 1.6736
+      "changePercent": 1.6736,
+      "marketCap": 15272.469018857144
     },
     {
       "symbol": "VICI",
       "security": "Vici Properties",
       "sector": "Real Estate",
       "change": 0.02,
-      "changePercent": 0.0696
+      "changePercent": 0.0696,
+      "marketCap": 30835.209337
     },
     {
       "symbol": "V",
       "security": "Visa Inc.",
       "sector": "Financials",
       "change": 2.45,
-      "changePercent": 0.7444
+      "changePercent": 0.7444,
+      "marketCap": 632036.4165239282
     },
     {
       "symbol": "VST",
       "security": "Vistra Corp.",
       "sector": "Utilities",
       "change": 6.58,
-      "changePercent": 4.5991
+      "changePercent": 4.5991,
+      "marketCap": 52267.22371959709
     },
     {
       "symbol": "VMC",
       "security": "Vulcan Materials Company",
       "sector": "Materials",
       "change": 12.96,
-      "changePercent": 4.1704
+      "changePercent": 4.1704,
+      "marketCap": 41152.49944621219
     },
     {
       "symbol": "WRB",
       "security": "W. R. Berkley Corporation",
       "sector": "Financials",
       "change": -0.88,
-      "changePercent": -1.2344
+      "changePercent": -1.2344,
+      "marketCap": 26415.27216660088
     },
     {
       "symbol": "GWW",
       "security": "W. W. Grainger",
       "sector": "Industrials",
       "change": 14.5,
-      "changePercent": 1.2255
+      "changePercent": 1.2255,
+      "marketCap": 56947.46281268656
     },
     {
       "symbol": "WAB",
       "security": "Wabtec",
       "sector": "Industrials",
       "change": 6.2,
-      "changePercent": 2.582
+      "changePercent": 2.582,
+      "marketCap": 39344.086184
     },
     {
       "symbol": "WMT",
       "security": "Walmart",
       "sector": "Consumer Staples",
       "change": 4.24,
-      "changePercent": 3.3402
+      "changePercent": 3.3402,
+      "marketCap": 941601.8805846082
     },
     {
       "symbol": "DIS",
       "security": "Walt Disney Company (The)",
       "sector": "Communication Services",
       "change": 3.73,
-      "changePercent": 3.5534
+      "changePercent": 3.5534,
+      "marketCap": 192564.21509337242
     },
     {
       "symbol": "WBD",
       "security": "Warner Bros. Discovery",
       "sector": "Communication Services",
       "change": 0.6,
-      "changePercent": 2.2422
+      "changePercent": 2.2422,
+      "marketCap": 68614.468449852
     },
     {
       "symbol": "WM",
       "security": "Waste Management",
       "sector": "Industrials",
       "change": 0.19,
-      "changePercent": 0.0838
+      "changePercent": 0.0838,
+      "marketCap": 92349.215687
     },
     {
       "symbol": "WAT",
       "security": "Waters Corporation",
       "sector": "Health Care",
       "change": 4.4,
-      "changePercent": 1.1674
+      "changePercent": 1.1674,
+      "marketCap": 22075.515966
     },
     {
       "symbol": "WEC",
       "security": "WEC Energy Group",
       "sector": "Utilities",
       "change": -0.52,
-      "changePercent": -0.4645
+      "changePercent": -0.4645,
+      "marketCap": 36156.45624305071
     },
     {
       "symbol": "WFC",
       "security": "Wells Fargo",
       "sector": "Financials",
       "change": 1.96,
-      "changePercent": 2.1302
+      "changePercent": 2.1302,
+      "marketCap": 275550.6648806111
     },
     {
       "symbol": "WELL",
       "security": "Welltower",
       "sector": "Real Estate",
       "change": 4.86,
-      "changePercent": 2.5437
+      "changePercent": 2.5437,
+      "marketCap": 126243.185761
     },
     {
       "symbol": "WST",
       "security": "West Pharmaceutical Services",
       "sector": "Health Care",
       "change": 17.33,
-      "changePercent": 7.4821
+      "changePercent": 7.4821,
+      "marketCap": 19507.456636809755
     },
     {
       "symbol": "WDC",
       "security": "Western Digital",
       "sector": "Information Technology",
       "change": 22.39,
-      "changePercent": 8.6053
+      "changePercent": 8.6053,
+      "marketCap": 95092.45423214415
     },
     {
       "symbol": "WY",
       "security": "Weyerhaeuser",
       "sector": "Real Estate",
       "change": -0.07,
-      "changePercent": -0.2621
+      "changePercent": -0.2621,
+      "marketCap": 18562.171341
     },
     {
       "symbol": "WSM",
       "security": "Williams-Sonoma, Inc.",
       "sector": "Consumer Discretionary",
       "change": 8.18,
-      "changePercent": 3.8496
+      "changePercent": 3.8496,
+      "marketCap": 24884.90925761175
     },
     {
       "symbol": "WMB",
       "security": "Williams Companies",
       "sector": "Energy",
       "change": -0.5,
-      "changePercent": -0.7416
+      "changePercent": -0.7416,
+      "marketCap": 76252.90429102976
     },
     {
       "symbol": "WTW",
       "security": "Willis Towers Watson",
       "sector": "Financials",
       "change": 2.72,
-      "changePercent": 0.831
+      "changePercent": 0.831,
+      "marketCap": 31108.24626968537
     },
     {
       "symbol": "WDAY",
       "security": "Workday, Inc.",
       "sector": "Information Technology",
       "change": 4.16,
-      "changePercent": 2.6203
+      "changePercent": 2.6203,
+      "marketCap": 45935.57881417386
     },
     {
       "symbol": "WYNN",
       "security": "Wynn Resorts",
       "sector": "Consumer Discretionary",
       "change": 4.76,
-      "changePercent": 4.2049
+      "changePercent": 4.2049,
+      "marketCap": 12222.199702252654
     },
     {
       "symbol": "XEL",
       "security": "Xcel Energy",
       "sector": "Utilities",
       "change": -0.22,
-      "changePercent": -0.289
+      "changePercent": -0.289,
+      "marketCap": 43325.34987392621
     },
     {
       "symbol": "XYL",
       "security": "Xylem Inc.",
       "sector": "Industrials",
       "change": 2.88,
-      "changePercent": 2.0684
+      "changePercent": 2.0684,
+      "marketCap": 33946.88858
     },
     {
       "symbol": "YUM",
       "security": "Yum! Brands",
       "sector": "Consumer Discretionary",
       "change": 1.84,
-      "changePercent": 1.1422
+      "changePercent": 1.1422,
+      "marketCap": 42039.416315
     },
     {
       "symbol": "ZBRA",
       "security": "Zebra Technologies",
       "sector": "Information Technology",
       "change": 10.32,
-      "changePercent": 4.2807
+      "changePercent": 4.2807,
+      "marketCap": 13050.584712
     },
     {
       "symbol": "ZBH",
       "security": "Zimmer Biomet",
       "sector": "Health Care",
       "change": 1.18,
-      "changePercent": 1.3299
+      "changePercent": 1.3299,
+      "marketCap": 18777.70322
     },
     {
       "symbol": "ZTS",
       "security": "Zoetis",
       "sector": "Health Care",
       "change": 0.69,
-      "changePercent": 0.5445
+      "changePercent": 0.5445,
+      "marketCap": 56897.89778056041
     }
   ]
 }
