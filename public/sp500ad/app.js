@@ -224,7 +224,7 @@ function buildChart(stocks) {
     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     dot.setAttribute("cx", x);
     dot.setAttribute("cy", y);
-    const radius = useMarketCap ? radiusScale(stock.marketCap, minCap, maxCap) : 4.5;
+    const radius = useMarketCap ? radiusScale(stock.marketCap, minCap, maxCap) : 3.0;
     dot.setAttribute("r", radius);
     dot.setAttribute("fill", SECTOR_COLORS[stock.sector] || "#7aa5ff");
     dot.setAttribute("class", "dot");
