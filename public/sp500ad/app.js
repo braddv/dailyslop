@@ -101,7 +101,13 @@ function hashString(value) {
 function jitterForSymbol(symbol, width) {
   const seed = hashString(symbol);
   const rand = (seed % 1000) / 1000;
-  return (rand - 0.5) * width * 0.6;
+  return (rand - 0.5) * width * 0.9;
+}
+
+function verticalJitter(symbol) {
+  const seed = hashString(`${symbol}-y`);
+  const rand = (seed % 1000) / 1000;
+  return (rand - 0.5) * 8;
 }
 
 function buildYAxis(ticks) {
@@ -212,7 +218,8 @@ function buildChart(stocks) {
     const y =
       padding.top +
       ((maxLog - symLog(stock.changePercent)) / (maxLog - minLog)) *
-        innerHeight;
+        innerHeight +
+      verticalJitter(stock.symbol);
 
     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     dot.setAttribute("cx", x);
