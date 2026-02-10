@@ -14,6 +14,7 @@ let lastStocks = [];
 let selectedMetric = "changePercent";
 let viewMode = "sector"; // sector | subindustry
 let selectedSector = null;
+const pinnedSymbols = new Set();
 
 const METRICS = {
   changePercent: {
@@ -388,8 +389,26 @@ function buildChart(stocks) {
       showTooltip(event, label);
     });
     dot.addEventListener("mouseleave", hideTooltip);
+    dot.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (pinnedSymbols.has(stock.symbol)) {
+        pinnedSymbols.delete(stock.symbol);
+      } else {
+        pinnedSymbols.add(stock.symbol);
+      }
+      buildChart(lastStocks);
+    });
 
     svg.appendChild(dot);
+
+    if (pinnedSymbols.has(stock.symbol)) {
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", x + 8);
+      text.setAttribute("y", y - 8);
+      text.setAttribute("class", "pinned-label");
+      text.textContent = stock.symbol;
+      svg.appendChild(text);
+    }
   });
 
   chartEl.appendChild(svg);
@@ -439,6 +458,11 @@ async function loadData() {
 
 refreshBtn.addEventListener("click", () => {
   loadData();
+});
+
+chartEl.addEventListener("click", () => {
+  pinnedSymbols.clear();
+  buildChart(lastStocks);
 });
 
 if (capToggle) {
