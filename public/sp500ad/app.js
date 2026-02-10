@@ -351,6 +351,8 @@ function buildChart(stocks) {
   const minCap = caps.length ? Math.min(...caps) : null;
   const maxCap = caps.length ? Math.max(...caps) : null;
 
+  const pinnedLabels = [];
+
   // Stock dots
   filtered.forEach((stock) => {
     const groupKey = keyFn(stock);
@@ -409,10 +411,11 @@ function buildChart(stocks) {
       text.setAttribute("y", y - 8);
       text.setAttribute("class", "pinned-label");
       text.textContent = `${stock.symbol} ${metricLabel}`;
-      svg.appendChild(text);
+      pinnedLabels.push(text);
     }
   });
 
+  pinnedLabels.forEach((label) => svg.appendChild(label));
   chartEl.appendChild(svg);
 }
 
