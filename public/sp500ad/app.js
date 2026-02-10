@@ -8,9 +8,12 @@ const tooltipEl = document.getElementById("tooltip");
 const capToggle = document.getElementById("capToggle");
 const metricToggle = document.getElementById("metricToggle");
 const metricSubhead = document.getElementById("metricSubhead");
+const backBtn = document.getElementById("backBtn");
 
 let lastStocks = [];
 let selectedMetric = "changePercent";
+let viewMode = "sector"; // sector | subindustry
+let selectedSector = null;
 
 const METRICS = {
   changePercent: {
@@ -43,8 +46,8 @@ const SECTORS = [
   { gics: "Materials", label: "XLB" },
   { gics: "Communication Services", label: "XLC" },
   { gics: "Information Technology", label: "XLK" },
-  { gics: "Consumer Discretionary", label: "XLY" }, // Consumer Cyclical
-  { gics: "Consumer Staples", label: "XLP" }, // Consumer Defensive
+  { gics: "Consumer Discretionary", label: "XLY" },
+  { gics: "Consumer Staples", label: "XLP" },
   { gics: "Energy", label: "XLE" },
   { gics: "Financials", label: "XLF" },
   { gics: "Health Care", label: "XLV" },
@@ -169,16 +172,73 @@ function hideTooltip() {
   tooltipEl.classList.remove("visible");
 }
 
+function formatLabel(text) {
+  if (!text) return "";
+  if (text.length <= 12) return text;
+  return `${text.slice(0, 10)}…`;
+}
+
+function splitLabel(text) {
+  if (!text) return ["", ""];
+  if (text.length <= 14) return [text, ""];
+  const parts = text.split(" ");
+  if (parts.length === 1) return [formatLabel(text), ""];
+  let line1 = "";
+  let line2 = "";
+  parts.forEach((part) => {
+    const candidate = line1 ? `${line1} ${part}` : part;
+    if (candidate.length <= 14) {
+      line1 = candidate;
+    } else if (!line2) {
+      line2 = part;
+    } else {
+      line2 = `${line2} ${part}`;
+    }
+  });
+  return [line1 || formatLabel(text), line2 ? formatLabel(line2) : ""];
+}
+function updateSubhead() {
+  if (!metricSubhead) return;
+  let base = METRICS[selectedMetric]?.subhead || "";
+  if (viewMode === "subindustry" && selectedSector) {
+    base = `${base} (${selectedSector} sub-industries)`;
+  }
+  metricSubhead.textContent = base;
+}
+
+function getGroups(stocks) {
+  if (viewMode === "sector") {
+    return {
+      groups: SECTORS.map((sector) => ({ key: sector.gics, label: sector.label })),
+      keyFn: (stock) => stock.sector,
+      interactive: true,
+    };
+  }
+
+  const filtered = stocks.filter((stock) => stock.sector === selectedSector && stock.subIndustry);
+  const subIndustries = Array.from(new Set(filtered.map((s) => s.subIndustry))).sort();
+  return {
+    groups: subIndustries.map((name) => ({ key: name, label: name })),
+    keyFn: (stock) => stock.subIndustry,
+    interactive: false,
+  };
+}
+
 function buildChart(stocks) {
   chartEl.innerHTML = "";
 
   const width = chartEl.clientWidth;
   const height = chartEl.clientHeight;
-  const padding = { top: 20, right: 20, bottom: 40, left: 10 };
+  const padding = { top: 20, right: 20, bottom: 70, left: 10 };
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
 
-  const filtered = stocks.filter((stock) => Number.isFinite(stock[selectedMetric]));
+  let working = stocks;
+  if (viewMode === "subindustry" && selectedSector) {
+    working = working.filter((stock) => stock.sector === selectedSector);
+  }
+
+  const filtered = working.filter((stock) => Number.isFinite(stock[selectedMetric]));
   if (!filtered.length) {
     chartEl.innerHTML = "<div class=\"notes\">No stock data to render.</div>";
     return;
@@ -211,10 +271,11 @@ function buildChart(stocks) {
     svg.appendChild(line);
   });
 
-  const sectorWidth = innerWidth / SECTORS.length;
+  const { groups, keyFn, interactive } = getGroups(filtered);
+  const sectorWidth = innerWidth / Math.max(groups.length, 1);
 
   // Sector dividers
-  for (let i = 0; i <= SECTORS.length; i += 1) {
+  for (let i = 0; i <= groups.length; i += 1) {
     const x = padding.left + sectorWidth * i;
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", x);
@@ -225,26 +286,53 @@ function buildChart(stocks) {
     svg.appendChild(line);
   }
 
-  // Sector labels
-  SECTORS.forEach((sector, index) => {
+  // Labels
+  groups.forEach((group, index) => {
     const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
     const x = padding.left + sectorWidth * index + sectorWidth / 2;
     label.setAttribute("x", x);
-    label.setAttribute("y", height - 10);
-    label.setAttribute("class", "sector-label");
-    label.textContent = sector.label || sector.gics;
+    label.setAttribute("y", height - 24);
+    label.setAttribute("class", interactive ? "sector-label interactive" : "sector-label");
+    const fullLabel = group.label || group.key;
+    const [line1, line2] = splitLabel(fullLabel);
+    const tspan1 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+    tspan1.setAttribute("x", x);
+    tspan1.setAttribute("dy", "0");
+    tspan1.textContent = line1;
+    label.appendChild(tspan1);
+    if (line2) {
+      const tspan2 = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+      tspan2.setAttribute("x", x);
+      tspan2.setAttribute("dy", "12");
+      tspan2.textContent = line2;
+      label.appendChild(tspan2);
+    }
+    if (group.label && group.label.length > 12) {
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = group.label;
+      label.appendChild(title);
+    }
+    if (interactive) {
+      label.addEventListener("click", () => {
+        viewMode = "subindustry";
+        selectedSector = group.key;
+        if (backBtn) backBtn.classList.add("visible");
+        updateSubhead();
+        buildChart(lastStocks);
+      });
+    }
     svg.appendChild(label);
   });
 
   if (selectedMetric === "pctFrom52wHigh" || selectedMetric === "pctFrom12wHigh") {
     const field = selectedMetric;
-    SECTORS.forEach((sector, index) => {
-      const sectorStocks = filtered.filter((stock) => stock.sector === sector.gics);
-      if (!sectorStocks.length) return;
-      const atHigh = sectorStocks.filter(
+    groups.forEach((group, index) => {
+      const groupStocks = filtered.filter((stock) => keyFn(stock) === group.key);
+      if (!groupStocks.length) return;
+      const atHigh = groupStocks.filter(
         (stock) => Number.isFinite(stock[field]) && stock[field] >= -1
       ).length;
-      const pct = Math.round((atHigh / sectorStocks.length) * 100);
+      const pct = Math.round((atHigh / groupStocks.length) * 100);
       const stat = document.createElementNS("http://www.w3.org/2000/svg", "text");
       const x = padding.left + sectorWidth * index + sectorWidth / 2;
       stat.setAttribute("x", x);
@@ -264,7 +352,8 @@ function buildChart(stocks) {
 
   // Stock dots
   filtered.forEach((stock) => {
-    const sectorIndex = SECTORS.findIndex((sector) => sector.gics === stock.sector);
+    const groupKey = keyFn(stock);
+    const sectorIndex = groups.findIndex((group) => group.key === groupKey);
     if (sectorIndex === -1) return;
 
     const jitter = jitterForSymbol(stock.symbol, sectorWidth);
@@ -286,6 +375,7 @@ function buildChart(stocks) {
 
     const label = `
       <div><strong>${stock.symbol}</strong> • ${stock.security}</div>
+      <div>Sector ${stock.sector}${stock.subIndustry ? ` • ${stock.subIndustry}` : ""}</div>
       <div>1W ${formatPerf(stock.perf1w)} · 1M ${formatPerf(stock.perf1m)} · 3M ${formatPerf(stock.perf3m)}</div>
       <div>From 12W High ${formatPerf(stock.pctFrom12wHigh)}</div>
       <div>From 52W High ${formatPerf(stock.pctFrom52wHigh)}</div>
@@ -308,9 +398,7 @@ function buildChart(stocks) {
 function setMetric(metric) {
   if (!METRICS[metric]) return;
   selectedMetric = metric;
-  if (metricSubhead) {
-    metricSubhead.textContent = METRICS[metric].subhead;
-  }
+  updateSubhead();
   if (metricToggle) {
     metricToggle.querySelectorAll(".toggle-btn").forEach((button) => {
       button.classList.toggle("active", button.dataset.metric === metric);
@@ -367,9 +455,20 @@ if (metricToggle) {
   });
 }
 
+if (backBtn) {
+  backBtn.addEventListener("click", () => {
+    viewMode = "sector";
+    selectedSector = null;
+    backBtn.classList.remove("visible");
+    updateSubhead();
+    buildChart(lastStocks);
+  });
+}
+
 window.addEventListener("resize", () => {
   buildChart(lastStocks);
 });
 
+updateSubhead();
 setMetric("changePercent");
 loadData();
