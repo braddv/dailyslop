@@ -195,11 +195,18 @@ h1 {
 .y-axis {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 20px 0 40px;
+  justify-content: flex-start;
+  padding: 0;
   color: var(--muted);
   font-size: 0.75rem;
   text-align: right;
+  position: relative;
+}
+
+.y-tick {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
 }
 
 .chart {

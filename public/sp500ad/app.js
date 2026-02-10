@@ -156,11 +156,18 @@ function verticalJitter(symbol) {
   return (rand - 0.5) * 8;
 }
 
-function buildYAxis(ticks) {
+function buildYAxis(ticks, height, padding, minLog, maxLog) {
   yAxisEl.innerHTML = "";
+  yAxisEl.style.height = `${height}px`;
   ticks.forEach((value) => {
+    const y =
+      padding.top +
+      ((maxLog - symLog(value)) / (maxLog - minLog)) *
+        (height - padding.top - padding.bottom);
     const label = document.createElement("div");
+    label.className = "y-tick";
     label.textContent = `${value.toFixed(1)}%`;
+    label.style.top = `${y}px`;
     yAxisEl.appendChild(label);
   });
 }
@@ -297,16 +304,14 @@ function buildChart(stocks) {
   const minChange = Math.min(...filtered.map((s) => s[selectedMetric]));
   const maxChange = Math.max(...filtered.map((s) => s[selectedMetric]));
   const range = niceRange(minChange, maxChange);
+  const minLog = symLog(range.min);
+  const maxLog = symLog(range.max);
   const ticks = buildTicks(range.min, range.max);
 
-  buildYAxis(ticks);
+  buildYAxis(ticks, height, padding, minLog, maxLog);
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-
-  // Grid lines
-  const minLog = symLog(range.min);
-  const maxLog = symLog(range.max);
 
   ticks.forEach((value) => {
     const y =
