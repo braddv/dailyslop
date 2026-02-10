@@ -402,11 +402,13 @@ function buildChart(stocks) {
     svg.appendChild(dot);
 
     if (pinnedSymbols.has(stock.symbol)) {
+      const metricValue = stock[selectedMetric];
+      const metricLabel = Number.isFinite(metricValue) ? `${metricValue.toFixed(2)}%` : "--";
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", x + 8);
       text.setAttribute("y", y - 8);
       text.setAttribute("class", "pinned-label");
-      text.textContent = stock.symbol;
+      text.textContent = `${stock.symbol} ${metricLabel}`;
       svg.appendChild(text);
     }
   });
