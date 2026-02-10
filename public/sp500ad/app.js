@@ -9,12 +9,14 @@ const capToggle = document.getElementById("capToggle");
 const metricToggle = document.getElementById("metricToggle");
 const metricSubhead = document.getElementById("metricSubhead");
 const backBtn = document.getElementById("backBtn");
+const filterButtons = document.querySelectorAll(".filter-btn");
 
 let lastStocks = [];
 let selectedMetric = "changePercent";
 let viewMode = "sector"; // sector | subindustry
 let selectedSector = null;
 const pinnedSymbols = new Set();
+let activeFilter = "all";
 
 const METRICS = {
   changePercent: {
@@ -71,6 +73,16 @@ const SECTOR_COLORS = {
   "Utilities": "#ce93d8",
 };
 
+const DOW_SYMBOLS = new Set([
+  "AAPL", "AMGN", "AMZN", "AXP", "BA", "CAT", "CRM", "CSCO", "CVX", "DIS",
+  "DOW", "GS", "HD", "HON", "IBM", "INTC", "JNJ", "JPM", "KO", "MCD",
+  "MMM", "MRK", "MSFT", "NKE", "PG", "TRV", "UNH", "V", "VZ", "WMT"
+]);
+
+const XMAG_EXCLUDES = new Set([
+  "GOOG", "GOOGL", "META", "MSFT", "AMZN", "TSLA", "AAPL", "NVDA"
+]);
+
 function formatDate(value) {
   if (!value) return "--";
   const date = new Date(value);
@@ -110,12 +122,12 @@ function buildTicks(min, max) {
   return Array.from(ticks).sort((a, b) => b - a);
 }
 
-function radiusScale(cap, minCap, maxCap) {
+function radiusScale(cap, minCap, maxCap, scaleFactor = 1) {
   if (!Number.isFinite(cap) || !Number.isFinite(minCap) || !Number.isFinite(maxCap)) {
-    return 4.0;
+    return 4.0 * scaleFactor;
   }
-  const minR = 3;
-  const maxR = 14;
+  const minR = 3 * scaleFactor;
+  const maxR = 14 * scaleFactor;
   if (maxCap === minCap) return (minR + maxR) / 2;
   const t =
     (Math.sqrt(cap) - Math.sqrt(minCap)) /
@@ -201,10 +213,47 @@ function splitLabel(text) {
 function updateSubhead() {
   if (!metricSubhead) return;
   let base = METRICS[selectedMetric]?.subhead || "";
+  if (activeFilter === "top50") {
+    base = `${base} (Top 50 market cap)`;
+  } else if (activeFilter === "dow") {
+    base = `${base} (Dow Jones)`;
+  }
   if (viewMode === "subindustry" && selectedSector) {
     base = `${base} (${selectedSector} sub-industries)`;
   }
   metricSubhead.textContent = base;
+}
+
+function applyFilter(stocks) {
+  const cleaned = stocks.filter((s) => s.symbol !== "GOOGL");
+  if (activeFilter === "top50") {
+    return [...cleaned]
+      .filter((s) => Number.isFinite(s.marketCap))
+      .sort((a, b) => b.marketCap - a.marketCap)
+      .slice(0, 50);
+  }
+  if (activeFilter === "top250") {
+    return [...cleaned]
+      .filter((s) => Number.isFinite(s.marketCap))
+      .sort((a, b) => b.marketCap - a.marketCap)
+      .slice(0, 250);
+  }
+  if (activeFilter === "bottom250") {
+    return [...cleaned]
+      .filter((s) => Number.isFinite(s.marketCap))
+      .sort((a, b) => a.marketCap - b.marketCap)
+      .slice(0, 250);
+  }
+  if (activeFilter === "xmag") {
+    return cleaned.filter((s) => !XMAG_EXCLUDES.has(s.symbol));
+  }
+  if (activeFilter === "mag7") {
+    return cleaned.filter((s) => XMAG_EXCLUDES.has(s.symbol));
+  }
+  if (activeFilter === "dow") {
+    return cleaned.filter((s) => DOW_SYMBOLS.has(s.symbol));
+  }
+  return cleaned;
 }
 
 function getGroups(stocks) {
@@ -234,7 +283,7 @@ function buildChart(stocks) {
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
 
-  let working = stocks;
+  let working = applyFilter(stocks);
   if (viewMode === "subindustry" && selectedSector) {
     working = working.filter((stock) => stock.sector === selectedSector);
   }
@@ -345,6 +394,7 @@ function buildChart(stocks) {
   }
 
   const useMarketCap = capToggle && capToggle.checked;
+  const scaleFactor = activeFilter === "bottom250" ? 0.5 : 1;
   const caps = filtered
     .map((s) => s.marketCap)
     .filter((value) => Number.isFinite(value) && value > 0);
@@ -371,7 +421,9 @@ function buildChart(stocks) {
     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     dot.setAttribute("cx", x);
     dot.setAttribute("cy", y);
-    const radius = useMarketCap ? radiusScale(stock.marketCap, minCap, maxCap) : 3.0;
+    const radius = useMarketCap
+      ? radiusScale(stock.marketCap, minCap, maxCap, scaleFactor)
+      : 3.0;
     dot.setAttribute("r", radius);
     dot.setAttribute("fill", SECTOR_COLORS[stock.sector] || "#7aa5ff");
     dot.setAttribute("class", "dot");
@@ -483,6 +535,22 @@ if (metricToggle) {
     setMetric(button.dataset.metric);
   });
 }
+
+filterButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const filter = button.dataset.filter;
+    if (!filter) return;
+    activeFilter = filter;
+    filterButtons.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.filter === filter);
+    });
+    viewMode = "sector";
+    selectedSector = null;
+    if (backBtn) backBtn.classList.remove("visible");
+    updateSubhead();
+    buildChart(lastStocks);
+  });
+});
 
 if (backBtn) {
   backBtn.addEventListener("click", () => {

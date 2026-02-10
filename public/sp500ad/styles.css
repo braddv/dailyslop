@@ -73,6 +73,7 @@ h1 {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .meta-card {
@@ -98,13 +99,41 @@ h1 {
   font-weight: 600;
 }
 
+.filter-btn {
+  background: rgba(10, 14, 22, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.filter-btn.active {
+  background: rgba(86, 194, 255, 0.2);
+  border-color: rgba(86, 194, 255, 0.6);
+}
+
 .controls {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
   margin-bottom: 18px;
   flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
 }
 
 .toggle-group {
