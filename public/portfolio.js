@@ -406,11 +406,14 @@ function topAndBottomFactors(rows, count = 3) {
       return {
         name: r?.factor_name || r?.name || r?.factor || 'Unknown',
         value: baseValue,
+        modelName: String(r?.model_name || '').trim(),
       };
     })
     .filter((r) => Number.isFinite(r.value));
-  const sortedDesc = [...usable].sort((a, b) => b.value - a.value);
-  const sortedAsc = [...usable].sort((a, b) => a.value - b.value);
+  const allFactorsRows = usable.filter((r) => r.modelName.toLowerCase() === 'all factors');
+  const rowsForRanking = allFactorsRows.length ? allFactorsRows : usable;
+  const sortedDesc = [...rowsForRanking].sort((a, b) => b.value - a.value);
+  const sortedAsc = [...rowsForRanking].sort((a, b) => a.value - b.value);
   return {
     top: sortedDesc.slice(0, count),
     bottom: sortedAsc.slice(0, count),
