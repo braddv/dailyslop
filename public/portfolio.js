@@ -7,6 +7,7 @@ const defaults = [
 let holdings = [];
 let state = {};
 let fetchedClassByTicker = {};
+let classificationWarnings = [];
 
 const manualClass = {
   VOO: { region: 'US', sector: 'Broad US Equity', factor: 'US Beta' },
@@ -53,6 +54,7 @@ async function loadTickerClassifications(tickers) {
   const targets = (tickers || []).map((t) => String(t || '').toUpperCase().trim()).filter(Boolean);
   const missing = targets.filter((t) => !fetchedClassByTicker[t]);
   if (!missing.length) {
+    classificationWarnings = [...new Set(classificationWarnings)];
     mergeFetchedClassifications();
     return;
   }
@@ -61,6 +63,12 @@ async function loadTickerClassifications(tickers) {
     const resp = await fetch(`/api/portfolio-classifications?tickers=${missing.join(',')}`);
     const payload = await resp.json();
     const classifications = payload?.classifications || {};
+    const remoteWarnings = Array.isArray(payload?.warnings) ? payload.warnings : [];
+    const finnhubConfigured = payload?.diagnostics?.finnhubConfigured;
+    classificationWarnings = [...classificationWarnings, ...remoteWarnings];
+    if (finnhubConfigured === false) {
+      classificationWarnings.push('Ticker classification fallback: Finnhub key not configured (FINNHUB_KEY or FINNHUB_API_KEY).');
+    }
     Object.entries(classifications).forEach(([ticker, cls]) => {
       fetchedClassByTicker[ticker] = {
         region: cls.region || 'Unknown',
@@ -248,6 +256,7 @@ function asWeightTable(mapObj, keyHeader) {
 
 async function run() {
   document.getElementById('warnings').textContent = '';
+  classificationWarnings = [];
   ensureClassifications();
 
   const clean = holdings.map((h) => ({ ticker: h.ticker.toUpperCase().trim(), marketValue: Number(h.marketValue) })).filter((h) => h.ticker && h.marketValue > 0);
@@ -305,7 +314,8 @@ async function run() {
     <b>Scenario shocks (rough)</b><br>Oil -20% day proxy impact: ${fmt(oilShock)}<br>Equity -10% proxy impact: ${fmt(equityShock)}
   `;
 
-  if (warnings?.length) document.getElementById('warnings').textContent = warnings.join(' | ');
+  const allWarnings = [...(warnings || []), ...classificationWarnings];
+  if (allWarnings.length) document.getElementById('warnings').textContent = [...new Set(allWarnings)].join(' | ');
   await runFactors();
 
   const htmlBlob = new Blob([`<html><body><h1>Portfolio Report Snapshot</h1>${document.body.innerHTML}</body></html>`], { type: 'text/html' });

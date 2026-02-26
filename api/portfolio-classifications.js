@@ -68,8 +68,8 @@ function toRegion(country) {
 }
 
 async function fetchFinnhubClassification(ticker) {
-  const token = process.env.FINNHUB_KEY;
-  if (!token) throw new Error('FINNHUB_KEY missing');
+  const token = process.env.FINNHUB_KEY || process.env.FINNHUB_API_KEY;
+  if (!token) throw new Error('Finnhub key missing (set FINNHUB_KEY or FINNHUB_API_KEY)');
 
   const cacheKey = `finnhub_profile_${ticker}`;
   const cached = readCache(cacheKey, FINNHUB_TTL_MS);
@@ -193,7 +193,13 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ classifications, warnings });
+    return res.status(200).json({
+      classifications,
+      warnings,
+      diagnostics: {
+        finnhubConfigured: Boolean(process.env.FINNHUB_KEY || process.env.FINNHUB_API_KEY),
+      },
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
