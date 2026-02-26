@@ -21,7 +21,7 @@
   <div class="card">
     <button id="loadDefault">Load Dad Portfolio Defaults</button>
     <input type="file" id="csvFile" accept=".csv" />
-    <span class="small">CSV columns: ticker,market_value or ticker,shares,price</span>
+    <span class="small">CSV columns: ticker,market_value[,kind,underlying,delta] or ticker,shares,price. For options use kind=option, underlying ticker, and delta (-1 to 1).</span>
     <div id="warnings" class="warn"></div>
   </div>
 
