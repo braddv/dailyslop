@@ -440,10 +440,10 @@ async function runFactors() {
 
   const symbolFactorEntries = Object.entries(symbolFactors).filter(([, rowsForSymbol]) => Array.isArray(rowsForSymbol) && rowsForSymbol.length);
   const sfTable = symbolFactorEntries.length
-    ? `<h4>FactorsToday symbol factors (h126 ~ 6M)</h4><table><tr><th>Symbol</th><th>Top 3 factors (h126)</th><th>Bottom 3 negative correlations (h126)</th></tr>${symbolFactorEntries.map(([symbol, rowsForSymbol]) => {
+    ? `<h4>FactorsToday symbol factors (value; falls back from h126 when h126 is empty/zero)</h4><table><tr><th>Symbol</th><th>Top 3 factors</th><th>Bottom 3 negative correlations</th></tr>${symbolFactorEntries.map(([symbol, rowsForSymbol]) => {
       const summary = topAndBottomFactors(rowsForSymbol, 'h126', 3);
-      const topHtml = summary.top.length ? summary.top.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No h126 values</span>';
-      const bottomHtml = summary.bottom.length ? summary.bottom.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No negative h126 values</span>';
+      const topHtml = summary.top.length ? summary.top.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No factor values</span>';
+      const bottomHtml = summary.bottom.length ? summary.bottom.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No negative factor values</span>';
       return `<tr><td>${symbol}</td><td>${topHtml}</td><td>${bottomHtml}</td></tr>`;
     }).join('')}</table>`
     : '<div class="small">FactorsToday symbol factor rows unavailable; using regression model only.</div>';
@@ -482,10 +482,15 @@ function mapToCsv(mapObj, header) {
 
 function topAndBottomFactors(rows, horizon = 'h126', count = 3) {
   const usable = (Array.isArray(rows) ? rows : [])
-    .map((r) => ({
-      name: r?.name || r?.factor || 'Unknown',
-      value: Number(r?.[horizon]),
-    }))
+    .map((r) => {
+      const horizonValue = Number(r?.[horizon]);
+      const baseValue = Number(r?.value);
+      const score = Number.isFinite(horizonValue) && horizonValue !== 0 ? horizonValue : baseValue;
+      return {
+        name: r?.name || r?.factor || 'Unknown',
+        value: score,
+      };
+    })
     .filter((r) => Number.isFinite(r.value));
   const sortedDesc = [...usable].sort((a, b) => b.value - a.value);
   const sortedAsc = [...usable].sort((a, b) => a.value - b.value);
