@@ -83,50 +83,42 @@ function calc12wHigh(timestamps, closes) {
   return high;
 }
 
-async function fetchQuoteChunk(symbols) {
-  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(','))}`;
-  const json = await fetchJsonWithRetry(url, 'quote');
-  return json?.quoteResponse?.result || [];
+function calc52wHigh(timestamps, closes) {
+  const cutoff = Date.now() - 365 * DAY_MS;
+  let high = null;
+  for (let i = 0; i < timestamps.length; i += 1) {
+    const ts = timestamps[i] * 1000;
+    const close = closes[i];
+    if (ts < cutoff || !Number.isFinite(close)) continue;
+    high = high == null ? close : Math.max(high, close);
+  }
+  return high;
 }
 
 async function fetchSparkChunk(symbols) {
-  const url = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(symbols.join(','))}&range=6mo&interval=1d`;
+  const url = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(symbols.join(','))}&range=1y&interval=1d`;
   const json = await fetchJsonWithRetry(url, 'spark');
   return json?.spark?.result || [];
 }
 
 async function processChunk(set) {
   const failures = [];
-  const quoteMap = new Map();
   const sparkMap = new Map();
 
-  const [quoteRes, sparkRes] = await Promise.allSettled([
-    fetchQuoteChunk(set),
-    fetchSparkChunk(set),
-  ]);
-
-  if (quoteRes.status === 'fulfilled') {
-    quoteRes.value.forEach((quote) => {
-      if (quote?.symbol) quoteMap.set(String(quote.symbol).toUpperCase(), quote);
-    });
-  } else {
-    set.forEach((symbol) => failures.push(`${symbol}: ${quoteRes.reason.message}`));
-  }
-
-  if (sparkRes.status === 'fulfilled') {
-    sparkRes.value.forEach((row) => {
+  try {
+    const rows = await fetchSparkChunk(set);
+    rows.forEach((row) => {
       if (row?.symbol) sparkMap.set(String(row.symbol).toUpperCase(), row);
     });
-  } else {
-    set.forEach((symbol) => failures.push(`${symbol}: ${sparkRes.reason.message}`));
+  } catch (err) {
+    set.forEach((symbol) => failures.push(`${symbol}: ${err.message}`));
   }
 
-  return { quoteMap, sparkMap, failures };
+  return { sparkMap, failures };
 }
 
 async function fetchYahooData(symbols) {
   const sets = chunk(symbols, CHUNK_SIZE);
-  const quoteMap = new Map();
   const sparkMap = new Map();
   const failures = [];
 
@@ -134,13 +126,12 @@ async function fetchYahooData(symbols) {
     const batch = sets.slice(i, i + MAX_CONCURRENCY);
     const results = await Promise.all(batch.map(processChunk));
     results.forEach((result) => {
-      result.quoteMap.forEach((v, k) => quoteMap.set(k, v));
       result.sparkMap.forEach((v, k) => sparkMap.set(k, v));
       failures.push(...result.failures);
     });
   }
 
-  return { quoteMap, sparkMap, failures };
+  return { sparkMap, failures };
 }
 
 function buildSectorSummary(stocks) {
@@ -166,27 +157,46 @@ function buildResponseFromYahoo() {
     security: stock.security,
     sector: stock.sector,
     subIndustry: stock.subIndustry,
+    seedMarketCap: stock.marketCap,
   }));
 
   const symbols = [...new Set(universe.map((stock) => stock.yahooSymbol))];
-  return fetchYahooData(symbols).then(({ quoteMap, sparkMap, failures }) => {
+  return fetchYahooData(symbols).then(({ sparkMap, failures }) => {
     const stocks = [];
 
     universe.forEach((stock) => {
-      const quote = quoteMap.get(stock.yahooSymbol);
-      if (!quote) {
-        failures.push(`${stock.symbol}/${stock.yahooSymbol}: missing quote`);
+      const spark = sparkMap.get(stock.yahooSymbol);
+      if (!spark) {
+        failures.push(`${stock.symbol}/${stock.yahooSymbol}: missing spark`);
         return;
       }
 
-      const spark = sparkMap.get(stock.yahooSymbol);
-      const timestamps = spark?.response?.[0]?.timestamp || [];
-      const closes = spark?.response?.[0]?.close || [];
+      const series = spark.response?.[0] || {};
+      const meta = series.meta || {};
+      const timestamps = series.timestamp || [];
+      const closes = series.close || [];
 
-      const currentPrice = quote.regularMarketPrice;
-      const lastClose = quote.regularMarketPreviousClose;
-      const high52w = quote.fiftyTwoWeekHigh;
+      const priceFromMeta = meta.regularMarketPrice;
+      const fallbackPrice = closes.findLast((value) => Number.isFinite(value));
+      const currentPrice = Number.isFinite(priceFromMeta) ? priceFromMeta : fallbackPrice;
+
+      const prevClose = Number.isFinite(meta.previousClose)
+        ? meta.previousClose
+        : Number.isFinite(meta.chartPreviousClose)
+          ? meta.chartPreviousClose
+          : pickLastBefore(timestamps, closes, Date.now() - DAY_MS);
+
+      const change = Number.isFinite(currentPrice) && Number.isFinite(prevClose)
+        ? currentPrice - prevClose
+        : null;
+      const changePercent = Number.isFinite(change) && Number.isFinite(prevClose) && prevClose !== 0
+        ? (change / prevClose) * 100
+        : null;
+
       const high12w = calc12wHigh(timestamps, closes);
+      const high52w = Number.isFinite(meta.fiftyTwoWeekHigh)
+        ? meta.fiftyTwoWeekHigh
+        : calc52wHigh(timestamps, closes);
 
       const pctFrom52wHigh = Number.isFinite(currentPrice) && Number.isFinite(high52w) && high52w > 0
         ? ((currentPrice / high52w) - 1) * 100
@@ -200,15 +210,15 @@ function buildResponseFromYahoo() {
         security: stock.security,
         sector: stock.sector,
         subIndustry: stock.subIndustry,
-        change: Number.isFinite(quote.regularMarketChange) ? quote.regularMarketChange : null,
-        changePercent: Number.isFinite(quote.regularMarketChangePercent) ? quote.regularMarketChangePercent : null,
-        marketCap: Number.isFinite(quote.marketCap) ? quote.marketCap : null,
+        change,
+        changePercent,
+        marketCap: Number.isFinite(meta.marketCap) ? meta.marketCap : stock.seedMarketCap,
         perf1w: calcPerf(currentPrice, timestamps, closes, 7),
         perf1m: calcPerf(currentPrice, timestamps, closes, 30),
         perf3m: calcPerf(currentPrice, timestamps, closes, 90),
         pctFrom52wHigh,
         high52w: Number.isFinite(high52w) ? high52w : null,
-        lastClose: Number.isFinite(lastClose) ? lastClose : null,
+        lastClose: Number.isFinite(prevClose) ? prevClose : null,
         currentPrice: Number.isFinite(currentPrice) ? currentPrice : null,
         high12w: Number.isFinite(high12w) ? high12w : null,
         pctFrom12wHigh,
@@ -216,14 +226,14 @@ function buildResponseFromYahoo() {
     });
 
     if (!stocks.length) {
-      throw new Error(`Yahoo returned no stock rows (${failures.slice(0, 3).join(' | ')})`);
+      throw new Error(`Yahoo spark returned no stock rows (${failures.slice(0, 3).join(' | ')})`);
     }
 
     return {
       asOf: new Date().toISOString(),
       source: {
         constituents: 'seed:/public/sp500ad/data/sector-ad.json',
-        quotes: 'Yahoo Finance',
+        quotes: 'Yahoo Finance spark',
       },
       failures,
       sectors: buildSectorSummary(stocks),
