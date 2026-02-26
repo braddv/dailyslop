@@ -6,6 +6,8 @@ const defaults = [
 
 let holdings = [];
 let state = {};
+let fetchedClassByTicker = {};
+let classificationWarnings = [];
 
 const manualClass = {
   VOO: { region: 'US', sector: 'Broad US Equity', factor: 'US Beta' },
@@ -272,6 +274,7 @@ function aggregateExposureWeights(clean) {
 
 async function run() {
   document.getElementById('warnings').textContent = '';
+  classificationWarnings = [];
   ensureClassifications();
 
   const clean = normalizeHoldings(holdings);
@@ -473,4 +476,5 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
 });
 
 holdings = JSON.parse(JSON.stringify(defaults));
+loadTickerClassifications(holdings.map((h) => h.ticker)).then(() => renderHoldings());
 renderHoldings();
