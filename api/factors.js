@@ -40,6 +40,22 @@ async function fetchFrench(url, cacheKey, expectedHeaders) {
 }
 
 function normalizeFactorsTodayPayload(payload, tickers) {
+  const ensureArray = (x) => (Array.isArray(x) ? x : []);
+  const asRows = (x) => ensureArray(x).map((r) => ({ ...r }));
+
+  if (Array.isArray(payload) && payload.length && !payload[0]?.symbol && !payload[0]?.ticker && tickers.length === 1) {
+    return { [tickers[0]]: asRows(payload) };
+  }
+
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    const keyed = {};
+    tickers.forEach((t) => {
+      const candidate = payload[t] || payload[t.toLowerCase()];
+      if (Array.isArray(candidate)) keyed[t] = asRows(candidate);
+    });
+    if (Object.keys(keyed).length) return keyed;
+  }
+
   const rows = Array.isArray(payload) ? payload
     : Array.isArray(payload?.data) ? payload.data
       : Array.isArray(payload?.factors) ? payload.factors
@@ -48,10 +64,8 @@ function normalizeFactorsTodayPayload(payload, tickers) {
   rows.forEach((r) => {
     const symbol = String(r?.symbol || r?.ticker || '').toUpperCase();
     if (!symbol) return;
-    out[symbol] = {
-      ...r,
-      symbol,
-    };
+    if (!out[symbol]) out[symbol] = [];
+    out[symbol].push({ ...r, symbol });
   });
   const filtered = {};
   tickers.forEach((t) => {
@@ -155,7 +169,7 @@ module.exports = async function handler(req, res) {
       MOM: hasMomentum && momByDate.get(r.date) ? momByDate.get(r.date).Mom : null,
     }));
 
-    const hasSymbolFactors = Object.keys(symbolFactors).length > 0;
+    const hasSymbolFactors = Object.values(symbolFactors).some((rows) => Array.isArray(rows) && rows.length);
     return res.status(200).json({ factors: merged, hasMomentum, symbolFactors, factorsCatalog, warnings, factorPriority: hasSymbolFactors ? 'factorstoday' : 'ff_regression' });
   } catch (err) {
     return res.status(500).json({ error: err.message });

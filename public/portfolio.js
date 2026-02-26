@@ -438,10 +438,14 @@ async function runFactors() {
   state.factorRows = rows;
   const regTable = `<div>Model: ${factorData.hasMomentum ? 'FF5 + MOM' : 'FF5 only (momentum unavailable)'}</div><table><tr><th>Name</th>${modelCols.map((c) => `<th>${c} β</th><th>${c} t</th>`).join('')}<th>R²</th><th>Annualized α</th></tr>${rows.map((r) => `<tr><td>${r.name}</td>${r.reg.beta.map((b, i) => `<td>${b.toFixed(3)}</td><td>${r.reg.t[i].toFixed(2)}</td>`).join('')}<td>${r.reg.r2.toFixed(2)}</td><td>${fmt(r.reg.alphaAnnual)}</td></tr>`).join('')}</table>`;
 
-  const sfRows = Object.values(symbolFactors);
-  const sfCols = sfRows.length ? Object.keys(sfRows[0]).filter((k) => k !== 'symbol' && typeof sfRows[0][k] === 'number').slice(0, 8) : [];
-  const sfTable = sfRows.length
-    ? `<h4>FactorsToday symbol factors (priority source)</h4><table><tr><th>Symbol</th>${sfCols.map((c) => `<th>${c}</th>`).join('')}</tr>${sfRows.map((r) => `<tr><td>${r.symbol}</td>${sfCols.map((c) => `<td>${Number(r[c]).toFixed(3)}</td>`).join('')}</tr>`).join('')}</table>`
+  const symbolFactorEntries = Object.entries(symbolFactors).filter(([, rowsForSymbol]) => Array.isArray(rowsForSymbol) && rowsForSymbol.length);
+  const sfTable = symbolFactorEntries.length
+    ? `<h4>FactorsToday symbol factors (h126 ~ 6M)</h4><table><tr><th>Symbol</th><th>Top 3 factors (h126)</th><th>Bottom 3 negative correlations (h126)</th></tr>${symbolFactorEntries.map(([symbol, rowsForSymbol]) => {
+      const summary = topAndBottomFactors(rowsForSymbol, 'h126', 3);
+      const topHtml = summary.top.length ? summary.top.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No h126 values</span>';
+      const bottomHtml = summary.bottom.length ? summary.bottom.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No negative h126 values</span>';
+      return `<tr><td>${symbol}</td><td>${topHtml}</td><td>${bottomHtml}</td></tr>`;
+    }).join('')}</table>`
     : '<div class="small">FactorsToday symbol factor rows unavailable; using regression model only.</div>';
 
   const catalogPreview = factorsCatalog.length
@@ -474,6 +478,21 @@ function mapToCsv(mapObj, header) {
     `${header},weight_percent`,
     ...Object.entries(mapObj).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k},${(v * 100).toFixed(4)}`),
   ].join('\n');
+}
+
+function topAndBottomFactors(rows, horizon = 'h126', count = 3) {
+  const usable = (Array.isArray(rows) ? rows : [])
+    .map((r) => ({
+      name: r?.name || r?.factor || 'Unknown',
+      value: Number(r?.[horizon]),
+    }))
+    .filter((r) => Number.isFinite(r.value));
+  const sortedDesc = [...usable].sort((a, b) => b.value - a.value);
+  const sortedAsc = [...usable].sort((a, b) => a.value - b.value);
+  return {
+    top: sortedDesc.slice(0, count),
+    bottom: sortedAsc.filter((r) => r.value < 0).slice(0, count),
+  };
 }
 
 document.getElementById('loadDefault').onclick = () => { holdings = JSON.parse(JSON.stringify(defaults)); renderHoldings(); };
