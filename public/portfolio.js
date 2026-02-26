@@ -6,8 +6,7 @@ const defaults = [
 
 let holdings = [];
 let state = {};
-let sectorClassByTicker = {};
-let sectorClassLoaded = false;
+let fetchedClassByTicker = {};
 
 const manualClass = {
   VOO: { region: 'US', sector: 'Broad US Equity', factor: 'US Beta' },
@@ -39,40 +38,39 @@ function asFactorBucket(sectorName) {
   return sector;
 }
 
-function mergeSectorClassifications() {
-  Object.entries(sectorClassByTicker).forEach(([ticker, cls]) => {
+function mergeFetchedClassifications() {
+  Object.entries(fetchedClassByTicker).forEach(([ticker, cls]) => {
     const existing = manualClass[ticker] || { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
     const merged = { ...existing };
     if (!merged.region || merged.region === 'Unknown') merged.region = cls.region || 'Unknown';
     if (!merged.sector || merged.sector === 'Unknown') merged.sector = cls.sector || 'Unknown';
-    if (!merged.factor || merged.factor === 'Unassigned') merged.factor = cls.factor || 'Unassigned';
+    if (!merged.factor || merged.factor === 'Unassigned') merged.factor = cls.factor || asFactorBucket(cls.sector);
     manualClass[ticker] = merged;
   });
 }
 
-async function loadSectorClassifications() {
-  if (sectorClassLoaded) return;
-  sectorClassLoaded = true;
+async function loadTickerClassifications(tickers) {
+  const targets = (tickers || []).map((t) => String(t || '').toUpperCase().trim()).filter(Boolean);
+  const missing = targets.filter((t) => !fetchedClassByTicker[t]);
+  if (!missing.length) {
+    mergeFetchedClassifications();
+    return;
+  }
+
   try {
-    const resp = await fetch('/api/sector-ad');
+    const resp = await fetch(`/api/portfolio-classifications?tickers=${missing.join(',')}`);
     const payload = await resp.json();
-    const stocks = Array.isArray(payload?.stocks) ? payload.stocks : [];
-    sectorClassByTicker = Object.fromEntries(stocks
-      .filter((s) => s?.symbol)
-      .map((s) => {
-        const sector = s.sector || 'Unknown';
-        return [
-          String(s.symbol).toUpperCase(),
-          {
-            region: 'US',
-            sector,
-            factor: asFactorBucket(sector),
-          },
-        ];
-      }));
-    mergeSectorClassifications();
+    const classifications = payload?.classifications || {};
+    Object.entries(classifications).forEach(([ticker, cls]) => {
+      fetchedClassByTicker[ticker] = {
+        region: cls.region || 'Unknown',
+        sector: cls.sector || 'Unknown',
+        factor: cls.factor || asFactorBucket(cls.sector),
+      };
+    });
+    mergeFetchedClassifications();
   } catch {
-    // Keep manual-only classifications when sector dataset cannot be loaded.
+    // Keep manual-only classifications when lookup fails.
   }
 }
 
@@ -253,6 +251,8 @@ async function run() {
   ensureClassifications();
 
   const clean = holdings.map((h) => ({ ticker: h.ticker.toUpperCase().trim(), marketValue: Number(h.marketValue) })).filter((h) => h.ticker && h.marketValue > 0);
+  await loadTickerClassifications(clean.map((h) => h.ticker));
+  renderClassificationTable();
   const total = clean.reduce((s, h) => s + h.marketValue, 0);
   const weights = Object.fromEntries(clean.map((h) => [h.ticker, h.marketValue / total]));
   const tickers = clean.map((h) => h.ticker);
@@ -419,5 +419,5 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
 });
 
 holdings = JSON.parse(JSON.stringify(defaults));
-loadSectorClassifications().then(() => renderHoldings());
+loadTickerClassifications(holdings.map((h) => h.ticker)).then(() => renderHoldings());
 renderHoldings();
