@@ -398,8 +398,6 @@ async function run() {
 
 async function runFactors() {
   if (!state.portRet) return;
-  const window = Number(document.getElementById('factorWindow').value);
-  const includeAssets = document.getElementById('assetFactors').checked;
   const factorResp = await fetch(`/api/factors?tickers=${state.tickers.join(',')}`);
   const factorData = await factorResp.json();
   if (factorData.error) {
@@ -407,36 +405,11 @@ async function runFactors() {
     return;
   }
 
-  const facMap = new Map(factorData.factors.map((f) => [f.date, f]));
-
   const factorWarnings = Array.isArray(factorData.warnings) ? factorData.warnings : [];
   const symbolFactors = factorData.symbolFactors || {};
   const factorsCatalog = Array.isArray(factorData.factorsCatalog) ? factorData.factorsCatalog : [];
-  const factorPriority = factorData.factorPriority || 'ff_regression';
-  const modelCols = factorData.hasMomentum ? ['alpha', 'Mkt-RF', 'SMB', 'HML', 'RMW', 'CMA', 'MOM'] : ['alpha', 'Mkt-RF', 'SMB', 'HML', 'RMW', 'CMA'];
-  const rows = [];
-
-  function doReg(name, retSeries) {
-    const joint = retSeries.slice(-window).map((r) => ({ r: r.r, f: facMap.get(r.date) })).filter((x) => x.f);
-    const y = joint.map((x) => x.r - x.f.RF);
-    const x = joint.map((xj) => modelCols.map((c, i) => (i === 0 ? 1 : (xj.f[c] ?? 0))));
-    if (x.length < modelCols.length + 5) return null;
-    const reg = ols(y, x, modelCols);
-    return { name, reg };
-  }
-
-  const p = doReg('Portfolio', state.portRet);
-  if (p) rows.push(p);
-  if (includeAssets) {
-    state.tickers.forEach((t) => {
-      const ret = simpleReturns(state.prices[t]).map((r) => ({ date: r.date, r: r.r }));
-      const rr = doReg(t, ret);
-      if (rr) rows.push(rr);
-    });
-  }
-
-  state.factorRows = rows;
-  const regTable = `<div>Model: ${factorData.hasMomentum ? 'FF5 + MOM' : 'FF5 only (momentum unavailable)'}</div><table><tr><th>Name</th>${modelCols.map((c) => `<th>${c} β</th><th>${c} t</th>`).join('')}<th>R²</th><th>Annualized α</th></tr>${rows.map((r) => `<tr><td>${r.name}</td>${r.reg.beta.map((b, i) => `<td>${b.toFixed(3)}</td><td>${r.reg.t[i].toFixed(2)}</td>`).join('')}<td>${r.reg.r2.toFixed(2)}</td><td>${fmt(r.reg.alphaAnnual)}</td></tr>`).join('')}</table>`;
+  const factorPriority = factorData.factorPriority || 'factorstoday_unavailable';
+  state.factorRows = [];
 
   const symbolFactorEntries = Object.entries(symbolFactors).filter(([, rowsForSymbol]) => Array.isArray(rowsForSymbol) && rowsForSymbol.length);
   const sfTable = symbolFactorEntries.length
@@ -446,14 +419,14 @@ async function runFactors() {
       const bottomHtml = summary.bottom.length ? summary.bottom.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No negative factor values</span>';
       return `<tr><td>${symbol}</td><td>${topHtml}</td><td>${bottomHtml}</td></tr>`;
     }).join('')}</table>`
-    : '<div class="small">FactorsToday symbol factor rows unavailable; using regression model only.</div>';
+    : '<div class="small">FactorsToday returned no symbol rows for the current tickers.</div>';
 
   const catalogPreview = factorsCatalog.length
     ? `<div class="small">FactorsToday catalog fields: ${factorsCatalog.slice(0, 8).map((x) => x.name || x.id || x.factor || String(x)).join(', ')}</div>`
     : '';
 
-  const priorityBanner = `<div><b>Factor priority:</b> ${factorPriority === 'factorstoday' ? 'FactorsToday symbol factors' : 'FF regression fallback'}</div>`;
-  const factorHtml = factorPriority === 'factorstoday' ? `${priorityBanner}${sfTable}${catalogPreview}<h4>Regression cross-check</h4>${regTable}` : `${priorityBanner}${regTable}${sfTable}${catalogPreview}`;
+  const priorityBanner = `<div><b>Factor source:</b> ${factorPriority === 'factorstoday' ? 'FactorsToday' : 'FactorsToday (no rows returned)'}</div>`;
+  const factorHtml = `${priorityBanner}${sfTable}${catalogPreview}`;
   document.getElementById('factors').innerHTML = factorHtml;
   if (factorWarnings.length) {
     const warningsEl = document.getElementById('warnings');
@@ -505,6 +478,10 @@ document.getElementById('rerunFactors').onclick = runFactors;
 document.getElementById('exportCorr').onclick = () => download('correlation_6m.csv', matrixCsv(state.corr.c6));
 document.getElementById('exportFactors').onclick = () => {
   const rows = state.factorRows || [];
+  if (!rows.length) {
+    download('factor_summary.csv', 'name,coef,tstat,r2,alpha_annual\n');
+    return;
+  }
   const header = 'name,coef,tstat,r2,alpha_annual';
   const csv = [header, ...rows.map((r) => `${r.name},"${r.reg.beta.map((x) => x.toFixed(4)).join('|')}","${r.reg.t.map((x) => x.toFixed(2)).join('|')}",${r.reg.r2.toFixed(3)},${r.reg.alphaAnnual.toFixed(4)}`)].join('\n');
   download('factor_summary.csv', csv);
