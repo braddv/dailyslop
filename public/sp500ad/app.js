@@ -488,12 +488,13 @@ function setMetric(metric) {
   buildChart(lastStocks);
 }
 
-async function loadData() {
+async function loadData(forceRefresh = false) {
   chartEl.innerHTML = "";
   notesEl.textContent = "";
 
   try {
-    const res = await fetch("./data/sector-ad.json");
+    const endpoint = forceRefresh ? "/api/sector-ad?refresh=true" : "/api/sector-ad";
+    const res = await fetch(endpoint);
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || "Failed to load data");
@@ -519,7 +520,7 @@ async function loadData() {
 }
 
 refreshBtn.addEventListener("click", () => {
-  loadData();
+  loadData(true);
 });
 
 chartEl.addEventListener("click", () => {

@@ -1,0 +1,207 @@
+const { readCache, writeCache } = require('./_lib/cache');
+const seedData = require('../public/sp500ad/data/sector-ad.json');
+
+const CACHE_KEY = 'sector_ad_yahoo';
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const CHUNK_SIZE = 100;
+
+function hasValidStocks(payload) {
+  return Array.isArray(payload?.stocks) && payload.stocks.length > 100;
+}
+
+function chunk(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+function pickLastBefore(timestamps, closes, cutoff) {
+  let value = null;
+  for (let i = 0; i < timestamps.length; i += 1) {
+    const ts = timestamps[i] * 1000;
+    const close = closes[i];
+    if (!Number.isFinite(close)) continue;
+    if (ts <= cutoff) value = close;
+    if (ts > cutoff) break;
+  }
+  return value;
+}
+
+function calcPerf(currentPrice, timestamps, closes, days) {
+  if (!Number.isFinite(currentPrice)) return null;
+  const base = pickLastBefore(timestamps, closes, Date.now() - days * DAY_MS);
+  if (!Number.isFinite(base) || base <= 0) return null;
+  return ((currentPrice / base) - 1) * 100;
+}
+
+function calc12wHigh(timestamps, closes) {
+  const cutoff = Date.now() - 84 * DAY_MS;
+  let high = null;
+  for (let i = 0; i < timestamps.length; i += 1) {
+    const ts = timestamps[i] * 1000;
+    const close = closes[i];
+    if (ts < cutoff || !Number.isFinite(close)) continue;
+    high = high == null ? close : Math.max(high, close);
+  }
+  return high;
+}
+
+async function fetchQuoteChunk(symbols) {
+  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(','))}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`quote HTTP ${resp.status}`);
+  const json = await resp.json();
+  return json?.quoteResponse?.result || [];
+}
+
+async function fetchSparkChunk(symbols) {
+  const url = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(symbols.join(','))}&range=6mo&interval=1d`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`spark HTTP ${resp.status}`);
+  const json = await resp.json();
+  return json?.spark?.result || [];
+}
+
+async function fetchYahooData(symbols) {
+  const quoteMap = new Map();
+  const sparkMap = new Map();
+  const failures = [];
+
+  for (const set of chunk(symbols, CHUNK_SIZE)) {
+    try {
+      const quotes = await fetchQuoteChunk(set);
+      quotes.forEach((quote) => {
+        if (quote?.symbol) quoteMap.set(String(quote.symbol).toUpperCase(), quote);
+      });
+    } catch (err) {
+      set.forEach((symbol) => failures.push(`${symbol}: ${err.message}`));
+    }
+
+    try {
+      const sparkRows = await fetchSparkChunk(set);
+      sparkRows.forEach((row) => {
+        if (row?.symbol) sparkMap.set(String(row.symbol).toUpperCase(), row);
+      });
+    } catch (err) {
+      set.forEach((symbol) => failures.push(`${symbol}: ${err.message}`));
+    }
+  }
+
+  return { quoteMap, sparkMap, failures };
+}
+
+function buildSectorSummary(stocks) {
+  const bySector = new Map();
+  stocks.forEach((stock) => {
+    const key = stock.sector || 'Unknown';
+    if (!bySector.has(key)) {
+      bySector.set(key, { sector: key, advancers: 0, decliners: 0, unchanged: 0, total: 0 });
+    }
+    const row = bySector.get(key);
+    row.total += 1;
+    if (stock.changePercent > 0) row.advancers += 1;
+    else if (stock.changePercent < 0) row.decliners += 1;
+    else row.unchanged += 1;
+  });
+  return Array.from(bySector.values()).sort((a, b) => a.sector.localeCompare(b.sector));
+}
+
+function buildResponseFromYahoo() {
+  const universe = seedData.stocks.map((stock) => ({
+    symbol: stock.symbol,
+    security: stock.security,
+    sector: stock.sector,
+    subIndustry: stock.subIndustry,
+  }));
+
+  const symbols = [...new Set(universe.map((stock) => stock.symbol))];
+  return fetchYahooData(symbols).then(({ quoteMap, sparkMap, failures }) => {
+    const stocks = [];
+
+    universe.forEach((stock) => {
+      const quote = quoteMap.get(stock.symbol);
+      if (!quote) {
+        failures.push(`${stock.symbol}: missing quote`);
+        return;
+      }
+
+      const spark = sparkMap.get(stock.symbol);
+      const timestamps = spark?.response?.[0]?.timestamp || [];
+      const closes = spark?.response?.[0]?.close || [];
+
+      const currentPrice = quote.regularMarketPrice;
+      const lastClose = quote.regularMarketPreviousClose;
+      const high52w = quote.fiftyTwoWeekHigh;
+      const high12w = calc12wHigh(timestamps, closes);
+
+      const pctFrom52wHigh = Number.isFinite(currentPrice) && Number.isFinite(high52w) && high52w > 0
+        ? ((currentPrice / high52w) - 1) * 100
+        : null;
+      const pctFrom12wHigh = Number.isFinite(currentPrice) && Number.isFinite(high12w) && high12w > 0
+        ? ((currentPrice / high12w) - 1) * 100
+        : null;
+
+      stocks.push({
+        ...stock,
+        change: Number.isFinite(quote.regularMarketChange) ? quote.regularMarketChange : null,
+        changePercent: Number.isFinite(quote.regularMarketChangePercent) ? quote.regularMarketChangePercent : null,
+        marketCap: Number.isFinite(quote.marketCap) ? quote.marketCap : null,
+        perf1w: calcPerf(currentPrice, timestamps, closes, 7),
+        perf1m: calcPerf(currentPrice, timestamps, closes, 30),
+        perf3m: calcPerf(currentPrice, timestamps, closes, 90),
+        pctFrom52wHigh,
+        high52w: Number.isFinite(high52w) ? high52w : null,
+        lastClose: Number.isFinite(lastClose) ? lastClose : null,
+        currentPrice: Number.isFinite(currentPrice) ? currentPrice : null,
+        high12w: Number.isFinite(high12w) ? high12w : null,
+        pctFrom12wHigh,
+      });
+    });
+
+    if (!stocks.length) {
+      throw new Error('Yahoo returned no stock rows');
+    }
+
+    return {
+      asOf: new Date().toISOString(),
+      source: {
+        constituents: 'seed:/public/sp500ad/data/sector-ad.json',
+        quotes: 'Yahoo Finance',
+      },
+      failures,
+      sectors: buildSectorSummary(stocks),
+      stocks,
+      cacheFresh: true,
+    };
+  });
+}
+
+module.exports = async function handler(req, res) {
+  try {
+    const refresh = String(req.query?.refresh || '').toLowerCase() === 'true';
+    if (!refresh) {
+      const cached = readCache(CACHE_KEY, CACHE_TTL_MS);
+      if (hasValidStocks(cached)) return res.status(200).json({ ...cached, cacheFresh: true });
+    }
+
+    const payload = await buildResponseFromYahoo();
+    writeCache(CACHE_KEY, payload);
+    return res.status(200).json({ ...payload, cacheFresh: true });
+  } catch (err) {
+    const cached = readCache(CACHE_KEY, 7 * DAY_MS);
+    if (hasValidStocks(cached)) {
+      return res.status(200).json({
+        ...cached,
+        cacheFresh: false,
+        failures: [...(cached.failures || []), `live refresh failed: ${err.message}`],
+      });
+    }
+
+    return res.status(200).json({
+      ...seedData,
+      cacheFresh: false,
+      failures: [...(seedData.failures || []), `live refresh failed: ${err.message}`],
+    });
+  }
+};
