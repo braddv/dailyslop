@@ -10,13 +10,18 @@ let fetchedClassByTicker = {};
 let classificationWarnings = [];
 
 const manualClass = {
-  VOO: { region: 'US', sector: 'Broad US Equity', factor: 'US Beta' },
-  VXUS: { region: 'ex-US', sector: 'Broad ex-US Equity', factor: 'International Beta' },
-  XLE: { region: 'US', sector: 'Energy', factor: 'Energy/Cyclicals' },
-  HAP: { region: 'Global', sector: 'Natural Resources', factor: 'Commodities Tilt' },
-  FCG: { region: 'US', sector: 'Energy', factor: 'Energy/Cyclicals' },
-  XOM: { region: 'US', sector: 'Energy', factor: 'Energy/Cyclicals' },
+  VOO: { region: 'US', sector: 'Broad US Equity', factor: 'Market Beta' },
+  VXUS: { region: 'ex-US', sector: 'Broad ex-US Equity', factor: 'International Equity' },
+  XLE: { region: 'US', sector: 'Energy', factor: 'Real Assets' },
+  HAP: { region: 'Global', sector: 'Natural Resources', factor: 'Real Assets' },
+  FCG: { region: 'US', sector: 'Energy', factor: 'Real Assets' },
+  XOM: { region: 'US', sector: 'Energy', factor: 'Real Assets' },
 };
+
+const FACTORS_TODAY_BUCKETS = [
+  'Market Beta', 'International Equity', 'Size', 'Value', 'Momentum', 'Quality',
+  'Low Volatility', 'Growth', 'Dividend', 'Real Assets', 'Rates', 'Thematic/Other', 'Unassigned',
+];
 
 function ensureClassifications() {
   holdings.forEach((h) => {
@@ -31,12 +36,15 @@ function ensureClassifications() {
 function asFactorBucket(sectorName) {
   const sector = String(sectorName || '').trim();
   if (!sector) return 'Unassigned';
-  if (sector === 'Information Technology' || sector === 'Communication Services') return 'Tech/Growth';
-  if (sector === 'Energy' || sector === 'Materials' || sector === 'Industrials') return 'Cyclicals/Real Assets';
-  if (sector === 'Utilities' || sector === 'Consumer Staples' || sector === 'Health Care') return 'Defensive/Quality';
-  if (sector === 'Financials') return 'Financials';
-  if (sector === 'Real Estate') return 'Rate Sensitive';
-  return sector;
+  if (sector === 'Information Technology' || sector === 'Communication Services' || sector === 'Consumer Discretionary') return 'Growth';
+  if (sector === 'Health Care') return 'Quality';
+  if (sector === 'Utilities' || sector === 'Consumer Staples') return 'Low Volatility';
+  if (sector === 'Industrials' || sector === 'Financials') return 'Value';
+  if (sector === 'Energy' || sector === 'Materials' || sector === 'Natural Resources') return 'Real Assets';
+  if (sector === 'Real Estate') return 'Rates';
+  if (sector === 'Broad US Equity' || sector === 'ETF') return 'Market Beta';
+  if (sector === 'Broad ex-US Equity') return 'International Equity';
+  return 'Thematic/Other';
 }
 
 function mergeFetchedClassifications() {
@@ -117,12 +125,12 @@ function renderClassificationTable() {
     return { ticker, cls };
   });
 
-  t.innerHTML = '<tr><th>Ticker</th><th>Region</th><th>Sector</th><th>Factor bucket</th></tr>' + rows.map((r) =>
+  t.innerHTML = '<tr><th>Ticker</th><th>Region</th><th>Sector</th><th>Factor bucket (Factors.today)</th></tr>' + rows.map((r) =>
     `<tr>
       <td>${r.ticker || '-'}</td>
       <td><input data-class-ticker="${r.ticker}" data-class-k="region" value="${r.cls.region || ''}"></td>
       <td><input data-class-ticker="${r.ticker}" data-class-k="sector" value="${r.cls.sector || ''}"></td>
-      <td><input data-class-ticker="${r.ticker}" data-class-k="factor" value="${r.cls.factor || ''}"></td>
+      <td><select data-class-ticker="${r.ticker}" data-class-k="factor">${FACTORS_TODAY_BUCKETS.map((bucket) => `<option value="${bucket}" ${bucket === (r.cls.factor || 'Unassigned') ? 'selected' : ''}>${bucket}</option>`).join('')}</select></td>
     </tr>`
   ).join('');
 }

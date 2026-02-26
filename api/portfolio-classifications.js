@@ -21,12 +21,15 @@ const INDUSTRY_TO_SECTOR = [
 function asFactorBucket(sectorName) {
   const sector = String(sectorName || '').trim();
   if (!sector || sector === 'Unknown') return 'Unassigned';
-  if (sector === 'Information Technology' || sector === 'Communication Services') return 'Tech/Growth';
-  if (sector === 'Energy' || sector === 'Materials' || sector === 'Industrials') return 'Cyclicals/Real Assets';
-  if (sector === 'Utilities' || sector === 'Consumer Staples' || sector === 'Health Care') return 'Defensive/Quality';
-  if (sector === 'Financials') return 'Financials';
-  if (sector === 'Real Estate') return 'Rate Sensitive';
-  return sector;
+  if (sector === 'Information Technology' || sector === 'Communication Services' || sector === 'Consumer Discretionary') return 'Growth';
+  if (sector === 'Health Care') return 'Quality';
+  if (sector === 'Utilities' || sector === 'Consumer Staples') return 'Low Volatility';
+  if (sector === 'Industrials' || sector === 'Financials') return 'Value';
+  if (sector === 'Energy' || sector === 'Materials' || sector === 'Natural Resources') return 'Real Assets';
+  if (sector === 'Real Estate') return 'Rates';
+  if (sector === 'Broad US Equity' || sector === 'ETF') return 'Market Beta';
+  if (sector === 'Broad ex-US Equity') return 'International Equity';
+  return 'Thematic/Other';
 }
 
 function getSp500Map() {
@@ -114,7 +117,7 @@ function classifyFromSparkMeta(ticker, meta = {}) {
   const instrumentType = String(meta.instrumentType || '').toUpperCase();
   let sector = 'Unknown';
   if (instrumentType === 'ETF') sector = 'ETF';
-  const factor = sector === 'ETF' ? 'Beta/Index Exposure' : 'Unassigned';
+  const factor = sector === 'ETF' ? 'Market Beta' : 'Unassigned';
   return {
     region: inferRegionFromMeta(meta, ticker),
     sector,
