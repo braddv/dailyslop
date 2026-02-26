@@ -6,6 +6,8 @@ const defaults = [
 
 let holdings = [];
 let state = {};
+let sectorClassByTicker = {};
+let sectorClassLoaded = false;
 
 const manualClass = {
   VOO: { region: 'US', sector: 'Broad US Equity', factor: 'US Beta' },
@@ -24,6 +26,54 @@ function ensureClassifications() {
     }
     if (!manualClass[t].factor) manualClass[t].factor = 'Unassigned';
   });
+}
+
+function asFactorBucket(sectorName) {
+  const sector = String(sectorName || '').trim();
+  if (!sector) return 'Unassigned';
+  if (sector === 'Information Technology' || sector === 'Communication Services') return 'Tech/Growth';
+  if (sector === 'Energy' || sector === 'Materials' || sector === 'Industrials') return 'Cyclicals/Real Assets';
+  if (sector === 'Utilities' || sector === 'Consumer Staples' || sector === 'Health Care') return 'Defensive/Quality';
+  if (sector === 'Financials') return 'Financials';
+  if (sector === 'Real Estate') return 'Rate Sensitive';
+  return sector;
+}
+
+function mergeSectorClassifications() {
+  Object.entries(sectorClassByTicker).forEach(([ticker, cls]) => {
+    const existing = manualClass[ticker] || { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
+    const merged = { ...existing };
+    if (!merged.region || merged.region === 'Unknown') merged.region = cls.region || 'Unknown';
+    if (!merged.sector || merged.sector === 'Unknown') merged.sector = cls.sector || 'Unknown';
+    if (!merged.factor || merged.factor === 'Unassigned') merged.factor = cls.factor || 'Unassigned';
+    manualClass[ticker] = merged;
+  });
+}
+
+async function loadSectorClassifications() {
+  if (sectorClassLoaded) return;
+  sectorClassLoaded = true;
+  try {
+    const resp = await fetch('/api/sector-ad');
+    const payload = await resp.json();
+    const stocks = Array.isArray(payload?.stocks) ? payload.stocks : [];
+    sectorClassByTicker = Object.fromEntries(stocks
+      .filter((s) => s?.symbol)
+      .map((s) => {
+        const sector = s.sector || 'Unknown';
+        return [
+          String(s.symbol).toUpperCase(),
+          {
+            region: 'US',
+            sector,
+            factor: asFactorBucket(sector),
+          },
+        ];
+      }));
+    mergeSectorClassifications();
+  } catch {
+    // Keep manual-only classifications when sector dataset cannot be loaded.
+  }
 }
 
 function renderHoldings() {
@@ -369,4 +419,5 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
 });
 
 holdings = JSON.parse(JSON.stringify(defaults));
+loadSectorClassifications().then(() => renderHoldings());
 renderHoldings();
