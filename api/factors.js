@@ -83,6 +83,31 @@ async function fetchFactorsToday(tickers) {
   return { symbolFactors: normalized, warning: null };
 }
 
+
+async function fetchFactorsTodayCatalog() {
+  const key = process.env.FACTORSTODAY_API_KEY;
+  if (!key) return { catalog: [], warning: 'FACTORSTODAY_API_KEY missing' };
+
+  const cacheKey = 'factorstoday_catalog';
+  const cached = readCache(cacheKey, 24 * 60 * 60 * 1000);
+  if (cached) return { catalog: cached, warning: null };
+
+  const base = FACTORSTODAY_URL.replace(/\/factors\/?$/, '');
+  const url = `${base}/catalog`;
+  const resp = await fetch(url, {
+    headers: {
+      accept: 'application/json,text/plain,*/*',
+      authorization: `Bearer ${key}`,
+      'x-api-key': key,
+    },
+  });
+  if (!resp.ok) throw new Error(`FactorsToday catalog HTTP ${resp.status}`);
+  const payload = await resp.json();
+  const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : Array.isArray(payload?.catalog) ? payload.catalog : [];
+  writeCache(cacheKey, rows);
+  return { catalog: rows, warning: null };
+}
+
 module.exports = async function handler(req, res) {
   try {
     const ff5 = await fetchFrench(FF5_URL, 'ff5_daily', ['Mkt-RF', 'SMB', 'HML', 'RMW', 'CMA', 'RF']);
@@ -97,6 +122,7 @@ module.exports = async function handler(req, res) {
 
     const tickers = [...new Set(String(req.query?.tickers || '').split(',').map((t) => t.trim().toUpperCase()).filter(Boolean))];
     let symbolFactors = {};
+    let factorsCatalog = [];
     const warnings = [];
     try {
       const ft = await fetchFactorsToday(tickers);
@@ -104,6 +130,13 @@ module.exports = async function handler(req, res) {
       if (ft.warning) warnings.push(ft.warning);
     } catch (err) {
       warnings.push(`FactorsToday unavailable: ${err.message}`);
+    }
+    try {
+      const cat = await fetchFactorsTodayCatalog();
+      factorsCatalog = cat.catalog || [];
+      if (cat.warning) warnings.push(cat.warning);
+    } catch (err) {
+      warnings.push(`FactorsToday catalog unavailable: ${err.message}`);
     }
 
     const momByDate = new Map((mom || []).map((r) => [r.date, r]));
@@ -118,7 +151,8 @@ module.exports = async function handler(req, res) {
       MOM: hasMomentum && momByDate.get(r.date) ? momByDate.get(r.date).Mom : null,
     }));
 
-    return res.status(200).json({ factors: merged, hasMomentum, symbolFactors, warnings });
+    const hasSymbolFactors = Object.keys(symbolFactors).length > 0;
+    return res.status(200).json({ factors: merged, hasMomentum, symbolFactors, factorsCatalog, warnings, factorPriority: hasSymbolFactors ? 'factorstoday' : 'ff_regression' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

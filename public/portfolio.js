@@ -411,6 +411,8 @@ async function runFactors() {
 
   const factorWarnings = Array.isArray(factorData.warnings) ? factorData.warnings : [];
   const symbolFactors = factorData.symbolFactors || {};
+  const factorsCatalog = Array.isArray(factorData.factorsCatalog) ? factorData.factorsCatalog : [];
+  const factorPriority = factorData.factorPriority || 'ff_regression';
   const modelCols = factorData.hasMomentum ? ['alpha', 'Mkt-RF', 'SMB', 'HML', 'RMW', 'CMA', 'MOM'] : ['alpha', 'Mkt-RF', 'SMB', 'HML', 'RMW', 'CMA'];
   const rows = [];
 
@@ -439,10 +441,16 @@ async function runFactors() {
   const sfRows = Object.values(symbolFactors);
   const sfCols = sfRows.length ? Object.keys(sfRows[0]).filter((k) => k !== 'symbol' && typeof sfRows[0][k] === 'number').slice(0, 8) : [];
   const sfTable = sfRows.length
-    ? `<h4>FactorsToday symbol factors</h4><table><tr><th>Symbol</th>${sfCols.map((c) => `<th>${c}</th>`).join('')}</tr>${sfRows.map((r) => `<tr><td>${r.symbol}</td>${sfCols.map((c) => `<td>${Number(r[c]).toFixed(3)}</td>`).join('')}</tr>`).join('')}</table>`
+    ? `<h4>FactorsToday symbol factors (priority source)</h4><table><tr><th>Symbol</th>${sfCols.map((c) => `<th>${c}</th>`).join('')}</tr>${sfRows.map((r) => `<tr><td>${r.symbol}</td>${sfCols.map((c) => `<td>${Number(r[c]).toFixed(3)}</td>`).join('')}</tr>`).join('')}</table>`
     : '<div class="small">FactorsToday symbol factor rows unavailable; using regression model only.</div>';
 
-  document.getElementById('factors').innerHTML = `${regTable}${sfTable}`;
+  const catalogPreview = factorsCatalog.length
+    ? `<div class="small">FactorsToday catalog fields: ${factorsCatalog.slice(0, 8).map((x) => x.name || x.id || x.factor || String(x)).join(', ')}</div>`
+    : '';
+
+  const priorityBanner = `<div><b>Factor priority:</b> ${factorPriority === 'factorstoday' ? 'FactorsToday symbol factors' : 'FF regression fallback'}</div>`;
+  const factorHtml = factorPriority === 'factorstoday' ? `${priorityBanner}${sfTable}${catalogPreview}<h4>Regression cross-check</h4>${regTable}` : `${priorityBanner}${regTable}${sfTable}${catalogPreview}`;
+  document.getElementById('factors').innerHTML = factorHtml;
   if (factorWarnings.length) {
     const warningsEl = document.getElementById('warnings');
     warningsEl.textContent = [warningsEl.textContent, ...factorWarnings].filter(Boolean).join(' | ');
