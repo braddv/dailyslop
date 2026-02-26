@@ -6,6 +6,8 @@ const defaults = [
 
 let holdings = [];
 let state = {};
+let fetchedClassByTicker = {};
+let classificationWarnings = [];
 
 const manualClass = {
   VOO: { region: 'US', sector: 'Broad US Equity', factor: 'US Beta' },
@@ -24,6 +26,60 @@ function ensureClassifications() {
     }
     if (!manualClass[t].factor) manualClass[t].factor = 'Unassigned';
   });
+}
+
+function asFactorBucket(sectorName) {
+  const sector = String(sectorName || '').trim();
+  if (!sector) return 'Unassigned';
+  if (sector === 'Information Technology' || sector === 'Communication Services') return 'Tech/Growth';
+  if (sector === 'Energy' || sector === 'Materials' || sector === 'Industrials') return 'Cyclicals/Real Assets';
+  if (sector === 'Utilities' || sector === 'Consumer Staples' || sector === 'Health Care') return 'Defensive/Quality';
+  if (sector === 'Financials') return 'Financials';
+  if (sector === 'Real Estate') return 'Rate Sensitive';
+  return sector;
+}
+
+function mergeFetchedClassifications() {
+  Object.entries(fetchedClassByTicker).forEach(([ticker, cls]) => {
+    const existing = manualClass[ticker] || { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
+    const merged = { ...existing };
+    if (!merged.region || merged.region === 'Unknown') merged.region = cls.region || 'Unknown';
+    if (!merged.sector || merged.sector === 'Unknown') merged.sector = cls.sector || 'Unknown';
+    if (!merged.factor || merged.factor === 'Unassigned') merged.factor = cls.factor || asFactorBucket(cls.sector);
+    manualClass[ticker] = merged;
+  });
+}
+
+async function loadTickerClassifications(tickers) {
+  const targets = (tickers || []).map((t) => String(t || '').toUpperCase().trim()).filter(Boolean);
+  const missing = targets.filter((t) => !fetchedClassByTicker[t]);
+  if (!missing.length) {
+    classificationWarnings = [...new Set(classificationWarnings)];
+    mergeFetchedClassifications();
+    return;
+  }
+
+  try {
+    const resp = await fetch(`/api/portfolio-classifications?tickers=${missing.join(',')}`);
+    const payload = await resp.json();
+    const classifications = payload?.classifications || {};
+    const remoteWarnings = Array.isArray(payload?.warnings) ? payload.warnings : [];
+    const finnhubConfigured = payload?.diagnostics?.finnhubConfigured;
+    classificationWarnings = [...classificationWarnings, ...remoteWarnings];
+    if (finnhubConfigured === false) {
+      classificationWarnings.push('Ticker classification fallback: Finnhub key not configured (FINNHUB_KEY or FINNHUB_API_KEY).');
+    }
+    Object.entries(classifications).forEach(([ticker, cls]) => {
+      fetchedClassByTicker[ticker] = {
+        region: cls.region || 'Unknown',
+        sector: cls.sector || 'Unknown',
+        factor: cls.factor || asFactorBucket(cls.sector),
+      };
+    });
+    mergeFetchedClassifications();
+  } catch {
+    // Keep manual-only classifications when lookup fails.
+  }
 }
 
 function renderHoldings() {
@@ -200,9 +256,12 @@ function asWeightTable(mapObj, keyHeader) {
 
 async function run() {
   document.getElementById('warnings').textContent = '';
+  classificationWarnings = [];
   ensureClassifications();
 
   const clean = holdings.map((h) => ({ ticker: h.ticker.toUpperCase().trim(), marketValue: Number(h.marketValue) })).filter((h) => h.ticker && h.marketValue > 0);
+  await loadTickerClassifications(clean.map((h) => h.ticker));
+  renderClassificationTable();
   const total = clean.reduce((s, h) => s + h.marketValue, 0);
   const weights = Object.fromEntries(clean.map((h) => [h.ticker, h.marketValue / total]));
   const tickers = clean.map((h) => h.ticker);
@@ -255,7 +314,8 @@ async function run() {
     <b>Scenario shocks (rough)</b><br>Oil -20% day proxy impact: ${fmt(oilShock)}<br>Equity -10% proxy impact: ${fmt(equityShock)}
   `;
 
-  if (warnings?.length) document.getElementById('warnings').textContent = warnings.join(' | ');
+  const allWarnings = [...(warnings || []), ...classificationWarnings];
+  if (allWarnings.length) document.getElementById('warnings').textContent = [...new Set(allWarnings)].join(' | ');
   await runFactors();
 
   const htmlBlob = new Blob([`<html><body><h1>Portfolio Report Snapshot</h1>${document.body.innerHTML}</body></html>`], { type: 'text/html' });
@@ -369,4 +429,5 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
 });
 
 holdings = JSON.parse(JSON.stringify(defaults));
+loadTickerClassifications(holdings.map((h) => h.ticker)).then(() => renderHoldings());
 renderHoldings();
