@@ -476,6 +476,17 @@ function buildChart(stocks) {
   chartEl.appendChild(svg);
 }
 
+
+async function readApiJson(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const preview = text.slice(0, 120).replace(/\s+/g, ' ').trim();
+    throw new Error(`API returned non-JSON response${preview ? `: ${preview}` : ''}`);
+  }
+}
+
 function setMetric(metric) {
   if (!METRICS[metric]) return;
   selectedMetric = metric;
@@ -495,12 +506,10 @@ async function loadData(forceRefresh = false) {
   try {
     const endpoint = forceRefresh ? "/api/sector-ad?refresh=true" : "/api/sector-ad";
     const res = await fetch(endpoint);
+    const data = await readApiJson(res);
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || "Failed to load data");
+      throw new Error(data.error || `Failed to load data (HTTP ${res.status})`);
     }
-
-    const data = await res.json();
     asOfEl.textContent = formatDate(data.asOf);
     cacheEl.textContent = data.cacheFresh ? "Fresh" : "Stale";
 

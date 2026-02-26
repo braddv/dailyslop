@@ -4,8 +4,8 @@ const seedData = require('../public/sp500ad/data/sector-ad.json');
 const CACHE_KEY = 'sector_ad_yahoo';
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const CHUNK_SIZE = 25;
-
+const CHUNK_SIZE = 75;
+const MAX_CONCURRENCY = 4;
 
 function toYahooSymbol(symbol) {
   return String(symbol).replace(/\./g, '-').toUpperCase();
@@ -16,7 +16,7 @@ function sleep(ms) {
 }
 
 async function fetchJsonWithRetry(url, label) {
-  const attempts = [0, 350, 1000];
+  const attempts = [0, 250, 800];
   let lastErr = null;
 
   for (let i = 0; i < attempts.length; i += 1) {
@@ -24,7 +24,7 @@ async function fetchJsonWithRetry(url, label) {
     try {
       const resp = await fetch(url, {
         headers: {
-          'accept': 'application/json,text/plain,*/*',
+          accept: 'application/json,text/plain,*/*',
           'user-agent': 'Mozilla/5.0 (compatible; dailyslop-sectorad/1.0)',
         },
       });
@@ -41,6 +41,7 @@ async function fetchJsonWithRetry(url, label) {
 
   throw lastErr || new Error(`${label} failed`);
 }
+
 function hasValidStocks(payload) {
   return Array.isArray(payload?.stocks) && payload.stocks.length > 100;
 }
@@ -94,29 +95,49 @@ async function fetchSparkChunk(symbols) {
   return json?.spark?.result || [];
 }
 
+async function processChunk(set) {
+  const failures = [];
+  const quoteMap = new Map();
+  const sparkMap = new Map();
+
+  const [quoteRes, sparkRes] = await Promise.allSettled([
+    fetchQuoteChunk(set),
+    fetchSparkChunk(set),
+  ]);
+
+  if (quoteRes.status === 'fulfilled') {
+    quoteRes.value.forEach((quote) => {
+      if (quote?.symbol) quoteMap.set(String(quote.symbol).toUpperCase(), quote);
+    });
+  } else {
+    set.forEach((symbol) => failures.push(`${symbol}: ${quoteRes.reason.message}`));
+  }
+
+  if (sparkRes.status === 'fulfilled') {
+    sparkRes.value.forEach((row) => {
+      if (row?.symbol) sparkMap.set(String(row.symbol).toUpperCase(), row);
+    });
+  } else {
+    set.forEach((symbol) => failures.push(`${symbol}: ${sparkRes.reason.message}`));
+  }
+
+  return { quoteMap, sparkMap, failures };
+}
+
 async function fetchYahooData(symbols) {
+  const sets = chunk(symbols, CHUNK_SIZE);
   const quoteMap = new Map();
   const sparkMap = new Map();
   const failures = [];
 
-  for (const set of chunk(symbols, CHUNK_SIZE)) {
-    try {
-      const quotes = await fetchQuoteChunk(set);
-      quotes.forEach((quote) => {
-        if (quote?.symbol) quoteMap.set(String(quote.symbol).toUpperCase(), quote);
-      });
-    } catch (err) {
-      set.forEach((symbol) => failures.push(`${symbol}: ${err.message}`));
-    }
-
-    try {
-      const sparkRows = await fetchSparkChunk(set);
-      sparkRows.forEach((row) => {
-        if (row?.symbol) sparkMap.set(String(row.symbol).toUpperCase(), row);
-      });
-    } catch (err) {
-      set.forEach((symbol) => failures.push(`${symbol}: ${err.message}`));
-    }
+  for (let i = 0; i < sets.length; i += MAX_CONCURRENCY) {
+    const batch = sets.slice(i, i + MAX_CONCURRENCY);
+    const results = await Promise.all(batch.map(processChunk));
+    results.forEach((result) => {
+      result.quoteMap.forEach((v, k) => quoteMap.set(k, v));
+      result.sparkMap.forEach((v, k) => sparkMap.set(k, v));
+      failures.push(...result.failures);
+    });
   }
 
   return { quoteMap, sparkMap, failures };
