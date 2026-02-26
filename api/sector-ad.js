@@ -4,7 +4,7 @@ const seedData = require('../public/sp500ad/data/sector-ad.json');
 const CACHE_KEY = 'sector_ad_yahoo';
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const CHUNK_SIZE = 75;
+const CHUNK_SIZE = 10;
 const MAX_CONCURRENCY = 4;
 
 function toYahooSymbol(symbol) {
@@ -120,7 +120,7 @@ async function processChunk(set) {
       if (row?.symbol) sparkMap.set(String(row.symbol).toUpperCase(), row);
     });
   } catch (err) {
-    set.forEach((symbol) => failures.push(`${symbol}: ${err.message}`));
+    failures.push(`chunk(${set.length}) ${set[0]}..${set[set.length - 1]}: ${err.message}`);
   }
 
   return { sparkMap, failures };
