@@ -356,10 +356,10 @@ async function runFactors() {
 
   const symbolFactorEntries = Object.entries(symbolFactors).filter(([, rowsForSymbol]) => Array.isArray(rowsForSymbol) && rowsForSymbol.length);
   const sfTable = symbolFactorEntries.length
-    ? `<h4>FactorsToday symbol factors (value)</h4><table><tr><th>Symbol</th><th>Top 3 factors</th><th>Bottom 3 negative correlations</th></tr>${symbolFactorEntries.map(([symbol, rowsForSymbol]) => {
+    ? `<h4>FactorsToday symbol factors (beta)</h4><table><tr><th>Symbol</th><th>Top 3 highest factor betas</th><th>Bottom 3 lowest factor betas</th></tr>${symbolFactorEntries.map(([symbol, rowsForSymbol]) => {
       const summary = topAndBottomFactors(rowsForSymbol, 3);
       const topHtml = summary.top.length ? summary.top.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No factor values</span>';
-      const bottomHtml = summary.bottom.length ? summary.bottom.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No negative factor values</span>';
+      const bottomHtml = summary.bottom.length ? summary.bottom.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No factor values</span>';
       return `<tr><td>${symbol}</td><td>${topHtml}</td><td>${bottomHtml}</td></tr>`;
     }).join('')}</table>`
     : '<div class="small">FactorsToday returned no symbol rows for the current tickers.</div>';
@@ -399,9 +399,9 @@ function mapToCsv(mapObj, header) {
 function topAndBottomFactors(rows, count = 3) {
   const usable = (Array.isArray(rows) ? rows : [])
     .map((r) => {
-      const baseValue = Number(r?.value);
+      const baseValue = Number(r?.beta);
       return {
-        name: r?.name || r?.factor || 'Unknown',
+        name: r?.factor_name || r?.name || r?.factor || 'Unknown',
         value: baseValue,
       };
     })
@@ -410,7 +410,7 @@ function topAndBottomFactors(rows, count = 3) {
   const sortedAsc = [...usable].sort((a, b) => a.value - b.value);
   return {
     top: sortedDesc.slice(0, count),
-    bottom: sortedAsc.filter((r) => r.value < 0).slice(0, count),
+    bottom: sortedAsc.slice(0, count),
   };
 }
 

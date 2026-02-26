@@ -1,5 +1,6 @@
 const { readCache, writeCache } = require('./_lib/cache');
 const FACTORSTODAY_URL = 'https://www.factorstoday.com/api/factors';
+const FACTORSTODAY_LOADINGS_BASE = 'https://www.factorstoday.com/api/stock-loadings';
 
 function normalizeFactorsTodayPayload(payload, tickers) {
   const ensureArray = (x) => (Array.isArray(x) ? x : []);
@@ -55,7 +56,6 @@ async function fetchFactorsToday(tickers) {
   const cached = readCache(cacheKey, 6 * 60 * 60 * 1000);
   if (cached) return { symbolFactors: cached, warning: null };
 
-  const url = `${FACTORSTODAY_URL}?symbols=${encodeURIComponent(tickers.join(','))}`;
   const headers = {
     accept: 'application/json,text/plain,*/*',
   };
@@ -63,14 +63,22 @@ async function fetchFactorsToday(tickers) {
     headers.authorization = `Bearer ${key}`;
     headers['x-api-key'] = key;
   }
-  const resp = await fetch(url, {
-    headers,
-  });
-  if (!resp.ok) throw new Error(`FactorsToday HTTP ${resp.status}`);
-  const payload = await resp.json();
-  const normalized = normalizeFactorsTodayPayload(payload, tickers);
-  writeCache(cacheKey, normalized);
-  return { symbolFactors: normalized, warning: null };
+  const symbolFactors = {};
+  const failures = [];
+  await Promise.all(tickers.map(async (ticker) => {
+    try {
+      const resp = await fetch(`${FACTORSTODAY_LOADINGS_BASE}/${encodeURIComponent(ticker)}`, { headers });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const payload = await resp.json();
+      const normalized = normalizeFactorsTodayPayload(payload, [ticker]);
+      symbolFactors[ticker] = normalized[ticker] || [];
+    } catch (err) {
+      failures.push(`${ticker}: ${err.message}`);
+      symbolFactors[ticker] = [];
+    }
+  }));
+  writeCache(cacheKey, symbolFactors);
+  return { symbolFactors, warning: failures.length ? `FactorsToday loadings unavailable for ${failures.join(', ')}` : null };
 }
 
 
