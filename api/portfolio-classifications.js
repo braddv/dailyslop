@@ -2,6 +2,21 @@ const { readCache, writeCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
 
 const PROFILE_TTL_MS = 24 * 60 * 60 * 1000;
+const FINNHUB_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+
+const INDUSTRY_TO_SECTOR = [
+  { re: /(metals|mining|steel|aluminum|copper|gold|silver|materials)/i, sector: 'Materials' },
+  { re: /(oil|gas|energy|drilling|exploration|refining)/i, sector: 'Energy' },
+  { re: /(bank|insurance|financial|asset management|capital markets)/i, sector: 'Financials' },
+  { re: /(semiconductor|software|internet|technology|it services|hardware)/i, sector: 'Information Technology' },
+  { re: /(biotech|pharma|health|medical)/i, sector: 'Health Care' },
+  { re: /(industrial|aerospace|defense|machinery|transportation)/i, sector: 'Industrials' },
+  { re: /(telecom|communication|media|entertainment)/i, sector: 'Communication Services' },
+  { re: /(consumer staples|beverage|food|household|personal products)/i, sector: 'Consumer Staples' },
+  { re: /(consumer discretionary|apparel|retail|automobile|leisure)/i, sector: 'Consumer Discretionary' },
+  { re: /(utilities|power|electric|water)/i, sector: 'Utilities' },
+  { re: /(real estate|reit|property)/i, sector: 'Real Estate' },
+];
 
 function asFactorBucket(sectorName) {
   const sector = String(sectorName || '').trim();
@@ -31,6 +46,52 @@ function getSp500Map() {
       source: 'sp500ad',
     };
   });
+  return out;
+}
+
+function inferSectorFromIndustry(industry) {
+  const text = String(industry || '').trim();
+  if (!text) return 'Unknown';
+  const match = INDUSTRY_TO_SECTOR.find((row) => row.re.test(text));
+  return match ? match.sector : 'Unknown';
+}
+
+function toRegion(country) {
+  const c = String(country || '').trim().toLowerCase();
+  if (!c) return 'Unknown';
+  if (c === 'us' || c === 'usa' || c === 'united states') return 'US';
+  if (c === 'canada') return 'Canada';
+  if (c === 'brazil' || c === 'mexico' || c === 'chile' || c === 'argentina' || c === 'peru') return 'LatAm';
+  if (c === 'uk' || c === 'united kingdom' || c === 'france' || c === 'germany' || c === 'spain' || c === 'italy' || c === 'switzerland' || c === 'netherlands') return 'Europe';
+  if (c === 'japan' || c === 'china' || c === 'taiwan' || c === 'south korea' || c === 'hong kong' || c === 'singapore' || c === 'india') return 'Asia';
+  return 'ex-US';
+}
+
+async function fetchFinnhubClassification(ticker) {
+  const token = process.env.FINNHUB_KEY;
+  if (!token) throw new Error('FINNHUB_KEY missing');
+
+  const cacheKey = `finnhub_profile_${ticker}`;
+  const cached = readCache(cacheKey, FINNHUB_TTL_MS);
+  if (cached) return cached;
+
+  const url = `https://finnhub.io/api/v1/stock/profile2?symbol=${encodeURIComponent(ticker)}&token=${encodeURIComponent(token)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`finnhub HTTP ${resp.status}`);
+  const profile = await resp.json();
+  if (!profile || !Object.keys(profile).length) throw new Error('finnhub empty profile');
+
+  const industry = profile.finnhubIndustry || '';
+  const sector = inferSectorFromIndustry(industry);
+  const out = {
+    region: toRegion(profile.country),
+    sector,
+    factor: asFactorBucket(sector),
+    country: profile.country || null,
+    industry: industry || null,
+    source: 'finnhub_profile2',
+  };
+  writeCache(cacheKey, out);
   return out;
 }
 
@@ -112,6 +173,16 @@ module.exports = async function handler(req, res) {
       if (sp500Map[ticker]) {
         classifications[ticker] = sp500Map[ticker];
         continue;
+      }
+
+      try {
+        const finnhubClass = await fetchFinnhubClassification(ticker);
+        if (finnhubClass.sector !== 'Unknown' || finnhubClass.region !== 'Unknown') {
+          classifications[ticker] = finnhubClass;
+          continue;
+        }
+      } catch (err) {
+        warnings.push(`${ticker}: ${err.message}`);
       }
 
       try {
