@@ -48,6 +48,17 @@ function normalizeFactorsTodayPayload(payload, tickers) {
   }
 
   if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    const symbolFactorsPayload = payload.symbolFactors && typeof payload.symbolFactors === 'object'
+      ? payload.symbolFactors
+      : null;
+    if (symbolFactorsPayload) {
+      const nested = {};
+      Object.keys(symbolFactorsPayload).forEach((k) => {
+        if (Array.isArray(symbolFactorsPayload[k])) nested[String(k).toUpperCase()] = asRows(symbolFactorsPayload[k]);
+      });
+      if (Object.keys(nested).length) return nested;
+    }
+
     const keyed = {};
     tickers.forEach((t) => {
       const candidate = payload[t] || payload[t.toLowerCase()];

@@ -440,8 +440,8 @@ async function runFactors() {
 
   const symbolFactorEntries = Object.entries(symbolFactors).filter(([, rowsForSymbol]) => Array.isArray(rowsForSymbol) && rowsForSymbol.length);
   const sfTable = symbolFactorEntries.length
-    ? `<h4>FactorsToday symbol factors (value; falls back from h126 when h126 is empty/zero)</h4><table><tr><th>Symbol</th><th>Top 3 factors</th><th>Bottom 3 negative correlations</th></tr>${symbolFactorEntries.map(([symbol, rowsForSymbol]) => {
-      const summary = topAndBottomFactors(rowsForSymbol, 'h126', 3);
+    ? `<h4>FactorsToday symbol factors (value)</h4><table><tr><th>Symbol</th><th>Top 3 factors</th><th>Bottom 3 negative correlations</th></tr>${symbolFactorEntries.map(([symbol, rowsForSymbol]) => {
+      const summary = topAndBottomFactors(rowsForSymbol, 3);
       const topHtml = summary.top.length ? summary.top.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No factor values</span>';
       const bottomHtml = summary.bottom.length ? summary.bottom.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No negative factor values</span>';
       return `<tr><td>${symbol}</td><td>${topHtml}</td><td>${bottomHtml}</td></tr>`;
@@ -480,15 +480,13 @@ function mapToCsv(mapObj, header) {
   ].join('\n');
 }
 
-function topAndBottomFactors(rows, horizon = 'h126', count = 3) {
+function topAndBottomFactors(rows, count = 3) {
   const usable = (Array.isArray(rows) ? rows : [])
     .map((r) => {
-      const horizonValue = Number(r?.[horizon]);
       const baseValue = Number(r?.value);
-      const score = Number.isFinite(horizonValue) && horizonValue !== 0 ? horizonValue : baseValue;
       return {
         name: r?.name || r?.factor || 'Unknown',
-        value: score,
+        value: baseValue,
       };
     })
     .filter((r) => Number.isFinite(r.value));
