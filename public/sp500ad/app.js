@@ -508,7 +508,10 @@ async function loadData(forceRefresh = false) {
     buildChart(lastStocks);
 
     if (data.failures && data.failures.length) {
-      notesEl.textContent = `${data.failures.length} symbols missing quotes.`;
+      const sample = data.failures.slice(0, 2).join(' | ');
+      notesEl.textContent = data.cacheFresh
+        ? `${data.failures.length} symbols missing quotes. ${sample}`
+        : `Live Yahoo refresh failed; showing fallback data. ${sample}`;
     }
   } catch (err) {
     chartEl.innerHTML = `

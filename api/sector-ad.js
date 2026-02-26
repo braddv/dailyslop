@@ -4,8 +4,43 @@ const seedData = require('../public/sp500ad/data/sector-ad.json');
 const CACHE_KEY = 'sector_ad_yahoo';
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const CHUNK_SIZE = 100;
+const CHUNK_SIZE = 25;
 
+
+function toYahooSymbol(symbol) {
+  return String(symbol).replace(/\./g, '-').toUpperCase();
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchJsonWithRetry(url, label) {
+  const attempts = [0, 350, 1000];
+  let lastErr = null;
+
+  for (let i = 0; i < attempts.length; i += 1) {
+    if (attempts[i]) await sleep(attempts[i]);
+    try {
+      const resp = await fetch(url, {
+        headers: {
+          'accept': 'application/json,text/plain,*/*',
+          'user-agent': 'Mozilla/5.0 (compatible; dailyslop-sectorad/1.0)',
+        },
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        const preview = text.slice(0, 120).replace(/\s+/g, ' ').trim();
+        throw new Error(`${label} HTTP ${resp.status}${preview ? `: ${preview}` : ''}`);
+      }
+      return resp.json();
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  throw lastErr || new Error(`${label} failed`);
+}
 function hasValidStocks(payload) {
   return Array.isArray(payload?.stocks) && payload.stocks.length > 100;
 }
@@ -49,17 +84,13 @@ function calc12wHigh(timestamps, closes) {
 
 async function fetchQuoteChunk(symbols) {
   const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(','))}`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`quote HTTP ${resp.status}`);
-  const json = await resp.json();
+  const json = await fetchJsonWithRetry(url, 'quote');
   return json?.quoteResponse?.result || [];
 }
 
 async function fetchSparkChunk(symbols) {
   const url = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(symbols.join(','))}&range=6mo&interval=1d`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`spark HTTP ${resp.status}`);
-  const json = await resp.json();
+  const json = await fetchJsonWithRetry(url, 'spark');
   return json?.spark?.result || [];
 }
 
@@ -110,23 +141,24 @@ function buildSectorSummary(stocks) {
 function buildResponseFromYahoo() {
   const universe = seedData.stocks.map((stock) => ({
     symbol: stock.symbol,
+    yahooSymbol: toYahooSymbol(stock.symbol),
     security: stock.security,
     sector: stock.sector,
     subIndustry: stock.subIndustry,
   }));
 
-  const symbols = [...new Set(universe.map((stock) => stock.symbol))];
+  const symbols = [...new Set(universe.map((stock) => stock.yahooSymbol))];
   return fetchYahooData(symbols).then(({ quoteMap, sparkMap, failures }) => {
     const stocks = [];
 
     universe.forEach((stock) => {
-      const quote = quoteMap.get(stock.symbol);
+      const quote = quoteMap.get(stock.yahooSymbol);
       if (!quote) {
-        failures.push(`${stock.symbol}: missing quote`);
+        failures.push(`${stock.symbol}/${stock.yahooSymbol}: missing quote`);
         return;
       }
 
-      const spark = sparkMap.get(stock.symbol);
+      const spark = sparkMap.get(stock.yahooSymbol);
       const timestamps = spark?.response?.[0]?.timestamp || [];
       const closes = spark?.response?.[0]?.close || [];
 
@@ -143,7 +175,10 @@ function buildResponseFromYahoo() {
         : null;
 
       stocks.push({
-        ...stock,
+        symbol: stock.symbol,
+        security: stock.security,
+        sector: stock.sector,
+        subIndustry: stock.subIndustry,
         change: Number.isFinite(quote.regularMarketChange) ? quote.regularMarketChange : null,
         changePercent: Number.isFinite(quote.regularMarketChangePercent) ? quote.regularMarketChangePercent : null,
         marketCap: Number.isFinite(quote.marketCap) ? quote.marketCap : null,
@@ -160,7 +195,7 @@ function buildResponseFromYahoo() {
     });
 
     if (!stocks.length) {
-      throw new Error('Yahoo returned no stock rows');
+      throw new Error(`Yahoo returned no stock rows (${failures.slice(0, 3).join(' | ')})`);
     }
 
     return {
@@ -178,6 +213,8 @@ function buildResponseFromYahoo() {
 }
 
 module.exports = async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+
   try {
     const refresh = String(req.query?.refresh || '').toLowerCase() === 'true';
     if (!refresh) {
