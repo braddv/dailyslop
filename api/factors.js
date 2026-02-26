@@ -62,19 +62,22 @@ function normalizeFactorsTodayPayload(payload, tickers) {
 
 async function fetchFactorsToday(tickers) {
   const key = process.env.FACTORSTODAY_API_KEY;
-  if (!key || !tickers.length) return { symbolFactors: {}, warning: key ? null : 'FACTORSTODAY_API_KEY missing' };
+  if (!tickers.length) return { symbolFactors: {}, warning: null };
 
   const cacheKey = `factorstoday_${tickers.join('_')}`;
   const cached = readCache(cacheKey, 6 * 60 * 60 * 1000);
   if (cached) return { symbolFactors: cached, warning: null };
 
   const url = `${FACTORSTODAY_URL}?symbols=${encodeURIComponent(tickers.join(','))}`;
+  const headers = {
+    accept: 'application/json,text/plain,*/*',
+  };
+  if (key) {
+    headers.authorization = `Bearer ${key}`;
+    headers['x-api-key'] = key;
+  }
   const resp = await fetch(url, {
-    headers: {
-      accept: 'application/json,text/plain,*/*',
-      authorization: `Bearer ${key}`,
-      'x-api-key': key,
-    },
+    headers,
   });
   if (!resp.ok) throw new Error(`FactorsToday HTTP ${resp.status}`);
   const payload = await resp.json();
@@ -86,20 +89,21 @@ async function fetchFactorsToday(tickers) {
 
 async function fetchFactorsTodayCatalog() {
   const key = process.env.FACTORSTODAY_API_KEY;
-  if (!key) return { catalog: [], warning: 'FACTORSTODAY_API_KEY missing' };
 
   const cacheKey = 'factorstoday_catalog';
   const cached = readCache(cacheKey, 24 * 60 * 60 * 1000);
   if (cached) return { catalog: cached, warning: null };
 
-  const base = FACTORSTODAY_URL.replace(/\/factors\/?$/, '');
-  const url = `${base}/catalog`;
+  const url = `${FACTORSTODAY_URL.replace(/\/+$/, '')}/catalog`;
+  const headers = {
+    accept: 'application/json,text/plain,*/*',
+  };
+  if (key) {
+    headers.authorization = `Bearer ${key}`;
+    headers['x-api-key'] = key;
+  }
   const resp = await fetch(url, {
-    headers: {
-      accept: 'application/json,text/plain,*/*',
-      authorization: `Bearer ${key}`,
-      'x-api-key': key,
-    },
+    headers,
   });
   if (!resp.ok) throw new Error(`FactorsToday catalog HTTP ${resp.status}`);
   const payload = await resp.json();
