@@ -476,6 +476,17 @@ function buildChart(stocks) {
   chartEl.appendChild(svg);
 }
 
+
+async function readApiJson(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const preview = text.slice(0, 120).replace(/\s+/g, ' ').trim();
+    throw new Error(`API returned non-JSON response${preview ? `: ${preview}` : ''}`);
+  }
+}
+
 function setMetric(metric) {
   if (!METRICS[metric]) return;
   selectedMetric = metric;
@@ -488,18 +499,17 @@ function setMetric(metric) {
   buildChart(lastStocks);
 }
 
-async function loadData() {
+async function loadData(forceRefresh = false) {
   chartEl.innerHTML = "";
   notesEl.textContent = "";
 
   try {
-    const res = await fetch("./data/sector-ad.json");
+    const endpoint = forceRefresh ? "/api/sector-ad?refresh=true" : "/api/sector-ad";
+    const res = await fetch(endpoint);
+    const data = await readApiJson(res);
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || "Failed to load data");
+      throw new Error(data.error || `Failed to load data (HTTP ${res.status})`);
     }
-
-    const data = await res.json();
     asOfEl.textContent = formatDate(data.asOf);
     cacheEl.textContent = data.cacheFresh ? "Fresh" : "Stale";
 
@@ -507,7 +517,10 @@ async function loadData() {
     buildChart(lastStocks);
 
     if (data.failures && data.failures.length) {
-      notesEl.textContent = `${data.failures.length} symbols missing quotes.`;
+      const sample = data.failures.slice(0, 2).join(' | ');
+      notesEl.textContent = data.cacheFresh
+        ? `${data.failures.length} symbols missing quotes. ${sample}`
+        : `Live Yahoo refresh failed; showing fallback data. ${sample}`;
     }
   } catch (err) {
     chartEl.innerHTML = `
@@ -519,7 +532,7 @@ async function loadData() {
 }
 
 refreshBtn.addEventListener("click", () => {
-  loadData();
+  loadData(true);
 });
 
 chartEl.addEventListener("click", () => {
