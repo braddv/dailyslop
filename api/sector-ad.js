@@ -83,6 +83,15 @@ function calc12wHigh(timestamps, closes) {
   return high;
 }
 
+
+function extractCloseSeries(series) {
+  const direct = Array.isArray(series?.close) ? series.close : null;
+  if (direct) return direct;
+
+  const nested = series?.indicators?.quote?.[0]?.close;
+  return Array.isArray(nested) ? nested : [];
+}
+
 function calc52wHigh(timestamps, closes) {
   const cutoff = Date.now() - 365 * DAY_MS;
   let high = null;
@@ -174,7 +183,7 @@ function buildResponseFromYahoo() {
       const series = spark.response?.[0] || {};
       const meta = series.meta || {};
       const timestamps = series.timestamp || [];
-      const closes = series.close || [];
+      const closes = extractCloseSeries(series);
 
       const priceFromMeta = meta.regularMarketPrice;
       const fallbackPrice = closes.findLast((value) => Number.isFinite(value));
