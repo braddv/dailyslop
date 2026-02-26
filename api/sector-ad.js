@@ -92,6 +92,18 @@ function extractCloseSeries(series) {
   return Array.isArray(nested) ? nested : [];
 }
 
+
+function getLastFinite(values, fromEndIndex = 0) {
+  let seen = 0;
+  for (let i = values.length - 1; i >= 0; i -= 1) {
+    const v = values[i];
+    if (!Number.isFinite(v)) continue;
+    if (seen === fromEndIndex) return v;
+    seen += 1;
+  }
+  return null;
+}
+
 function calc52wHigh(timestamps, closes) {
   const cutoff = Date.now() - 365 * DAY_MS;
   let high = null;
@@ -186,14 +198,15 @@ function buildResponseFromYahoo() {
       const closes = extractCloseSeries(series);
 
       const priceFromMeta = meta.regularMarketPrice;
-      const fallbackPrice = closes.findLast((value) => Number.isFinite(value));
-      const currentPrice = Number.isFinite(priceFromMeta) ? priceFromMeta : fallbackPrice;
+      const lastSeriesClose = getLastFinite(closes, 0);
+      const prevSeriesClose = getLastFinite(closes, 1);
+      const currentPrice = Number.isFinite(priceFromMeta) ? priceFromMeta : lastSeriesClose;
 
-      const prevClose = Number.isFinite(meta.previousClose)
-        ? meta.previousClose
-        : Number.isFinite(meta.chartPreviousClose)
-          ? meta.chartPreviousClose
-          : pickLastBefore(timestamps, closes, Date.now() - DAY_MS);
+      const prevClose = Number.isFinite(meta.regularMarketPreviousClose)
+        ? meta.regularMarketPreviousClose
+        : Number.isFinite(meta.previousClose)
+          ? meta.previousClose
+          : prevSeriesClose;
 
       const change = Number.isFinite(currentPrice) && Number.isFinite(prevClose)
         ? currentPrice - prevClose
