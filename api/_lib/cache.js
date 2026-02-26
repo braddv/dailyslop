@@ -1,21 +1,52 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
-const CACHE_DIR = path.join(process.cwd(), '.cache');
+function getCandidateDirs() {
+  const out = [];
+
+  if (process.env.PORTFOLIO_CACHE_DIR) out.push(process.env.PORTFOLIO_CACHE_DIR);
+
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    out.push(path.join(os.tmpdir(), 'dailyslop-cache'));
+  }
+
+  out.push(path.join(process.cwd(), '.cache'));
+  out.push(path.join(os.tmpdir(), 'dailyslop-cache'));
+
+  return [...new Set(out)];
+}
+
+let resolvedDir = null;
+let cacheEnabled = true;
 
 function ensureCacheDir() {
-  if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
+  if (resolvedDir || !cacheEnabled) return resolvedDir;
+
+  const candidates = getCandidateDirs();
+  for (const dir of candidates) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      resolvedDir = dir;
+      return resolvedDir;
+    } catch {
+      // try next candidate
+    }
   }
+
+  cacheEnabled = false;
+  return null;
 }
 
 function readCache(key, maxAgeMs) {
-  ensureCacheDir();
-  const file = path.join(CACHE_DIR, `${key}.json`);
-  if (!fs.existsSync(file)) return null;
-  const stat = fs.statSync(file);
-  if (Date.now() - stat.mtimeMs > maxAgeMs) return null;
+  const dir = ensureCacheDir();
+  if (!dir) return null;
+
+  const file = path.join(dir, `${key}.json`);
   try {
+    if (!fs.existsSync(file)) return null;
+    const stat = fs.statSync(file);
+    if (Date.now() - stat.mtimeMs > maxAgeMs) return null;
     return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch {
     return null;
@@ -23,9 +54,15 @@ function readCache(key, maxAgeMs) {
 }
 
 function writeCache(key, value) {
-  ensureCacheDir();
-  const file = path.join(CACHE_DIR, `${key}.json`);
-  fs.writeFileSync(file, JSON.stringify(value), 'utf8');
+  const dir = ensureCacheDir();
+  if (!dir) return;
+
+  const file = path.join(dir, `${key}.json`);
+  try {
+    fs.writeFileSync(file, JSON.stringify(value), 'utf8');
+  } catch {
+    // Best-effort cache; ignore write errors so API still works.
+  }
 }
 
 module.exports = { readCache, writeCache };
