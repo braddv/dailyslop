@@ -28,59 +28,6 @@ function ensureClassifications() {
   });
 }
 
-function asFactorBucket(sectorName) {
-  const sector = String(sectorName || '').trim();
-  if (!sector) return 'Unassigned';
-  if (sector === 'Information Technology' || sector === 'Communication Services') return 'Tech/Growth';
-  if (sector === 'Energy' || sector === 'Materials' || sector === 'Industrials') return 'Cyclicals/Real Assets';
-  if (sector === 'Utilities' || sector === 'Consumer Staples' || sector === 'Health Care') return 'Defensive/Quality';
-  if (sector === 'Financials') return 'Financials';
-  if (sector === 'Real Estate') return 'Rate Sensitive';
-  return sector;
-}
-
-function mergeFetchedClassifications() {
-  Object.entries(fetchedClassByTicker).forEach(([ticker, cls]) => {
-    const existing = manualClass[ticker] || { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
-    const merged = { ...existing };
-    if (!merged.region || merged.region === 'Unknown') merged.region = cls.region || 'Unknown';
-    if (!merged.sector || merged.sector === 'Unknown') merged.sector = cls.sector || 'Unknown';
-    if (!merged.factor || merged.factor === 'Unassigned') merged.factor = cls.factor || asFactorBucket(cls.sector);
-    manualClass[ticker] = merged;
-  });
-}
-
-async function loadTickerClassifications(tickers) {
-  const targets = (tickers || []).map((t) => String(t || '').toUpperCase().trim()).filter(Boolean);
-  const missing = targets.filter((t) => !fetchedClassByTicker[t]);
-  if (!missing.length) {
-    classificationWarnings = [...new Set(classificationWarnings)];
-    mergeFetchedClassifications();
-    return;
-  }
-
-  try {
-    const resp = await fetch(`/api/portfolio-classifications?tickers=${missing.join(',')}`);
-    const payload = await resp.json();
-    const classifications = payload?.classifications || {};
-    const remoteWarnings = Array.isArray(payload?.warnings) ? payload.warnings : [];
-    const finnhubConfigured = payload?.diagnostics?.finnhubConfigured;
-    classificationWarnings = [...classificationWarnings, ...remoteWarnings];
-    if (finnhubConfigured === false) {
-      classificationWarnings.push('Ticker classification fallback: Finnhub key not configured (FINNHUB_KEY or FINNHUB_API_KEY).');
-    }
-    Object.entries(classifications).forEach(([ticker, cls]) => {
-      fetchedClassByTicker[ticker] = {
-        region: cls.region || 'Unknown',
-        sector: cls.sector || 'Unknown',
-        factor: cls.factor || asFactorBucket(cls.sector),
-      };
-    });
-    mergeFetchedClassifications();
-  } catch {
-    // Keep manual-only classifications when lookup fails.
-  }
-}
 
 function renderHoldings() {
   const t = document.getElementById('holdingsTable');
@@ -331,7 +278,6 @@ async function run() {
   ensureClassifications();
 
   const clean = normalizeHoldings(holdings);
-  await loadTickerClassifications(clean.map((h) => h.effectiveTicker));
   renderClassificationTable();
   const total = clean.reduce((s, h) => s + h.marketValue, 0);
   const { weights, tickers, grossExposure } = aggregateExposureWeights(clean);
@@ -388,7 +334,7 @@ async function run() {
     ...clean.filter((h) => h.kind === 'option' && !h.underlying).map((h) => `${h.ticker}: option missing underlying (using ticker as proxy)`),
     ...clean.filter((h) => h.kind === 'option' && !h.expiration).map((h) => `${h.ticker}: option missing expiration date`),
   ];
-  const allWarnings = [...(warnings || []), ...classificationWarnings, ...structureWarnings];
+  const allWarnings = [...(warnings || []), ...structureWarnings];
   if (allWarnings.length) document.getElementById('warnings').textContent = [...new Set(allWarnings)].join(' | ');
   await runFactors();
 
@@ -398,41 +344,40 @@ async function run() {
 
 async function runFactors() {
   if (!state.portRet) return;
-  const window = Number(document.getElementById('factorWindow').value);
-  const includeAssets = document.getElementById('assetFactors').checked;
-  const factorResp = await fetch('/api/factors');
+  const factorResp = await fetch(`/api/factors?tickers=${state.tickers.join(',')}`);
   const factorData = await factorResp.json();
   if (factorData.error) {
     document.getElementById('factors').textContent = `Factor load failed: ${factorData.error}`;
     return;
   }
 
-  const facMap = new Map(factorData.factors.map((f) => [f.date, f]));
-  const modelCols = factorData.hasMomentum ? ['alpha', 'Mkt-RF', 'SMB', 'HML', 'RMW', 'CMA', 'MOM'] : ['alpha', 'Mkt-RF', 'SMB', 'HML', 'RMW', 'CMA'];
-  const rows = [];
+  const factorWarnings = Array.isArray(factorData.warnings) ? factorData.warnings : [];
+  const symbolFactors = factorData.symbolFactors || {};
+  const factorsCatalog = Array.isArray(factorData.factorsCatalog) ? factorData.factorsCatalog : [];
+  const factorPriority = factorData.factorPriority || 'factorstoday_unavailable';
+  state.factorRows = [];
 
-  function doReg(name, retSeries) {
-    const joint = retSeries.slice(-window).map((r) => ({ r: r.r, f: facMap.get(r.date) })).filter((x) => x.f);
-    const y = joint.map((x) => x.r - x.f.RF);
-    const x = joint.map((xj) => modelCols.map((c, i) => (i === 0 ? 1 : (xj.f[c] ?? 0))));
-    if (x.length < modelCols.length + 5) return null;
-    const reg = ols(y, x, modelCols);
-    return { name, reg };
+  const symbolFactorEntries = Object.entries(symbolFactors).filter(([, rowsForSymbol]) => Array.isArray(rowsForSymbol) && rowsForSymbol.length);
+  const sfTable = symbolFactorEntries.length
+    ? `<h4>FactorsToday symbol factors (beta)</h4><table><tr><th>Symbol</th><th>Top 3 highest factor betas</th><th>Bottom 3 lowest factor betas</th></tr>${symbolFactorEntries.map(([symbol, rowsForSymbol]) => {
+      const summary = topAndBottomFactors(rowsForSymbol, 3);
+      const topHtml = summary.top.length ? summary.top.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No factor values</span>';
+      const bottomHtml = summary.bottom.length ? summary.bottom.map((f) => `${f.name} (${f.value.toFixed(3)})`).join('<br>') : '<span class="small">No factor values</span>';
+      return `<tr><td>${symbol}</td><td>${topHtml}</td><td>${bottomHtml}</td></tr>`;
+    }).join('')}</table>`
+    : '<div class="small">FactorsToday returned no symbol rows for the current tickers.</div>';
+
+  const catalogPreview = factorsCatalog.length
+    ? `<div class="small">FactorsToday catalog fields: ${factorsCatalog.slice(0, 8).map((x) => x.name || x.id || x.factor || String(x)).join(', ')}</div>`
+    : '';
+
+  const priorityBanner = `<div><b>Factor source:</b> ${factorPriority === 'factorstoday' ? 'FactorsToday' : 'FactorsToday (no rows returned)'}</div>`;
+  const factorHtml = `${priorityBanner}${sfTable}${catalogPreview}`;
+  document.getElementById('factors').innerHTML = factorHtml;
+  if (factorWarnings.length) {
+    const warningsEl = document.getElementById('warnings');
+    warningsEl.textContent = [warningsEl.textContent, ...factorWarnings].filter(Boolean).join(' | ');
   }
-
-  const p = doReg('Portfolio', state.portRet);
-  if (p) rows.push(p);
-  if (includeAssets) {
-    state.tickers.forEach((t) => {
-      const ret = simpleReturns(state.prices[t]).map((r) => ({ date: r.date, r: r.r }));
-      const rr = doReg(t, ret);
-      if (rr) rows.push(rr);
-    });
-  }
-
-  state.factorRows = rows;
-  const table = `<div>Model: ${factorData.hasMomentum ? 'FF5 + MOM' : 'FF5 only (momentum unavailable)'}</div><table><tr><th>Name</th>${modelCols.map((c) => `<th>${c} β</th><th>${c} t</th>`).join('')}<th>R²</th><th>Annualized α</th></tr>${rows.map((r) => `<tr><td>${r.name}</td>${r.reg.beta.map((b, i) => `<td>${b.toFixed(3)}</td><td>${r.reg.t[i].toFixed(2)}</td>`).join('')}<td>${r.reg.r2.toFixed(2)}</td><td>${fmt(r.reg.alphaAnnual)}</td></tr>`).join('')}</table>`;
-  document.getElementById('factors').innerHTML = table;
 }
 
 function download(name, content) {
@@ -454,6 +399,24 @@ function mapToCsv(mapObj, header) {
   ].join('\n');
 }
 
+function topAndBottomFactors(rows, count = 3) {
+  const usable = (Array.isArray(rows) ? rows : [])
+    .map((r) => {
+      const baseValue = Number(r?.beta);
+      return {
+        name: r?.factor_name || r?.name || r?.factor || 'Unknown',
+        value: baseValue,
+      };
+    })
+    .filter((r) => Number.isFinite(r.value));
+  const sortedDesc = [...usable].sort((a, b) => b.value - a.value);
+  const sortedAsc = [...usable].sort((a, b) => a.value - b.value);
+  return {
+    top: sortedDesc.slice(0, count),
+    bottom: sortedAsc.slice(0, count),
+  };
+}
+
 document.getElementById('loadDefault').onclick = () => { holdings = JSON.parse(JSON.stringify(defaults)); renderHoldings(); };
 document.getElementById('addRow').onclick = () => { holdings.push({ ticker: '', marketValue: 0, kind: 'equity', underlying: '', delta: 1, expiration: '' }); renderHoldings(); };
 document.getElementById('run').onclick = run;
@@ -461,6 +424,10 @@ document.getElementById('rerunFactors').onclick = runFactors;
 document.getElementById('exportCorr').onclick = () => download('correlation_6m.csv', matrixCsv(state.corr.c6));
 document.getElementById('exportFactors').onclick = () => {
   const rows = state.factorRows || [];
+  if (!rows.length) {
+    download('factor_summary.csv', 'name,coef,tstat,r2,alpha_annual\n');
+    return;
+  }
   const header = 'name,coef,tstat,r2,alpha_annual';
   const csv = [header, ...rows.map((r) => `${r.name},"${r.reg.beta.map((x) => x.toFixed(4)).join('|')}","${r.reg.t.map((x) => x.toFixed(2)).join('|')}",${r.reg.r2.toFixed(3)},${r.reg.alphaAnnual.toFixed(4)}`)].join('\n');
   download('factor_summary.csv', csv);
