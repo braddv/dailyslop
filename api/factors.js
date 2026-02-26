@@ -1,5 +1,5 @@
 const { readCache, writeCache } = require('./_lib/cache');
-const FACTORSTODAY_URL = process.env.FACTORSTODAY_API_URL || 'https://www.factorstoday.com/api/factors';
+const FACTORSTODAY_URL = 'https://www.factorstoday.com/api/factors';
 
 function normalizeFactorsTodayPayload(payload, tickers) {
   const ensureArray = (x) => (Array.isArray(x) ? x : []);
