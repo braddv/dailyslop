@@ -84,9 +84,27 @@ async function loadTickerClassifications(tickers) {
 
 function renderHoldings() {
   const t = document.getElementById('holdingsTable');
-  t.innerHTML = '<tr><th>Ticker</th><th>Market Value</th><th>Delete</th></tr>' + holdings.map((h, i) =>
-    `<tr><td><input data-i="${i}" data-k="ticker" value="${h.ticker}"></td><td><input data-i="${i}" data-k="marketValue" type="number" step="0.01" value="${h.marketValue}"></td><td><button data-del="${i}">X</button></td></tr>`
-  ).join('');
+  t.innerHTML = '<tr><th>Ticker/Label</th><th>Type</th><th>Underlying (options)</th><th>Delta (options)</th><th>Expiration (options)</th><th>Market Value</th><th>Delete</th></tr>' + holdings.map((h, i) => {
+    const kind = h.kind || 'equity';
+    const isOption = kind === 'option';
+    const underlying = h.underlying || '';
+    const delta = Number.isFinite(Number(h.delta)) ? Number(h.delta) : 1;
+    const expiration = h.expiration || '';
+    return `<tr>
+      <td><input data-i="${i}" data-k="ticker" value="${h.ticker || ''}"></td>
+      <td>
+        <select data-i="${i}" data-k="kind">
+          <option value="equity" ${kind === 'equity' ? 'selected' : ''}>equity/ETF</option>
+          <option value="option" ${kind === 'option' ? 'selected' : ''}>option</option>
+        </select>
+      </td>
+      <td><input data-i="${i}" data-k="underlying" value="${underlying}" ${isOption ? '' : 'disabled'} placeholder="e.g. XLE"></td>
+      <td><input data-i="${i}" data-k="delta" type="number" step="0.01" min="-1" max="1" value="${delta}" ${isOption ? '' : 'disabled'}></td>
+      <td><input data-i="${i}" data-k="expiration" type="date" value="${expiration}" ${isOption ? '' : 'disabled'}></td>
+      <td><input data-i="${i}" data-k="marketValue" type="number" step="0.01" value="${h.marketValue}"></td>
+      <td><button data-del="${i}">X</button></td>
+    </tr>`;
+  }).join('');
   ensureClassifications();
   renderClassificationTable();
 }
@@ -116,10 +134,26 @@ function parseCsv(text) {
   const mvi = head.indexOf('market_value');
   const si = head.indexOf('shares');
   const pi = head.indexOf('price');
+  const ki = head.indexOf('kind');
+  const ui = head.indexOf('underlying');
+  const di = head.indexOf('delta');
+  const ei = head.indexOf('expiration');
   return rows.slice(1).map((r) => {
     const ticker = r[ti]?.toUpperCase();
     const marketValue = mvi >= 0 ? Number(r[mvi]) : Number(r[si]) * Number(r[pi] || 0);
-    return { ticker, marketValue };
+    const kind = (r[ki] || 'equity').toLowerCase() === 'option' ? 'option' : 'equity';
+    const underlying = (r[ui] || '').toUpperCase();
+    const delta = Number(r[di]);
+    const expiration = (r[ei] || '').trim();
+    return {
+      ticker,
+      marketValue,
+      expiration,
+      kind,
+      underlying,
+      delta: Number.isFinite(delta) ? delta : 1,
+      expiration,
+    };
   }).filter((x) => x.ticker && Number.isFinite(x.marketValue) && x.marketValue > 0);
 }
 
@@ -254,17 +288,53 @@ function asWeightTable(mapObj, keyHeader) {
   return `<table><tr><th>${keyHeader}</th><th>Weight</th></tr>${rows.map(([k, v]) => `<tr><td>${k}</td><td>${fmt(v)}</td></tr>`).join('')}</table>`;
 }
 
+function normalizeHoldings(rawHoldings) {
+  return rawHoldings.map((h) => {
+    const kind = (h.kind || 'equity') === 'option' ? 'option' : 'equity';
+    const ticker = String(h.ticker || '').toUpperCase().trim();
+    const underlying = String(h.underlying || '').toUpperCase().trim();
+    const marketValue = Number(h.marketValue);
+    const expiration = String(h.expiration || '').trim();
+    const rawDelta = Number(h.delta);
+    const delta = Number.isFinite(rawDelta) ? Math.max(-1, Math.min(1, rawDelta)) : 1;
+    const effectiveTicker = kind === 'option' ? (underlying || ticker) : ticker;
+    const exposureValue = kind === 'option' ? marketValue * delta : marketValue;
+    return {
+      ...h,
+      ticker,
+      underlying,
+      kind,
+      delta,
+      marketValue,
+      effectiveTicker,
+      exposureValue,
+    };
+  }).filter((h) => h.effectiveTicker && Number.isFinite(h.marketValue) && h.marketValue > 0 && Number.isFinite(h.exposureValue));
+}
+
+function aggregateExposureWeights(clean) {
+  const byTicker = {};
+  clean.forEach((h) => {
+    byTicker[h.effectiveTicker] = (byTicker[h.effectiveTicker] || 0) + h.exposureValue;
+  });
+  const gross = Object.values(byTicker).reduce((s, v) => s + Math.abs(v), 0);
+  const weights = {};
+  Object.entries(byTicker).forEach(([t, v]) => {
+    weights[t] = gross ? (v / gross) : 0;
+  });
+  return { weights, tickers: Object.keys(weights), grossExposure: gross };
+}
+
 async function run() {
   document.getElementById('warnings').textContent = '';
   classificationWarnings = [];
   ensureClassifications();
 
-  const clean = holdings.map((h) => ({ ticker: h.ticker.toUpperCase().trim(), marketValue: Number(h.marketValue) })).filter((h) => h.ticker && h.marketValue > 0);
-  await loadTickerClassifications(clean.map((h) => h.ticker));
+  const clean = normalizeHoldings(holdings);
+  await loadTickerClassifications(clean.map((h) => h.effectiveTicker));
   renderClassificationTable();
   const total = clean.reduce((s, h) => s + h.marketValue, 0);
-  const weights = Object.fromEntries(clean.map((h) => [h.ticker, h.marketValue / total]));
-  const tickers = clean.map((h) => h.ticker);
+  const { weights, tickers, grossExposure } = aggregateExposureWeights(clean);
 
   const priceResp = await fetch(`/api/portfolio-prices?tickers=${tickers.join(',')}`);
   const { prices, warnings } = await priceResp.json();
@@ -276,11 +346,11 @@ async function run() {
 
   const hhi = clean.reduce((s, h) => s + (h.marketValue / total) ** 2, 0);
   const top5 = [...clean].sort((a, b) => b.marketValue - a.marketValue).slice(0, 5).reduce((s, h) => s + h.marketValue, 0) / total;
-  document.getElementById('risk').innerHTML = `Top 5 weight: ${fmt(top5)}<br>HHI: ${hhi.toFixed(3)}<br>${[...clean].sort((a, b) => b.marketValue - a.marketValue).slice(0, 5).map((h) => `${h.ticker}: ${fmt(h.marketValue / total)}`).join('<br>')}`;
+  document.getElementById('risk').innerHTML = `Top 5 weight: ${fmt(top5)}<br>HHI: ${hhi.toFixed(3)}<br>Gross delta-adjusted exposure: $${grossExposure.toFixed(0)}<br>${[...clean].sort((a, b) => b.marketValue - a.marketValue).slice(0, 5).map((h) => `${h.ticker}: ${fmt(h.marketValue / total)}`).join('<br>')}`;
 
   const classRows = clean.map((h) => {
-    const cls = manualClass[h.ticker] || { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
-    return { ...h, region: cls.region || 'Unknown', sector: cls.sector || 'Unknown', factor: cls.factor || 'Unassigned' };
+    const cls = manualClass[h.effectiveTicker] || { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
+    return { ...h, ticker: h.effectiveTicker, region: cls.region || 'Unknown', sector: cls.sector || 'Unknown', factor: cls.factor || 'Unassigned' };
   });
 
   const bySector = aggregateBy(classRows, 'sector', total);
@@ -314,7 +384,11 @@ async function run() {
     <b>Scenario shocks (rough)</b><br>Oil -20% day proxy impact: ${fmt(oilShock)}<br>Equity -10% proxy impact: ${fmt(equityShock)}
   `;
 
-  const allWarnings = [...(warnings || []), ...classificationWarnings];
+  const structureWarnings = [
+    ...clean.filter((h) => h.kind === 'option' && !h.underlying).map((h) => `${h.ticker}: option missing underlying (using ticker as proxy)`),
+    ...clean.filter((h) => h.kind === 'option' && !h.expiration).map((h) => `${h.ticker}: option missing expiration date`),
+  ];
+  const allWarnings = [...(warnings || []), ...classificationWarnings, ...structureWarnings];
   if (allWarnings.length) document.getElementById('warnings').textContent = [...new Set(allWarnings)].join(' | ');
   await runFactors();
 
@@ -381,7 +455,7 @@ function mapToCsv(mapObj, header) {
 }
 
 document.getElementById('loadDefault').onclick = () => { holdings = JSON.parse(JSON.stringify(defaults)); renderHoldings(); };
-document.getElementById('addRow').onclick = () => { holdings.push({ ticker: '', marketValue: 0 }); renderHoldings(); };
+document.getElementById('addRow').onclick = () => { holdings.push({ ticker: '', marketValue: 0, kind: 'equity', underlying: '', delta: 1, expiration: '' }); renderHoldings(); };
 document.getElementById('run').onclick = run;
 document.getElementById('rerunFactors').onclick = runFactors;
 document.getElementById('exportCorr').onclick = () => download('correlation_6m.csv', matrixCsv(state.corr.c6));
@@ -408,9 +482,15 @@ document.getElementById('exportGroups').onclick = () => {
 
 document.getElementById('holdingsTable').addEventListener('input', (e) => {
   const i = Number(e.target.dataset.i); const k = e.target.dataset.k;
-  if (Number.isInteger(i) && k) holdings[i][k] = k === 'marketValue' ? Number(e.target.value) : e.target.value;
+  if (Number.isInteger(i) && k) holdings[i][k] = (k === 'marketValue' || k === 'delta') ? Number(e.target.value) : e.target.value;
   ensureClassifications();
   renderClassificationTable();
+});
+document.getElementById('holdingsTable').addEventListener('change', (e) => {
+  const i = Number(e.target.dataset.i); const k = e.target.dataset.k;
+  if (!Number.isInteger(i) || !k) return;
+  holdings[i][k] = (k === 'marketValue' || k === 'delta') ? Number(e.target.value) : e.target.value;
+  if (k === 'kind') renderHoldings();
 });
 document.getElementById('holdingsTable').addEventListener('click', (e) => {
   const i = Number(e.target.dataset.del);
