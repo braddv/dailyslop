@@ -2,12 +2,6 @@ const { readCache, writeCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
 
 const PROFILE_TTL_MS = 24 * 60 * 60 * 1000;
-const COUNTRY_TO_REGION = {
-  'United States': 'US',
-  USA: 'US',
-  US: 'US',
-  Canada: 'Canada',
-};
 
 function asFactorBucket(sectorName) {
   const sector = String(sectorName || '').trim();
@@ -18,13 +12,6 @@ function asFactorBucket(sectorName) {
   if (sector === 'Financials') return 'Financials';
   if (sector === 'Real Estate') return 'Rate Sensitive';
   return sector;
-}
-
-function toRegion(country) {
-  const c = String(country || '').trim();
-  if (!c) return 'Unknown';
-  if (COUNTRY_TO_REGION[c]) return COUNTRY_TO_REGION[c];
-  return 'ex-US';
 }
 
 function getSp500Map() {
@@ -47,32 +34,68 @@ function getSp500Map() {
   return out;
 }
 
-async function fetchYahooProfile(ticker) {
+function inferRegionFromMeta(meta = {}, ticker) {
+  const name = String(meta.exchangeName || meta.fullExchangeName || '').toLowerCase();
+  const market = String(meta.market || '').toLowerCase();
+
+  if (name.includes('nasdaq') || name.includes('nyse') || name.includes('arca') || name.includes('amex') || market === 'us_market') return 'US';
+  if (name.includes('toronto') || name.includes('tsx')) return 'Canada';
+  if (name.includes('sao paulo') || name.includes('bovespa')) return 'LatAm';
+  if (name.includes('london')) return 'Europe';
+  if (name.includes('hong kong') || name.includes('tokyo') || name.includes('shanghai') || name.includes('shenzhen')) return 'Asia';
+
+  // Common OTC ADR suffix pattern in US symbols.
+  if (/^[A-Z]{5}$/.test(ticker) && ticker.endsWith('Y')) return 'ex-US';
+  return 'Unknown';
+}
+
+function classifyFromSparkMeta(ticker, meta = {}) {
+  const instrumentType = String(meta.instrumentType || '').toUpperCase();
+  let sector = 'Unknown';
+  if (instrumentType === 'ETF') sector = 'ETF';
+  const factor = sector === 'ETF' ? 'Beta/Index Exposure' : 'Unassigned';
+  return {
+    region: inferRegionFromMeta(meta, ticker),
+    sector,
+    factor,
+    source: 'yahoo_spark',
+  };
+}
+
+async function fetchSparkClassifications(tickers) {
+  if (!tickers.length) return { byTicker: {}, failures: [] };
+  const url = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(tickers.join(','))}&range=5d&interval=1d`;
+  const resp = await fetch(url, {
+    headers: {
+      accept: 'application/json,text/plain,*/*',
+      'user-agent': 'Mozilla/5.0 (compatible; dailyslop-portfolio/1.0)',
+    },
+  });
+  if (!resp.ok) throw new Error(`spark HTTP ${resp.status}`);
+
+  const json = await resp.json();
+  const rows = Array.isArray(json?.spark?.result) ? json.spark.result : [];
+  const byTicker = {};
+  rows.forEach((r) => {
+    const symbol = String(r?.symbol || '').toUpperCase();
+    if (!symbol) return;
+    const meta = r?.response?.[0]?.meta || {};
+    byTicker[symbol] = classifyFromSparkMeta(symbol, meta);
+  });
+
+  const failures = tickers.filter((t) => !byTicker[t]).map((t) => `${t}: missing spark row`);
+  return { byTicker, failures };
+}
+
+async function getSparkClassification(ticker) {
   const cacheKey = `profile_${ticker}`;
   const cached = readCache(cacheKey, PROFILE_TTL_MS);
   if (cached) return cached;
 
-  const modules = 'assetProfile,price';
-  const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=${modules}`;
-  const resp = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; dailyslop-portfolio/1.0)' } });
-  if (!resp.ok) throw new Error(`profile HTTP ${resp.status}`);
-  const json = await resp.json();
-  const result = json?.quoteSummary?.result?.[0];
-  if (!result) throw new Error('missing profile result');
-
-  const assetProfile = result.assetProfile || {};
-  const price = result.price || {};
-  const country = assetProfile.country || price.country || null;
-  const sector = assetProfile.sector || 'Unknown';
-  const out = {
-    region: toRegion(country),
-    sector,
-    factor: asFactorBucket(sector),
-    country: country || null,
-    source: 'yahoo_profile',
-  };
-  writeCache(cacheKey, out);
-  return out;
+  const { byTicker, failures } = await fetchSparkClassifications([ticker]);
+  if (!byTicker[ticker]) throw new Error(failures[0] || 'missing spark row');
+  writeCache(cacheKey, byTicker[ticker]);
+  return byTicker[ticker];
 }
 
 module.exports = async function handler(req, res) {
@@ -92,7 +115,7 @@ module.exports = async function handler(req, res) {
       }
 
       try {
-        classifications[ticker] = await fetchYahooProfile(ticker);
+        classifications[ticker] = await getSparkClassification(ticker);
       } catch (err) {
         classifications[ticker] = { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned', source: 'none' };
         warnings.push(`${ticker}: ${err.message}`);
