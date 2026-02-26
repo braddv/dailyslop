@@ -8,14 +8,48 @@ let holdings = [];
 let state = {};
 
 const manualClass = {
-  VOO: { region: 'US', sector: 'Broad US Equity' }, VXUS: { region: 'ex-US', sector: 'Broad ex-US Equity' },
-  XLE: { region: 'US', sector: 'Energy' }, HAP: { region: 'Global', sector: 'Natural Resources' }, FCG: { region: 'US', sector: 'Energy' }, XOM: { region: 'US', sector: 'Energy' },
+  VOO: { region: 'US', sector: 'Broad US Equity', factor: 'US Beta' },
+  VXUS: { region: 'ex-US', sector: 'Broad ex-US Equity', factor: 'International Beta' },
+  XLE: { region: 'US', sector: 'Energy', factor: 'Energy/Cyclicals' },
+  HAP: { region: 'Global', sector: 'Natural Resources', factor: 'Commodities Tilt' },
+  FCG: { region: 'US', sector: 'Energy', factor: 'Energy/Cyclicals' },
+  XOM: { region: 'US', sector: 'Energy', factor: 'Energy/Cyclicals' },
 };
+
+function ensureClassifications() {
+  holdings.forEach((h) => {
+    const t = (h.ticker || '').toUpperCase();
+    if (!manualClass[t]) {
+      manualClass[t] = { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
+    }
+    if (!manualClass[t].factor) manualClass[t].factor = 'Unassigned';
+  });
+}
 
 function renderHoldings() {
   const t = document.getElementById('holdingsTable');
   t.innerHTML = '<tr><th>Ticker</th><th>Market Value</th><th>Delete</th></tr>' + holdings.map((h, i) =>
     `<tr><td><input data-i="${i}" data-k="ticker" value="${h.ticker}"></td><td><input data-i="${i}" data-k="marketValue" type="number" step="0.01" value="${h.marketValue}"></td><td><button data-del="${i}">X</button></td></tr>`
+  ).join('');
+  ensureClassifications();
+  renderClassificationTable();
+}
+
+function renderClassificationTable() {
+  const t = document.getElementById('classificationTable');
+  const rows = holdings.map((h) => {
+    const ticker = (h.ticker || '').toUpperCase();
+    const cls = manualClass[ticker] || { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
+    return { ticker, cls };
+  });
+
+  t.innerHTML = '<tr><th>Ticker</th><th>Region</th><th>Sector</th><th>Factor bucket</th></tr>' + rows.map((r) =>
+    `<tr>
+      <td>${r.ticker || '-'}</td>
+      <td><input data-class-ticker="${r.ticker}" data-class-k="region" value="${r.cls.region || ''}"></td>
+      <td><input data-class-ticker="${r.ticker}" data-class-k="sector" value="${r.cls.sector || ''}"></td>
+      <td><input data-class-ticker="${r.ticker}" data-class-k="factor" value="${r.cls.factor || ''}"></td>
+    </tr>`
   ).join('');
 }
 
@@ -73,13 +107,13 @@ function statsFromReturns(ret, rf = 0) {
   const sharpe = vol ? ((avg - rf / 252) * 252) / vol : NaN;
   const sortinoDen = percentileNeg(rs) * Math.sqrt(252);
   const sortino = sortinoDen ? ((avg - rf / 252) * 252) / sortinoDen : NaN;
-  let peak = 1, path = 1, mdd = 0;
+  let peak = 1; let path = 1; let mdd = 0;
   rs.forEach((r) => { path *= (1 + r); peak = Math.max(peak, path); mdd = Math.min(mdd, path / peak - 1); });
   return { cum, vol, sharpe, sortino, mdd };
 }
 
 function corr(x, y) {
-  const mx = mean(x), my = mean(y);
+  const mx = mean(x); const my = mean(y);
   const cov = mean(x.map((v, i) => (v - mx) * (y[i] - my)));
   return cov / (stdev(x) * stdev(y));
 }
@@ -87,9 +121,9 @@ function corr(x, y) {
 function corrMatrix(portRet, tickers, window) {
   const sliced = portRet.slice(-window);
   const data = {};
-  tickers.forEach((t) => data[t] = sliced.map((r) => r.row[t] || 0));
+  tickers.forEach((t) => { data[t] = sliced.map((r) => r.row[t] || 0); });
   const m = {};
-  tickers.forEach((a) => { m[a] = {}; tickers.forEach((b) => m[a][b] = corr(data[a], data[b])); });
+  tickers.forEach((a) => { m[a] = {}; tickers.forEach((b) => { m[a][b] = corr(data[a], data[b]); }); });
   return m;
 }
 
@@ -114,7 +148,8 @@ function invert(mat) {
   const n = mat.length;
   const a = mat.map((r, i) => [...r, ...Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))]);
   for (let i = 0; i < n; i++) {
-    let p = i; for (let r = i + 1; r < n; r++) if (Math.abs(a[r][i]) > Math.abs(a[p][i])) p = r;
+    let p = i;
+    for (let r = i + 1; r < n; r++) if (Math.abs(a[r][i]) > Math.abs(a[p][i])) p = r;
     [a[i], a[p]] = [a[p], a[i]];
     const div = a[i][i]; if (!div) throw new Error('Singular matrix');
     for (let c = 0; c < 2 * n; c++) a[i][c] /= div;
@@ -127,7 +162,7 @@ function invert(mat) {
 }
 
 function ols(y, x, colNames) {
-  const n = y.length, k = x[0].length;
+  const n = y.length; const k = x[0].length;
   const xtx = Array.from({ length: k }, () => Array(k).fill(0));
   const xty = Array(k).fill(0);
   for (let i = 0; i < n; i++) {
@@ -149,8 +184,24 @@ function ols(y, x, colNames) {
   return { beta, se, t, r2, alphaAnnual: (Math.pow(1 + beta[0], 252) - 1), names: colNames };
 }
 
+function aggregateBy(items, keyName, total) {
+  const out = {};
+  items.forEach((item) => {
+    const k = item[keyName] || 'Unknown';
+    out[k] = (out[k] || 0) + item.marketValue / total;
+  });
+  return out;
+}
+
+function asWeightTable(mapObj, keyHeader) {
+  const rows = Object.entries(mapObj).sort((a, b) => b[1] - a[1]);
+  return `<table><tr><th>${keyHeader}</th><th>Weight</th></tr>${rows.map(([k, v]) => `<tr><td>${k}</td><td>${fmt(v)}</td></tr>`).join('')}</table>`;
+}
+
 async function run() {
   document.getElementById('warnings').textContent = '';
+  ensureClassifications();
+
   const clean = holdings.map((h) => ({ ticker: h.ticker.toUpperCase().trim(), marketValue: Number(h.marketValue) })).filter((h) => h.ticker && h.marketValue > 0);
   const total = clean.reduce((s, h) => s + h.marketValue, 0);
   const weights = Object.fromEntries(clean.map((h) => [h.ticker, h.marketValue / total]));
@@ -160,17 +211,30 @@ async function run() {
   const { prices, warnings } = await priceResp.json();
   const portRet = portfolioReturns(prices, weights);
   const stat = statsFromReturns(portRet);
-  state = { prices, weights, portRet, tickers };
+  state = { prices, weights, portRet, tickers, clean, total };
 
   document.getElementById('stats').innerHTML = `Cumulative: ${fmt(stat.cum)}<br>Vol (ann): ${fmt(stat.vol)}<br>Max Drawdown: ${fmt(stat.mdd)}<br>Sharpe: ${stat.sharpe.toFixed(2)}<br>Sortino: ${stat.sortino.toFixed(2)}`;
 
   const hhi = clean.reduce((s, h) => s + (h.marketValue / total) ** 2, 0);
   const top5 = [...clean].sort((a, b) => b.marketValue - a.marketValue).slice(0, 5).reduce((s, h) => s + h.marketValue, 0) / total;
-  document.getElementById('risk').innerHTML = `Top 5 weight: ${fmt(top5)}<br>HHI: ${hhi.toFixed(3)}<br>${[...clean].sort((a,b)=>b.marketValue-a.marketValue).slice(0,5).map(h=>`${h.ticker}: ${fmt(h.marketValue/total)}`).join('<br>')}`;
+  document.getElementById('risk').innerHTML = `Top 5 weight: ${fmt(top5)}<br>HHI: ${hhi.toFixed(3)}<br>${[...clean].sort((a, b) => b.marketValue - a.marketValue).slice(0, 5).map((h) => `${h.ticker}: ${fmt(h.marketValue / total)}`).join('<br>')}`;
 
-  const c1 = corrMatrix(portRet, tickers, 21), c3 = corrMatrix(portRet, tickers, 63), c6 = corrMatrix(portRet, tickers, 126);
+  const classRows = clean.map((h) => {
+    const cls = manualClass[h.ticker] || { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
+    return { ...h, region: cls.region || 'Unknown', sector: cls.sector || 'Unknown', factor: cls.factor || 'Unassigned' };
+  });
+
+  const bySector = aggregateBy(classRows, 'sector', total);
+  const byRegion = aggregateBy(classRows, 'region', total);
+  const byFactor = aggregateBy(classRows, 'factor', total);
+
+  document.getElementById('sectorDiversity').innerHTML = `${asWeightTable(bySector, 'Sector')}<div class="small">Sector HHI: ${Object.values(bySector).reduce((s, w) => s + w * w, 0).toFixed(3)}</div>`;
+  document.getElementById('factorDiversity').innerHTML = `${asWeightTable(byFactor, 'Factor bucket')}<div class="small">Factor-bucket HHI: ${Object.values(byFactor).reduce((s, w) => s + w * w, 0).toFixed(3)}</div>`;
+
+  const c1 = corrMatrix(portRet, tickers, 21); const c3 = corrMatrix(portRet, tickers, 63); const c6 = corrMatrix(portRet, tickers, 126);
   state.corr = { c1, c3, c6 };
-  document.getElementById('corr').innerHTML = `<h4>1 month</h4>${matrixToTable(c1)}<h4>3 months</h4>${matrixToTable(c3)}<h4>6 months</h4>${matrixToTable(c6)}<h4>Top pairs (6m)</h4><table><tr><th>Pair</th><th>Corr</th></tr>${topPairs(c6).map(p=>`<tr><td>${p.pair}</td><td>${p.v.toFixed(2)}</td></tr>`).join('')}</table>`;
+  state.groups = { bySector, byRegion, byFactor };
+  document.getElementById('corr').innerHTML = `<h4>1 month</h4>${matrixToTable(c1)}<h4>3 months</h4>${matrixToTable(c3)}<h4>6 months</h4>${matrixToTable(c6)}<h4>Top pairs (6m)</h4><table><tr><th>Pair</th><th>Corr</th></tr>${topPairs(c6).map((p) => `<tr><td>${p.pair}</td><td>${p.v.toFixed(2)}</td></tr>`).join('')}</table>`;
 
   const rolling = [30, 90, 180].map((w) => {
     const rows = tickers.map((t) => {
@@ -178,18 +242,16 @@ async function run() {
       const ar = portRet.slice(-w).map((r) => r.row[t] || 0);
       return { t, c: corr(pr, ar) };
     }).sort((a, b) => a.c - b.c);
-    return `<h4>${w}d</h4><div>Diversifiers: ${rows.slice(0, 3).map((x) => `${x.t} (${x.c.toFixed(2)})`).join(', ')}</div><table><tr><th>Ticker</th><th>Corr vs Portfolio</th></tr>${rows.map(r=>`<tr><td>${r.t}</td><td>${r.c.toFixed(2)}</td></tr>`).join('')}</table>`;
+    return `<h4>${w}d</h4><div>Diversifiers: ${rows.slice(0, 3).map((x) => `${x.t} (${x.c.toFixed(2)})`).join(', ')}</div><table><tr><th>Ticker</th><th>Corr vs Portfolio</th></tr>${rows.map((r) => `<tr><td>${r.t}</td><td>${r.c.toFixed(2)}</td></tr>`).join('')}</table>`;
   }).join('');
   document.getElementById('rolling').innerHTML = rolling;
 
-  const classRows = clean.map((h) => ({ ...h, cls: manualClass[h.ticker] || { region: 'Unknown', sector: 'Unknown' } }));
-  const bySector = {}; const byRegion = {};
-  classRows.forEach((r) => { bySector[r.cls.sector] = (bySector[r.cls.sector] || 0) + r.marketValue / total; byRegion[r.cls.region] = (byRegion[r.cls.region] || 0) + r.marketValue / total; });
   const oilShock = -0.2 * ((weights.XLE || 0) + (weights.XOM || 0));
   const equityShock = -0.1 * (weights.VOO || 0.6);
   document.getElementById('notThinking').innerHTML = `
-    <b>Sector proxy weights</b><br>${Object.entries(bySector).map(([k,v])=>`${k}: ${fmt(v)}`).join('<br>')}<br><br>
-    <b>Region proxy weights</b><br>${Object.entries(byRegion).map(([k,v])=>`${k}: ${fmt(v)}`).join('<br>')}<br><br>
+    <b>Sector proxy weights</b><br>${Object.entries(bySector).map(([k, v]) => `${k}: ${fmt(v)}`).join('<br>')}<br><br>
+    <b>Region proxy weights</b><br>${Object.entries(byRegion).map(([k, v]) => `${k}: ${fmt(v)}`).join('<br>')}<br><br>
+    <b>Factor-bucket weights</b><br>${Object.entries(byFactor).map(([k, v]) => `${k}: ${fmt(v)}`).join('<br>')}<br><br>
     <b>Scenario shocks (rough)</b><br>Oil -20% day proxy impact: ${fmt(oilShock)}<br>Equity -10% proxy impact: ${fmt(equityShock)}
   `;
 
@@ -218,7 +280,7 @@ async function runFactors() {
   function doReg(name, retSeries) {
     const joint = retSeries.slice(-window).map((r) => ({ r: r.r, f: facMap.get(r.date) })).filter((x) => x.f);
     const y = joint.map((x) => x.r - x.f.RF);
-    const x = joint.map((x) => modelCols.map((c, i) => i === 0 ? 1 : (x.f[c] ?? 0)));
+    const x = joint.map((xj) => modelCols.map((c, i) => (i === 0 ? 1 : (xj.f[c] ?? 0))));
     if (x.length < modelCols.length + 5) return null;
     const reg = ols(y, x, modelCols);
     return { name, reg };
@@ -235,7 +297,7 @@ async function runFactors() {
   }
 
   state.factorRows = rows;
-  const table = `<div>Model: ${factorData.hasMomentum ? 'FF5 + MOM' : 'FF5 only (momentum unavailable)'}</div><table><tr><th>Name</th>${modelCols.map(c=>`<th>${c} β</th><th>${c} t</th>`).join('')}<th>R²</th><th>Annualized α</th></tr>${rows.map((r)=>`<tr><td>${r.name}</td>${r.reg.beta.map((b,i)=>`<td>${b.toFixed(3)}</td><td>${r.reg.t[i].toFixed(2)}</td>`).join('')}<td>${r.reg.r2.toFixed(2)}</td><td>${fmt(r.reg.alphaAnnual)}</td></tr>`).join('')}</table>`;
+  const table = `<div>Model: ${factorData.hasMomentum ? 'FF5 + MOM' : 'FF5 only (momentum unavailable)'}</div><table><tr><th>Name</th>${modelCols.map((c) => `<th>${c} β</th><th>${c} t</th>`).join('')}<th>R²</th><th>Annualized α</th></tr>${rows.map((r) => `<tr><td>${r.name}</td>${r.reg.beta.map((b, i) => `<td>${b.toFixed(3)}</td><td>${r.reg.t[i].toFixed(2)}</td>`).join('')}<td>${r.reg.r2.toFixed(2)}</td><td>${fmt(r.reg.alphaAnnual)}</td></tr>`).join('')}</table>`;
   document.getElementById('factors').innerHTML = table;
 }
 
@@ -251,6 +313,13 @@ function matrixCsv(m) {
   return [',' + t.join(','), ...t.map((r) => [r, ...t.map((c) => m[r][c])].join(','))].join('\n');
 }
 
+function mapToCsv(mapObj, header) {
+  return [
+    `${header},weight_percent`,
+    ...Object.entries(mapObj).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k},${(v * 100).toFixed(4)}`),
+  ].join('\n');
+}
+
 document.getElementById('loadDefault').onclick = () => { holdings = JSON.parse(JSON.stringify(defaults)); renderHoldings(); };
 document.getElementById('addRow').onclick = () => { holdings.push({ ticker: '', marketValue: 0 }); renderHoldings(); };
 document.getElementById('run').onclick = run;
@@ -259,17 +328,40 @@ document.getElementById('exportCorr').onclick = () => download('correlation_6m.c
 document.getElementById('exportFactors').onclick = () => {
   const rows = state.factorRows || [];
   const header = 'name,coef,tstat,r2,alpha_annual';
-  const csv = [header, ...rows.map((r) => `${r.name},"${r.reg.beta.map((x)=>x.toFixed(4)).join('|')}","${r.reg.t.map((x)=>x.toFixed(2)).join('|')}",${r.reg.r2.toFixed(3)},${r.reg.alphaAnnual.toFixed(4)}`)].join('\n');
+  const csv = [header, ...rows.map((r) => `${r.name},"${r.reg.beta.map((x) => x.toFixed(4)).join('|')}","${r.reg.t.map((x) => x.toFixed(2)).join('|')}",${r.reg.r2.toFixed(3)},${r.reg.alphaAnnual.toFixed(4)}`)].join('\n');
   download('factor_summary.csv', csv);
+};
+document.getElementById('exportGroups').onclick = () => {
+  if (!state.groups) return;
+  const csv = [
+    '# Sector groups',
+    mapToCsv(state.groups.bySector, 'sector'),
+    '',
+    '# Region groups',
+    mapToCsv(state.groups.byRegion, 'region'),
+    '',
+    '# Factor bucket groups',
+    mapToCsv(state.groups.byFactor, 'factor_bucket'),
+  ].join('\n');
+  download('sector_factor_groups.csv', csv);
 };
 
 document.getElementById('holdingsTable').addEventListener('input', (e) => {
   const i = Number(e.target.dataset.i); const k = e.target.dataset.k;
   if (Number.isInteger(i) && k) holdings[i][k] = k === 'marketValue' ? Number(e.target.value) : e.target.value;
+  ensureClassifications();
+  renderClassificationTable();
 });
 document.getElementById('holdingsTable').addEventListener('click', (e) => {
   const i = Number(e.target.dataset.del);
   if (Number.isInteger(i)) { holdings.splice(i, 1); renderHoldings(); }
+});
+document.getElementById('classificationTable').addEventListener('input', (e) => {
+  const ticker = (e.target.dataset.classTicker || '').toUpperCase();
+  const k = e.target.dataset.classK;
+  if (!ticker || !k) return;
+  if (!manualClass[ticker]) manualClass[ticker] = { region: 'Unknown', sector: 'Unknown', factor: 'Unassigned' };
+  manualClass[ticker][k] = e.target.value || (k === 'factor' ? 'Unassigned' : 'Unknown');
 });
 document.getElementById('csvFile').addEventListener('change', async (e) => {
   const file = e.target.files[0]; if (!file) return;
