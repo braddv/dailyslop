@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bradley's Cookbook | dAily Slop</title>
+  <link rel="icon" href="/gruelda.png" type="image/png">
+  <style>
+    :root {
+      --bg: #f5e6cc;
+      --panel: #d8c3a5;
+      --text: #2f2417;
+      --accent: #836953;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrapper {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      margin-bottom: 16px;
+    }
+
+    h1,
+    h2 {
+      margin-top: 0;
+    }
+
+    .sub {
+      margin-top: -8px;
+      margin-bottom: 16px;
+      opacity: 0.85;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    button,
+    input,
+    textarea {
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      background: #f8efe0;
+    }
+
+    .viewer {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .recipe-card {
+      background: rgba(255, 255, 255, 0.45);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .recipe-title {
+      font-size: 22px;
+      margin: 0 0 8px;
+    }
+
+    .meta {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+
+    .recipe-notes {
+      white-space: pre-wrap;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .scroll-list {
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .scroll-list li {
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .scroll-list li.active {
+      outline: 2px solid var(--accent);
+      background: rgba(255, 255, 255, 0.65);
+    }
+
+    form {
+      display: grid;
+      gap: 8px;
+    }
+
+    .muted {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    a {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="panel">
+      <h1>Bradley's Weekly Recipe Rotation</h1>
+      <p class="sub">Protein + vegetables + carb. Scroll your cookbook, then add new recipes whenever you want.</p>
+      <p><a href="/">← Back to dAily Slop</a></p>
+    </div>
+
+    <div class="panel">
+      <h2>Recipe Viewer</h2>
+      <div class="controls">
+        <button id="prev-recipe" type="button">← Previous</button>
+        <button id="next-recipe" type="button">Next →</button>
+        <button id="shuffle-recipe" type="button">Shuffle pick</button>
+      </div>
+      <div class="viewer">
+        <article id="recipe-card" class="recipe-card"></article>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Cookbook Scroll List</h2>
+      <ul id="recipe-list" class="scroll-list"></ul>
+      <p class="muted">Tip: click any recipe in the list to jump directly to it.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Add a New Recipe</h2>
+      <form id="add-recipe-form">
+        <input id="recipe-name" name="recipe-name" placeholder="Recipe title" required>
+        <textarea id="recipe-details" name="recipe-details" rows="5" placeholder="Ingredients, prep notes, and how you serve it" required></textarea>
+        <button type="submit">Add Recipe</button>
+      </form>
+      <p class="muted">Saved in your browser via localStorage on this device.</p>
+    </div>
+  </div>
+
+  <script src="/cookbook.js"></script>
+</body>
+</html>
