@@ -1,11 +1,28 @@
 const { readCache, writeCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
 
-const CACHE_KEY = 'sector_ad_yahoo';
-const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const DAILY_CACHE_KEY = 'sector_ad_yahoo_daily_v2';
+const INTRADAY_CACHE_KEY = 'sector_ad_yahoo_intraday_v3';
+const DAILY_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const INTRADAY_MARKET_TTL_MS = 10 * 60 * 1000;
+const INTRADAY_OFF_HOURS_TTL_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const CHUNK_SIZE = 10;
 const MAX_CONCURRENCY = 4;
+const BENCHMARKS = [
+  ['SPY', 'S&P 500', 'S&P 500'],
+  ['XLB', 'Materials Select Sector SPDR', 'Materials'],
+  ['XLC', 'Communication Services Select Sector SPDR', 'Communication Services'],
+  ['XLY', 'Consumer Discretionary Select Sector SPDR', 'Consumer Discretionary'],
+  ['XLP', 'Consumer Staples Select Sector SPDR', 'Consumer Staples'],
+  ['XLE', 'Energy Select Sector SPDR', 'Energy'],
+  ['XLF', 'Financial Select Sector SPDR', 'Financials'],
+  ['XLV', 'Health Care Select Sector SPDR', 'Health Care'],
+  ['XLI', 'Industrial Select Sector SPDR', 'Industrials'],
+  ['XLK', 'Technology Select Sector SPDR', 'Information Technology'],
+  ['XLRE', 'Real Estate Select Sector SPDR', 'Real Estate'],
+  ['XLU', 'Utilities Select Sector SPDR', 'Utilities'],
+];
 
 function toYahooSymbol(symbol) {
   return String(symbol).replace(/\./g, '-').toUpperCase();
@@ -116,18 +133,32 @@ function calc52wHigh(timestamps, closes) {
   return high;
 }
 
-async function fetchSparkChunk(symbols) {
-  const url = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(symbols.join(','))}&range=1y&interval=1d`;
-  const json = await fetchJsonWithRetry(url, 'spark');
+function buildDailyReplay(timestamps, closes) {
+  const cutoff = Date.now() - 186 * DAY_MS;
+  const points = [];
+  for (let i = 0; i < timestamps.length; i += 1) {
+    const timestamp = timestamps[i];
+    const close = closes[i];
+    if (!Number.isFinite(timestamp) || timestamp * 1000 < cutoff || !Number.isFinite(close)) {
+      continue;
+    }
+    points.push([timestamp, close]);
+  }
+  return points;
+}
+
+async function fetchSparkChunk(symbols, range, interval) {
+  const url = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${encodeURIComponent(symbols.join(','))}&range=${range}&interval=${interval}`;
+  const json = await fetchJsonWithRetry(url, `spark ${range}/${interval}`);
   return json?.spark?.result || [];
 }
 
-async function processChunk(set) {
+async function processChunk(set, range, interval) {
   const failures = [];
   const sparkMap = new Map();
 
   try {
-    const rows = await fetchSparkChunk(set);
+    const rows = await fetchSparkChunk(set, range, interval);
     rows.forEach((row) => {
       if (row?.symbol) sparkMap.set(String(row.symbol).toUpperCase(), row);
     });
@@ -138,14 +169,16 @@ async function processChunk(set) {
   return { sparkMap, failures };
 }
 
-async function fetchYahooData(symbols) {
+async function fetchYahooData(symbols, range, interval) {
   const sets = chunk(symbols, CHUNK_SIZE);
   const sparkMap = new Map();
   const failures = [];
 
   for (let i = 0; i < sets.length; i += MAX_CONCURRENCY) {
     const batch = sets.slice(i, i + MAX_CONCURRENCY);
-    const results = await Promise.all(batch.map(processChunk));
+    const results = await Promise.all(
+      batch.map((set) => processChunk(set, range, interval))
+    );
     results.forEach((result) => {
       result.sparkMap.forEach((v, k) => sparkMap.set(k, v));
       failures.push(...result.failures);
@@ -153,6 +186,18 @@ async function fetchYahooData(symbols) {
   }
 
   return { sparkMap, failures };
+}
+
+function buildReplayPoints(series) {
+  const timestamps = series?.timestamp || [];
+  const closes = extractCloseSeries(series);
+  const points = [];
+  for (let i = 0; i < timestamps.length; i += 1) {
+    if (Number.isFinite(timestamps[i]) && Number.isFinite(closes[i])) {
+      points.push([timestamps[i], closes[i]]);
+    }
+  }
+  return points;
 }
 
 function buildSectorSummary(stocks) {
@@ -171,8 +216,8 @@ function buildSectorSummary(stocks) {
   return Array.from(bySector.values()).sort((a, b) => a.sector.localeCompare(b.sector));
 }
 
-function buildResponseFromYahoo() {
-  const universe = seedData.stocks.map((stock) => ({
+function buildUniverse() {
+  return seedData.stocks.map((stock) => ({
     symbol: stock.symbol,
     yahooSymbol: toYahooSymbol(stock.symbol),
     security: stock.security,
@@ -180,9 +225,73 @@ function buildResponseFromYahoo() {
     subIndustry: stock.subIndustry,
     seedMarketCap: stock.marketCap,
   }));
+}
 
-  const symbols = [...new Set(universe.map((stock) => stock.yahooSymbol))];
-  return fetchYahooData(symbols).then(({ sparkMap, failures }) => {
+function buildBenchmarkUniverse() {
+  return BENCHMARKS.map(([symbol, security, sector]) => ({
+    symbol,
+    yahooSymbol: symbol,
+    security,
+    sector,
+    subIndustry: 'Sector ETF',
+  }));
+}
+
+function buildDailyBenchmark(stock, spark) {
+  if (!spark) return null;
+  const series = spark.response?.[0] || {};
+  const meta = series.meta || {};
+  const timestamps = series.timestamp || [];
+  const closes = extractCloseSeries(series);
+  const currentPrice = Number.isFinite(meta.regularMarketPrice)
+    ? meta.regularMarketPrice
+    : getLastFinite(closes, 0);
+  const prevClose = Number.isFinite(meta.regularMarketPreviousClose)
+    ? meta.regularMarketPreviousClose
+    : getLastFinite(closes, 1);
+  const change = Number.isFinite(currentPrice) && Number.isFinite(prevClose)
+    ? currentPrice - prevClose
+    : null;
+  const high12w = calc12wHigh(timestamps, closes);
+  const high52w = Number.isFinite(meta.fiftyTwoWeekHigh)
+    ? meta.fiftyTwoWeekHigh
+    : calc52wHigh(timestamps, closes);
+  return {
+    symbol: stock.symbol,
+    security: stock.security,
+    sector: stock.sector,
+    subIndustry: stock.subIndustry,
+    change,
+    changePercent: Number.isFinite(change) && Number.isFinite(prevClose) && prevClose
+      ? (change / prevClose) * 100
+      : null,
+    perf1w: calcPerf(currentPrice, timestamps, closes, 7),
+    perf1m: calcPerf(currentPrice, timestamps, closes, 30),
+    perf3m: calcPerf(currentPrice, timestamps, closes, 90),
+    pctFrom52wHigh: Number.isFinite(currentPrice) && Number.isFinite(high52w)
+      ? ((currentPrice / high52w) - 1) * 100
+      : null,
+    high52w,
+    lastClose: prevClose,
+    currentPrice,
+    high12w,
+    pctFrom12wHigh: Number.isFinite(currentPrice) && Number.isFinite(high12w)
+      ? ((currentPrice / high12w) - 1) * 100
+      : null,
+    replayDaily: buildDailyReplay(timestamps, closes),
+  };
+}
+
+function buildDailyResponse() {
+  const universe = buildUniverse();
+  const benchmarkUniverse = buildBenchmarkUniverse();
+
+  const symbols = [...new Set(
+    [...universe, ...benchmarkUniverse].map((stock) => stock.yahooSymbol)
+  )];
+  return fetchYahooData(symbols, '1y', '1d').then((dailyResult) => {
+    const sparkMap = dailyResult.sparkMap;
+    const failures = [...dailyResult.failures];
     const stocks = [];
 
     universe.forEach((stock) => {
@@ -244,12 +353,16 @@ function buildResponseFromYahoo() {
         currentPrice: Number.isFinite(currentPrice) ? currentPrice : null,
         high12w: Number.isFinite(high12w) ? high12w : null,
         pctFrom12wHigh,
+        replayDaily: buildDailyReplay(timestamps, closes),
       });
     });
 
     if (!stocks.length) {
       throw new Error(`Yahoo spark returned no stock rows (${failures.slice(0, 3).join(' | ')})`);
     }
+    const benchmarks = benchmarkUniverse
+      .map((stock) => buildDailyBenchmark(stock, sparkMap.get(stock.yahooSymbol)))
+      .filter(Boolean);
 
     return {
       asOf: new Date().toISOString(),
@@ -260,38 +373,188 @@ function buildResponseFromYahoo() {
       failures,
       sectors: buildSectorSummary(stocks),
       stocks,
+      benchmarks,
       cacheFresh: true,
     };
   });
 }
 
+function buildIntradayResponse() {
+  const universe = buildUniverse();
+  const benchmarkUniverse = buildBenchmarkUniverse();
+  const allRows = [...universe, ...benchmarkUniverse];
+  const symbols = [...new Set(allRows.map((stock) => stock.yahooSymbol))];
+  return Promise.all([
+    fetchYahooData(symbols, '2d', '15m'),
+    fetchYahooData(symbols, '10d', '60m'),
+  ]).then(([dayResult, weekResult]) => ({
+    asOf: new Date().toISOString(),
+    failures: [
+      ...dayResult.failures.map((failure) => `15m ${failure}`),
+      ...weekResult.failures.map((failure) => `60m ${failure}`),
+    ],
+    stocks: universe.map((stock) => ({
+      symbol: stock.symbol,
+      replayDay15m: buildReplayPoints(
+        dayResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null
+      ),
+      replayWeekHourly: buildReplayPoints(
+        weekResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null
+      ),
+    })),
+    benchmarks: benchmarkUniverse.map((stock) => ({
+      symbol: stock.symbol,
+      replayDay15m: buildReplayPoints(
+        dayResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null
+      ),
+      replayWeekHourly: buildReplayPoints(
+        weekResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null
+      ),
+    })),
+  }));
+}
+
+function isUsMarketHours(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  if (values.weekday === 'Sat' || values.weekday === 'Sun') return false;
+  const minutes = Number(values.hour) * 60 + Number(values.minute);
+  return minutes >= 9 * 60 + 30 && minutes < 16 * 60 + 15;
+}
+
+function hasValidIntraday(payload) {
+  return Array.isArray(payload?.stocks) && payload.stocks.length > 100;
+}
+
+function mergeQuoteRow(stock, live = {}) {
+  const latestIntraday = getLastFinite(
+    (live.replayDay15m || []).map((point) => point[1]),
+    0
+  );
+  const currentPrice = Number.isFinite(latestIntraday)
+    ? latestIntraday
+    : stock.currentPrice;
+  const prevClose = stock.lastClose;
+  const change = Number.isFinite(currentPrice) && Number.isFinite(prevClose)
+    ? currentPrice - prevClose
+    : stock.change;
+  const changePercent = Number.isFinite(change) && Number.isFinite(prevClose) && prevClose !== 0
+    ? (change / prevClose) * 100
+    : stock.changePercent;
+  const dailyTimestamps = (stock.replayDaily || []).map((point) => point[0]);
+  const dailyCloses = (stock.replayDaily || []).map((point) => point[1]);
+  return {
+    ...stock,
+    currentPrice,
+    change,
+    changePercent,
+    perf1w: calcPerf(currentPrice, dailyTimestamps, dailyCloses, 7),
+    perf1m: calcPerf(currentPrice, dailyTimestamps, dailyCloses, 30),
+    perf3m: calcPerf(currentPrice, dailyTimestamps, dailyCloses, 90),
+    pctFrom52wHigh: Number.isFinite(currentPrice) && Number.isFinite(stock.high52w)
+      ? ((currentPrice / stock.high52w) - 1) * 100
+      : stock.pctFrom52wHigh,
+    pctFrom12wHigh: Number.isFinite(currentPrice) && Number.isFinite(stock.high12w)
+      ? ((currentPrice / stock.high12w) - 1) * 100
+      : stock.pctFrom12wHigh,
+    replayDay15m: live.replayDay15m || [],
+    replayWeekHourly: live.replayWeekHourly || [],
+  };
+}
+
+function mergePayloads(daily, intraday, cacheFresh) {
+  const intradayBySymbol = new Map(
+    (intraday.stocks || []).map((stock) => [stock.symbol, stock])
+  );
+  const intradayBenchmarks = new Map(
+    (intraday.benchmarks || []).map((stock) => [stock.symbol, stock])
+  );
+  const stocks = (daily.stocks || []).map((stock) =>
+    mergeQuoteRow(stock, intradayBySymbol.get(stock.symbol))
+  );
+  const benchmarks = (daily.benchmarks || []).map((stock) =>
+    mergeQuoteRow(stock, intradayBenchmarks.get(stock.symbol))
+  );
+  return {
+    ...daily,
+    asOf: intraday.asOf || daily.asOf,
+    failures: [...(daily.failures || []), ...(intraday.failures || [])],
+    sectors: buildSectorSummary(stocks),
+    stocks,
+    benchmarks,
+    cacheFresh,
+    cachePolicy: {
+      dailyHours: 12,
+      intradayMinutes: isUsMarketHours() ? 10 : 720,
+      marketHours: isUsMarketHours(),
+    },
+  };
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
 
-  try {
-    const refresh = String(req.query?.refresh || '').toLowerCase() === 'true';
-    if (!refresh) {
-      const cached = readCache(CACHE_KEY, CACHE_TTL_MS);
-      if (hasValidStocks(cached)) return res.status(200).json({ ...cached, cacheFresh: true });
-    }
+  const refresh = String(req.query?.refresh || '').toLowerCase() === 'true';
+  const intradayTtl = isUsMarketHours()
+    ? INTRADAY_MARKET_TTL_MS
+    : INTRADAY_OFF_HOURS_TTL_MS;
+  let daily = refresh ? null : readCache(DAILY_CACHE_KEY, DAILY_CACHE_TTL_MS);
+  let intraday = refresh ? null : readCache(INTRADAY_CACHE_KEY, intradayTtl);
+  let dailyFresh = hasValidStocks(daily);
+  let intradayFresh = hasValidIntraday(intraday);
 
-    const payload = await buildResponseFromYahoo();
-    writeCache(CACHE_KEY, payload);
-    return res.status(200).json({ ...payload, cacheFresh: true });
-  } catch (err) {
-    const cached = readCache(CACHE_KEY, 7 * DAY_MS);
-    if (hasValidStocks(cached)) {
-      return res.status(200).json({
-        ...cached,
-        cacheFresh: false,
-        failures: [...(cached.failures || []), `live refresh failed: ${err.message}`],
-      });
-    }
+  const [dailyAttempt, intradayAttempt] = await Promise.all([
+    dailyFresh
+      ? Promise.resolve(null)
+      : buildDailyResponse().then((value) => ({ value })).catch((error) => ({ error })),
+    intradayFresh
+      ? Promise.resolve(null)
+      : buildIntradayResponse().then((value) => ({ value })).catch((error) => ({ error })),
+  ]);
 
-    return res.status(200).json({
-      ...seedData,
-      cacheFresh: false,
-      failures: [...(seedData.failures || []), `live refresh failed: ${err.message}`],
-    });
+  if (dailyAttempt?.value) {
+    daily = dailyAttempt.value;
+    dailyFresh = true;
+    writeCache(DAILY_CACHE_KEY, daily);
+  } else if (!dailyFresh) {
+    daily = readCache(DAILY_CACHE_KEY, 7 * DAY_MS);
+    if (!hasValidStocks(daily)) daily = seedData;
+    daily = {
+      ...daily,
+      failures: [
+        ...(daily.failures || []),
+        `daily refresh failed: ${dailyAttempt?.error?.message || 'unknown error'}`,
+      ],
+    };
   }
+
+  if (intradayAttempt?.value) {
+    intraday = intradayAttempt.value;
+    intradayFresh = true;
+    writeCache(INTRADAY_CACHE_KEY, intraday);
+  } else if (!intradayFresh) {
+    intraday = readCache(INTRADAY_CACHE_KEY, 2 * DAY_MS);
+    if (!hasValidIntraday(intraday)) {
+      intraday = { asOf: daily.asOf, failures: [], stocks: [] };
+    }
+    if (intradayAttempt?.error) {
+      intraday = {
+        ...intraday,
+        failures: [
+          ...(intraday.failures || []),
+          `intraday refresh failed: ${intradayAttempt.error.message}`,
+        ],
+      };
+    }
+  }
+
+  return res.status(200).json(
+    mergePayloads(daily, intraday, dailyFresh && intradayFresh)
+  );
 };

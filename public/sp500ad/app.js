@@ -10,13 +10,55 @@ const metricToggle = document.getElementById("metricToggle");
 const metricSubhead = document.getElementById("metricSubhead");
 const backBtn = document.getElementById("backBtn");
 const filterButtons = document.querySelectorAll(".filter-btn");
+const controlsEl = document.querySelector(".controls");
+const tickerSearchForm = document.getElementById("tickerSearch");
+const tickerSearchInput = document.getElementById("tickerSearchInput");
+const tickerOptions = document.getElementById("tickerOptions");
+const tickerSearchStatus = document.getElementById("tickerSearchStatus");
+const replayPlayBtn = document.getElementById("replayPlay");
+const replayPlayIcon = document.getElementById("replayPlayIcon");
+const replayPlayLabel = document.getElementById("replayPlayLabel");
+const replayScrubber = document.getElementById("replayScrubber");
+const replaySpeed = document.getElementById("replaySpeed");
+const replayTimestamp = document.getElementById("replayTimestamp");
+const replayStatus = document.getElementById("replayStatus");
+const replayTransport = document.getElementById("replayTransport");
+const liveModeBtn = document.getElementById("liveModeBtn");
+const replay1dModeBtn = document.getElementById("replay1dModeBtn");
+const replay2dModeBtn = document.getElementById("replay2dModeBtn");
+const replay1wModeBtn = document.getElementById("replay1wModeBtn");
+const replay2wModeBtn = document.getElementById("replay2wModeBtn");
+const replayModeBtn = document.getElementById("replayModeBtn");
+const replay2mModeBtn = document.getElementById("replay2mModeBtn");
+const replay3mModeBtn = document.getElementById("replay3mModeBtn");
+const replay6mModeBtn = document.getElementById("replay6mModeBtn");
+const backLiveBtn = document.getElementById("backLiveBtn");
 
 let lastStocks = [];
+let lastBenchmarks = [];
 let selectedMetric = "changePercent";
 let viewMode = "sector"; // sector | subindustry
 let selectedSector = null;
 const pinnedSymbols = new Set();
 let activeFilter = "all";
+let replayFrames = [];
+let replayFrameIndex = 0;
+let replayTimer = null;
+let replayActive = false;
+let replayValueRange = null;
+let chartProjection = null;
+let replayPeriod = "1m";
+
+const REPLAY_PERIODS = {
+  "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", sessions: 1 },
+  "2d": { field: "replayDay15m", label: "2-day", cadence: "15-minute" },
+  "1w": { field: "replayWeekHourly", label: "1-week", cadence: "hourly", sessions: 5 },
+  "2w": { field: "replayWeekHourly", label: "2-week", cadence: "hourly", sessions: 10 },
+  "1m": { field: "replayDaily", days: 31, label: "1-month", cadence: "daily" },
+  "2m": { field: "replayDaily", days: 62, label: "2-month", cadence: "daily" },
+  "3m": { field: "replayDaily", days: 93, label: "3-month", cadence: "daily" },
+  "6m": { field: "replayDaily", days: 186, label: "6-month", cadence: "daily" },
+};
 
 const METRICS = {
   changePercent: {
@@ -96,38 +138,58 @@ function niceRange(min, max) {
   return { min: min - padding, max: max + padding };
 }
 
-function symLog(value, constant = 0.5) {
+function symLog(value, constant = 5) {
   const sign = Math.sign(value);
   const magnitude = Math.log1p(Math.abs(value) / constant);
   return sign * magnitude;
 }
 
 function buildTicks(min, max) {
-  const base = [0, 0.5, 1, 2, 5, 10];
-  const maxAbs = Math.max(Math.abs(min), Math.abs(max));
-  const ticks = new Set([0]);
+  const base = [0, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+  const ticks = new Set();
   base.forEach((t) => {
-    if (t <= maxAbs) {
-      ticks.add(t);
-      ticks.add(-t);
-    }
+    if (t >= min && t <= max) ticks.add(t);
+    if (-t >= min && -t <= max) ticks.add(-t);
   });
-
-  if (maxAbs > 10) {
-    const extra = Math.ceil(maxAbs / 5) * 5;
-    ticks.add(extra);
-    ticks.add(-extra);
-  }
 
   return Array.from(ticks).sort((a, b) => b - a);
 }
 
-function radiusScale(cap, minCap, maxCap, scaleFactor = 1) {
+function filterTicksBySpacing(ticks, height, padding, minLog, maxLog) {
+  const innerHeight = height - padding.top - padding.bottom;
+  const positioned = ticks.map((value) => ({
+    value,
+    y:
+      padding.top +
+      ((maxLog - symLog(value)) / (maxLog - minLog)) * innerHeight,
+  }));
+  const prioritized = [...positioned].sort((a, b) => {
+    if (a.value === 0) return -1;
+    if (b.value === 0) return 1;
+    return Math.abs(symLog(b.value)) - Math.abs(symLog(a.value));
+  });
+  const selected = [];
+  prioritized.forEach((candidate) => {
+    if (selected.every((tick) => Math.abs(tick.y - candidate.y) >= 30)) {
+      selected.push(candidate);
+    }
+  });
+  return selected.map((tick) => tick.value).sort((a, b) => b - a);
+}
+
+function radiusScale(
+  cap,
+  minCap,
+  maxCap,
+  scaleFactor = 1,
+  minRadius = 3,
+  maxRadius = 14
+) {
   if (!Number.isFinite(cap) || !Number.isFinite(minCap) || !Number.isFinite(maxCap)) {
     return 4.0 * scaleFactor;
   }
-  const minR = 3 * scaleFactor;
-  const maxR = 14 * scaleFactor;
+  const minR = minRadius * scaleFactor;
+  const maxR = maxRadius * scaleFactor;
   if (maxCap === minCap) return (minR + maxR) / 2;
   const t =
     (Math.sqrt(cap) - Math.sqrt(minCap)) /
@@ -224,6 +286,8 @@ function updateSubhead() {
     base = `${base} (Top 50 market cap)`;
   } else if (activeFilter === "dow") {
     base = `${base} (Dow Jones)`;
+  } else if (activeFilter === "sectors") {
+    base = `${base} (Sector ETFs and SPY)`;
   }
   if (viewMode === "subindustry" && selectedSector) {
     base = `${base} (${selectedSector} sub-industries)`;
@@ -263,20 +327,67 @@ function applyFilter(stocks) {
   return cleaned;
 }
 
+function buildSectorViewStocks() {
+  const sectorCaps = new Map();
+  let totalCap = 0;
+  lastStocks.forEach((stock) => {
+    if (!Number.isFinite(stock.marketCap) || stock.marketCap <= 0) return;
+    sectorCaps.set(stock.sector, (sectorCaps.get(stock.sector) || 0) + stock.marketCap);
+    totalCap += stock.marketCap;
+  });
+  const maxSectorCap = Math.max(0, ...sectorCaps.values());
+  return lastBenchmarks.map((benchmark) => {
+    const isSpy = benchmark.symbol === "SPY";
+    const sectorCap = sectorCaps.get(benchmark.sector) || 0;
+    const weight = isSpy ? 100 : totalCap > 0 ? (sectorCap / totalCap) * 100 : null;
+    return {
+      ...benchmark,
+      isBenchmark: true,
+      marketCap: isSpy ? maxSectorCap * 1.15 : sectorCap,
+      sp500Weight: weight,
+      __replayValue: replayActive
+        ? getReplayValue(benchmark, replayFrames[replayFrameIndex])
+        : undefined,
+    };
+  });
+}
+
 function getGroups(stocks) {
+  if (activeFilter === "sectors") {
+    return {
+      groups: [
+        { key: "S&P 500", label: "SPY" },
+        ...SECTORS.map((sector) => ({ key: sector.gics, label: sector.label })),
+      ],
+      keyFn: (stock) => stock.sector,
+      interactive: true,
+    };
+  }
   if (viewMode === "sector") {
     return {
-      groups: SECTORS.map((sector) => ({ key: sector.gics, label: sector.label })),
+      groups: [
+        { key: "S&P 500", label: "SPY" },
+        ...SECTORS.map((sector) => ({ key: sector.gics, label: sector.label })),
+      ],
       keyFn: (stock) => stock.sector,
       interactive: true,
     };
   }
 
-  const filtered = stocks.filter((stock) => stock.sector === selectedSector && stock.subIndustry);
+  const filtered = stocks.filter(
+    (stock) =>
+      !stock.isBenchmark &&
+      stock.sector === selectedSector &&
+      stock.subIndustry
+  );
   const subIndustries = Array.from(new Set(filtered.map((s) => s.subIndustry))).sort();
+  const sectorEtf = SECTORS.find((sector) => sector.gics === selectedSector)?.label || "ETF";
   return {
-    groups: subIndustries.map((name) => ({ key: name, label: name })),
-    keyFn: (stock) => stock.subIndustry,
+    groups: [
+      { key: "__benchmark__", label: sectorEtf },
+      ...subIndustries.map((name) => ({ key: name, label: name })),
+    ],
+    keyFn: (stock) => stock.isBenchmark ? "__benchmark__" : stock.subIndustry,
     interactive: false,
   };
 }
@@ -290,23 +401,42 @@ function buildChart(stocks) {
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
 
-  let working = applyFilter(stocks);
+  let working = activeFilter === "sectors"
+    ? buildSectorViewStocks()
+    : applyFilter(stocks);
+  if (activeFilter !== "sectors") {
+    const benchmarks = buildSectorViewStocks();
+    const benchmark = viewMode === "sector"
+      ? benchmarks.find((stock) => stock.symbol === "SPY")
+      : benchmarks.find((stock) => stock.sector === selectedSector);
+    if (benchmark) working = [...working, benchmark];
+  }
   if (viewMode === "subindustry" && selectedSector) {
     working = working.filter((stock) => stock.sector === selectedSector);
   }
 
-  const filtered = working.filter((stock) => Number.isFinite(stock[selectedMetric]));
+  const valueField = replayActive ? "__replayValue" : selectedMetric;
+  const filtered = working.filter((stock) => Number.isFinite(stock[valueField]));
   if (!filtered.length) {
     chartEl.innerHTML = "<div class=\"notes\">No stock data to render.</div>";
     return;
   }
 
-  const minChange = Math.min(...filtered.map((s) => s[selectedMetric]));
-  const maxChange = Math.max(...filtered.map((s) => s[selectedMetric]));
-  const range = niceRange(minChange, maxChange);
+  const minChange = Math.min(...filtered.map((s) => s[valueField]));
+  const maxChange = Math.max(...filtered.map((s) => s[valueField]));
+  const range = replayActive && replayValueRange
+    ? replayValueRange
+    : niceRange(minChange, maxChange);
   const minLog = symLog(range.min);
   const maxLog = symLog(range.max);
-  const ticks = buildTicks(range.min, range.max);
+  chartProjection = { padding, innerHeight, minLog, maxLog };
+  const ticks = filterTicksBySpacing(
+    buildTicks(range.min, range.max),
+    height,
+    padding,
+    minLog,
+    maxLog
+  );
 
   buildYAxis(ticks, height, padding, minLog, maxLog);
 
@@ -369,17 +499,31 @@ function buildChart(stocks) {
     }
     if (interactive) {
       label.addEventListener("click", () => {
+        if (group.key === "S&P 500") return;
+        if (activeFilter === "sectors") {
+          activeFilter = "all";
+          filterButtons.forEach((button) => {
+            button.classList.toggle("active", button.dataset.filter === "all");
+          });
+        }
         viewMode = "subindustry";
         selectedSector = group.key;
         if (backBtn) backBtn.classList.add("visible");
         updateSubhead();
-        buildChart(lastStocks);
+        if (replayActive) {
+          calculateReplayRange();
+          updateReplaySubhead();
+        }
+        renderCurrentChart();
       });
     }
     svg.appendChild(label);
   });
 
-  if (selectedMetric === "pctFrom52wHigh" || selectedMetric === "pctFrom12wHigh") {
+  if (
+    activeFilter !== "sectors" &&
+    (selectedMetric === "pctFrom52wHigh" || selectedMetric === "pctFrom12wHigh")
+  ) {
     const field = selectedMetric;
     groups.forEach((group, index) => {
       const groupStocks = filtered.filter((stock) => keyFn(stock) === group.key);
@@ -401,6 +545,7 @@ function buildChart(stocks) {
   const useMarketCap = capToggle && capToggle.checked;
   const scaleFactor = activeFilter === "bottom250" ? 0.5 : 1;
   const caps = filtered
+    .filter((stock) => !stock.isBenchmark || activeFilter === "sectors")
     .map((s) => s.marketCap)
     .filter((value) => Number.isFinite(value) && value > 0);
   const minCap = caps.length ? Math.min(...caps) : null;
@@ -414,38 +559,57 @@ function buildChart(stocks) {
     const sectorIndex = groups.findIndex((group) => group.key === groupKey);
     if (sectorIndex === -1) return;
 
-    const jitter = jitterForSymbol(stock.symbol, sectorWidth);
+    const jitter = activeFilter === "sectors" || stock.isBenchmark
+      ? 0
+      : jitterForSymbol(stock.symbol, sectorWidth);
     const x =
       padding.left + sectorWidth * sectorIndex + sectorWidth / 2 + jitter;
     const y =
       padding.top +
-      ((maxLog - symLog(stock[selectedMetric])) / (maxLog - minLog)) *
+      ((maxLog - symLog(stock[valueField])) / (maxLog - minLog)) *
         innerHeight +
       verticalJitter(stock.symbol);
 
     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     dot.setAttribute("cx", x);
     dot.setAttribute("cy", y);
-    const radius = useMarketCap
-      ? radiusScale(stock.marketCap, minCap, maxCap, scaleFactor)
-      : 3.0;
+    const radius = stock.isBenchmark && activeFilter !== "sectors"
+      ? 16
+      : useMarketCap
+      ? activeFilter === "sectors"
+        ? radiusScale(stock.marketCap, minCap, maxCap, 1, 8, 22)
+        : radiusScale(stock.marketCap, minCap, maxCap, scaleFactor)
+      : activeFilter === "sectors" ? 10 : 3.0;
+
     dot.setAttribute("r", radius);
     dot.setAttribute("fill", SECTOR_COLORS[stock.sector] || "#7aa5ff");
     dot.setAttribute("class", "dot");
+    if (stock.isBenchmark) dot.classList.add("spy-benchmark");
+    dot.dataset.symbol = stock.symbol;
 
-    const label = `
-      <div><strong>${stock.symbol}</strong> • ${stock.security}</div>
-      <div>Sector ${stock.sector}${stock.subIndustry ? ` • ${stock.subIndustry}` : ""}</div>
-      <div>1W ${formatPerf(stock.perf1w)} · 1M ${formatPerf(stock.perf1m)} · 3M ${formatPerf(stock.perf3m)}</div>
-      <div>From 12W High ${formatPerf(stock.pctFrom12wHigh)}</div>
-      <div>From 52W High ${formatPerf(stock.pctFrom52wHigh)}</div>
-      <div>Today ${formatPerf(stock.changePercent)}</div>
-    `;
+    const tooltipLabel = () => {
+      const replayLine = replayActive
+        ? `<div>${REPLAY_PERIODS[replayPeriod].label} replay ${formatPerf(getReplayValue(stock, replayFrames[replayFrameIndex]))}</div>`
+        : "";
+      const weightLine = Number.isFinite(stock.sp500Weight)
+        ? `<div>${stock.symbol === "SPY" ? "Benchmark" : "S&P 500 weight"} ${stock.symbol === "SPY" ? "100%" : `${stock.sp500Weight.toFixed(1)}%`}</div>`
+        : "";
+      return `
+        <div><strong>${stock.symbol}</strong> • ${stock.security}</div>
+        <div>Sector ${stock.sector}${stock.subIndustry ? ` • ${stock.subIndustry}` : ""}</div>
+        ${replayLine}
+        ${weightLine}
+        <div>1W ${formatPerf(stock.perf1w)} · 1M ${formatPerf(stock.perf1m)} · 3M ${formatPerf(stock.perf3m)}</div>
+        <div>From 12W High ${formatPerf(stock.pctFrom12wHigh)}</div>
+        <div>From 52W High ${formatPerf(stock.pctFrom52wHigh)}</div>
+        <div>Today ${formatPerf(stock.changePercent)}</div>
+      `;
+    };
     dot.addEventListener("mouseenter", (event) => {
-      showTooltip(event, label);
+      showTooltip(event, tooltipLabel());
     });
     dot.addEventListener("mousemove", (event) => {
-      showTooltip(event, label);
+      showTooltip(event, tooltipLabel());
     });
     dot.addEventListener("mouseleave", hideTooltip);
     dot.addEventListener("click", (event) => {
@@ -455,18 +619,19 @@ function buildChart(stocks) {
       } else {
         pinnedSymbols.add(stock.symbol);
       }
-      buildChart(lastStocks);
+      renderCurrentChart();
     });
 
     svg.appendChild(dot);
 
     if (pinnedSymbols.has(stock.symbol)) {
-      const metricValue = stock[selectedMetric];
+      const metricValue = stock[valueField];
       const metricLabel = Number.isFinite(metricValue) ? `${metricValue.toFixed(2)}%` : "--";
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", x + 8);
       text.setAttribute("y", y - 8);
       text.setAttribute("class", "pinned-label");
+      text.dataset.symbol = stock.symbol;
       text.textContent = `${stock.symbol} ${metricLabel}`;
       pinnedLabels.push(text);
     }
@@ -489,6 +654,8 @@ async function readApiJson(res) {
 
 function setMetric(metric) {
   if (!METRICS[metric]) return;
+  if (replayActive) return;
+  stopReplay();
   selectedMetric = metric;
   updateSubhead();
   if (metricToggle) {
@@ -499,7 +666,332 @@ function setMetric(metric) {
   buildChart(lastStocks);
 }
 
+function getReplayValue(stock, timestamp) {
+  const points = getReplayPoints(stock);
+  if (!Array.isArray(points) || !points.length || !Number.isFinite(timestamp)) return null;
+  let price = null;
+  for (let i = points.length - 1; i >= 0; i -= 1) {
+    if (points[i][0] <= timestamp) {
+      price = points[i][1];
+      break;
+    }
+  }
+  const base = points[0] && points[0][1];
+  if (!Number.isFinite(price) || !Number.isFinite(base) || base === 0) return null;
+  return ((price / base) - 1) * 100;
+}
+
+function getReplayPoints(stock) {
+  const config = REPLAY_PERIODS[replayPeriod];
+  const points = stock[config.field];
+  if (!Array.isArray(points) || !points.length) return [];
+  if (config.sessions) {
+    const sessionStarts = [0];
+    for (let i = 1; i < points.length; i += 1) {
+      if (points[i][0] - points[i - 1][0] > 6 * 60 * 60) {
+        sessionStarts.push(i);
+      }
+    }
+    const startIndex = sessionStarts[
+      Math.max(0, sessionStarts.length - config.sessions)
+    ];
+    return points.slice(startIndex);
+  }
+  if (!config.days) return points;
+  const windowDays = config.days;
+  const latestTimestamp = points[points.length - 1]?.[0];
+  if (!Number.isFinite(latestTimestamp)) return [];
+  const cutoff = latestTimestamp - windowDays * 86400;
+  return points.filter((point) => Number.isFinite(point?.[0]) && point[0] >= cutoff);
+}
+
+function replayStocksAt(index) {
+  const timestamp = replayFrames[index];
+  return lastStocks.map((stock) => ({
+    ...stock,
+    __replayValue: getReplayValue(stock, timestamp),
+  }));
+}
+
+function renderCurrentChart() {
+  buildChart(replayActive ? replayStocksAt(replayFrameIndex) : lastStocks);
+}
+
+function populateTickerSearch() {
+  tickerOptions.innerHTML = "";
+  [...lastStocks, ...lastBenchmarks]
+    .sort((a, b) => a.symbol.localeCompare(b.symbol))
+    .forEach((stock) => {
+      const option = document.createElement("option");
+      option.value = stock.symbol;
+      option.label = `${stock.symbol} — ${stock.security || stock.symbol}`;
+      tickerOptions.appendChild(option);
+    });
+}
+
+function pinSearchedTicker() {
+  const query = tickerSearchInput.value.trim();
+  if (!query) {
+    tickerSearchStatus.textContent = "Enter a ticker symbol.";
+    return;
+  }
+  const universe = [...lastStocks, ...lastBenchmarks];
+  const tickerQuery = query.split(/\s+|—/)[0].toUpperCase();
+  const exactMatch =
+    universe.find((stock) => stock.symbol.toUpperCase() === tickerQuery) ||
+    universe.find((stock) => stock.security?.toLowerCase() === query.toLowerCase());
+  const tickerMatches = universe.filter((stock) =>
+    stock.symbol.toUpperCase().startsWith(tickerQuery)
+  );
+  const match = exactMatch || (tickerMatches.length === 1 ? tickerMatches[0] : null);
+  if (!match) {
+    tickerSearchStatus.textContent = tickerMatches.length > 1
+      ? `${tickerMatches.length} tickers match “${query}”. Choose one from the list.`
+      : `No S&P 500 ticker found for “${query}”.`;
+    return;
+  }
+
+  const isBenchmark = lastBenchmarks.some((stock) => stock.symbol === match.symbol);
+  const stayInSubindustry = viewMode === "subindustry" && match.symbol !== "SPY";
+  activeFilter = stayInSubindustry
+    ? "all"
+    : isBenchmark && match.symbol !== "SPY"
+      ? "sectors"
+      : "all";
+  if (stayInSubindustry) {
+    viewMode = "subindustry";
+    selectedSector = match.sector;
+    if (backBtn) backBtn.classList.add("visible");
+  } else {
+    viewMode = "sector";
+    selectedSector = null;
+    if (backBtn) backBtn.classList.remove("visible");
+  }
+  filterButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.filter === activeFilter);
+  });
+  pinnedSymbols.add(match.symbol);
+  tickerSearchInput.value = match.symbol;
+  tickerSearchStatus.textContent = `Pinned ${match.symbol}.`;
+  updateSubhead();
+  if (replayActive) {
+    calculateReplayRange();
+    updateReplaySubhead();
+  }
+  renderCurrentChart();
+}
+
+function buildReplayTimeline() {
+  const timestamps = new Set();
+  lastStocks.forEach((stock) => {
+    getReplayPoints(stock).forEach((point) => {
+      if (Number.isFinite(point?.[0])) timestamps.add(point[0]);
+    });
+  });
+  replayFrames = Array.from(timestamps).sort((a, b) => a - b);
+  replayFrameIndex = Math.max(0, replayFrames.length - 1);
+  replayScrubber.max = String(Math.max(0, replayFrames.length - 1));
+  replayScrubber.value = String(replayFrameIndex);
+  replayPlayBtn.disabled = replayFrames.length < 2;
+  replayScrubber.disabled = replayFrames.length < 2;
+  replayTimestamp.textContent = "Live snapshot";
+  replayStatus.textContent = replayFrames.length
+    ? "Live market view"
+    : "Replay data unavailable";
+  setReplayUi(false);
+}
+
+function calculateReplayRange() {
+  let candidates = activeFilter === "sectors"
+    ? buildSectorViewStocks()
+    : applyFilter(lastStocks);
+  if (activeFilter !== "sectors") {
+    const benchmarks = buildSectorViewStocks();
+    const benchmark = viewMode === "sector"
+      ? benchmarks.find((stock) => stock.symbol === "SPY")
+      : benchmarks.find((stock) => stock.sector === selectedSector);
+    if (benchmark) candidates = [...candidates, benchmark];
+  }
+  if (viewMode === "subindustry" && selectedSector) {
+    candidates = candidates.filter((stock) => stock.sector === selectedSector);
+  }
+  const values = [];
+  replayFrames.forEach((timestamp) => {
+    candidates.forEach((stock) => {
+      const value = getReplayValue(stock, timestamp);
+      if (Number.isFinite(value)) values.push(value);
+    });
+  });
+  replayValueRange = values.length
+    ? niceRange(Math.min(0, ...values), Math.max(0, ...values))
+    : null;
+}
+
+function formatReplayDate(timestamp) {
+  if (!Number.isFinite(timestamp)) return "Replay timeline";
+  if (["1d", "2d", "1w", "2w"].includes(replayPeriod)) {
+    return `${new Date(timestamp * 1000).toLocaleString([], {
+      timeZone: "America/New_York",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    })} ET`;
+  }
+  return new Date(timestamp * 1000).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function updateReplaySubhead() {
+  if (!metricSubhead) return;
+  let suffix = "";
+  if (activeFilter !== "all") {
+    const activeButton = document.querySelector(`.filter-btn[data-filter="${activeFilter}"]`);
+    suffix = activeButton ? ` (${activeButton.textContent.trim()})` : "";
+  }
+  if (viewMode === "subindustry" && selectedSector) {
+    suffix += ` (${selectedSector} sub-industries)`;
+  }
+  const config = REPLAY_PERIODS[replayPeriod];
+  metricSubhead.textContent = `${config.cadence[0].toUpperCase() + config.cadence.slice(1)} movement from the first price in the ${config.label} replay.${suffix}`;
+}
+
+function replayFrameSummary(ready = false) {
+  const cadence = REPLAY_PERIODS[replayPeriod].cadence;
+  return `${replayFrames.length} ${cadence} frames${ready ? " · ready" : ""}`;
+}
+
+function updateReplayFrame(index, rebuild = false) {
+  if (!replayFrames.length) return;
+  replayFrameIndex = Math.max(0, Math.min(index, replayFrames.length - 1));
+  replayScrubber.value = String(replayFrameIndex);
+  replayTimestamp.textContent = formatReplayDate(replayFrames[replayFrameIndex]);
+
+  if (rebuild || !replayActive || !chartProjection) {
+    replayActive = true;
+    calculateReplayRange();
+    updateReplaySubhead();
+    renderCurrentChart();
+    return;
+  }
+
+  const { padding, innerHeight, minLog, maxLog } = chartProjection;
+  chartEl.style.setProperty(
+    "--replay-duration",
+    `${Math.max(180, Number(replaySpeed.value) * 0.88)}ms`
+  );
+  const stocks = replayStocksAt(replayFrameIndex);
+  const benchmarkValues = lastBenchmarks.map((stock) => ({
+    symbol: stock.symbol,
+    __replayValue: getReplayValue(stock, replayFrames[replayFrameIndex]),
+  }));
+  const values = new Map(
+    [...stocks, ...benchmarkValues].map((stock) => [stock.symbol, stock.__replayValue])
+  );
+  chartEl.querySelectorAll(".dot[data-symbol]").forEach((dot) => {
+    const value = values.get(dot.dataset.symbol);
+    if (!Number.isFinite(value)) {
+      dot.style.opacity = "0";
+      return;
+    }
+    const y =
+      padding.top +
+      ((maxLog - symLog(value)) / (maxLog - minLog)) * innerHeight +
+      verticalJitter(dot.dataset.symbol);
+    dot.setAttribute("cy", y);
+    dot.style.opacity = "0.9";
+  });
+  chartEl.querySelectorAll(".pinned-label[data-symbol]").forEach((label) => {
+    const value = values.get(label.dataset.symbol);
+    if (!Number.isFinite(value)) return;
+    const y =
+      padding.top +
+      ((maxLog - symLog(value)) / (maxLog - minLog)) * innerHeight +
+      verticalJitter(label.dataset.symbol);
+    label.setAttribute("y", y - 8);
+    label.textContent = `${label.dataset.symbol} ${formatPerf(value)}`;
+  });
+}
+
+function stopReplay() {
+  if (replayTimer) {
+    clearInterval(replayTimer);
+    replayTimer = null;
+  }
+  replayPlayIcon.textContent = "▶";
+  replayPlayLabel.textContent = "Play";
+}
+
+function setReplayUi(active) {
+  replayActive = active;
+  liveModeBtn.classList.toggle("active", !active);
+  replay1dModeBtn.classList.toggle("active", active && replayPeriod === "1d");
+  replay2dModeBtn.classList.toggle("active", active && replayPeriod === "2d");
+  replay1wModeBtn.classList.toggle("active", active && replayPeriod === "1w");
+  replay2wModeBtn.classList.toggle("active", active && replayPeriod === "2w");
+  replayModeBtn.classList.toggle("active", active && replayPeriod === "1m");
+  replay2mModeBtn.classList.toggle("active", active && replayPeriod === "2m");
+  replay3mModeBtn.classList.toggle("active", active && replayPeriod === "3m");
+  replay6mModeBtn.classList.toggle("active", active && replayPeriod === "6m");
+  replayTransport.classList.toggle("is-disabled", !active);
+  controlsEl.classList.toggle("replay-locked", active);
+  metricToggle.querySelectorAll(".toggle-btn").forEach((button) => {
+    button.disabled = active;
+  });
+}
+
+function enterReplayMode(period = "1m") {
+  replayPeriod = period;
+  buildReplayTimeline();
+  if (replayFrames.length < 2) {
+    replayStatus.textContent = "Replay data unavailable";
+    return;
+  }
+  stopReplay();
+  setReplayUi(true);
+  updateReplayFrame(0, true);
+  replayStatus.textContent = replayFrameSummary(true);
+}
+
+function exitReplayMode() {
+  stopReplay();
+  setReplayUi(false);
+  replayFrameIndex = Math.max(0, replayFrames.length - 1);
+  replayScrubber.value = String(replayFrameIndex);
+  replayTimestamp.textContent = "Live snapshot";
+  replayStatus.textContent = "Live market view";
+  chartEl.style.removeProperty("--replay-duration");
+  updateSubhead();
+  buildChart(lastStocks);
+}
+
+function startReplay() {
+  if (replayFrames.length < 2) return;
+  if (replayFrameIndex >= replayFrames.length - 1) {
+    updateReplayFrame(0, true);
+  } else if (!replayActive) {
+    updateReplayFrame(replayFrameIndex, true);
+  }
+  replayPlayIcon.textContent = "❚❚";
+  replayPlayLabel.textContent = "Pause";
+  replayStatus.textContent = `Playing ${REPLAY_PERIODS[replayPeriod].cadence} prices`;
+  replayTimer = setInterval(() => {
+    if (replayFrameIndex >= replayFrames.length - 1) {
+      stopReplay();
+      replayStatus.textContent = replayFrameSummary();
+      return;
+    }
+    updateReplayFrame(replayFrameIndex + 1);
+  }, Number(replaySpeed.value));
+}
+
 async function loadData(forceRefresh = false) {
+  stopReplay();
+  setReplayUi(false);
+  updateSubhead();
   chartEl.innerHTML = "";
   notesEl.textContent = "";
 
@@ -514,7 +1006,10 @@ async function loadData(forceRefresh = false) {
     cacheEl.textContent = data.cacheFresh ? "Fresh" : "Stale";
 
     lastStocks = data.stocks || [];
+    lastBenchmarks = data.benchmarks || [];
+    populateTickerSearch();
     buildChart(lastStocks);
+    buildReplayTimeline();
 
     if (data.failures && data.failures.length) {
       const sample = data.failures.slice(0, 2).join(' | ');
@@ -537,12 +1032,12 @@ refreshBtn.addEventListener("click", () => {
 
 chartEl.addEventListener("click", () => {
   pinnedSymbols.clear();
-  buildChart(lastStocks);
+  renderCurrentChart();
 });
 
 if (capToggle) {
   capToggle.addEventListener("change", () => {
-    buildChart(lastStocks);
+    renderCurrentChart();
   });
 }
 
@@ -566,7 +1061,11 @@ filterButtons.forEach((button) => {
     selectedSector = null;
     if (backBtn) backBtn.classList.remove("visible");
     updateSubhead();
-    buildChart(lastStocks);
+    if (replayActive) {
+      calculateReplayRange();
+      updateReplaySubhead();
+    }
+    renderCurrentChart();
   });
 });
 
@@ -576,12 +1075,57 @@ if (backBtn) {
     selectedSector = null;
     backBtn.classList.remove("visible");
     updateSubhead();
-    buildChart(lastStocks);
+    if (replayActive) {
+      calculateReplayRange();
+      updateReplaySubhead();
+    }
+    renderCurrentChart();
   });
 }
 
 window.addEventListener("resize", () => {
-  buildChart(lastStocks);
+  renderCurrentChart();
+});
+
+replayPlayBtn.addEventListener("click", () => {
+  if (replayTimer) {
+    stopReplay();
+    replayStatus.textContent = replayFrameSummary();
+  } else {
+    startReplay();
+  }
+});
+
+liveModeBtn.addEventListener("click", exitReplayMode);
+backLiveBtn.addEventListener("click", exitReplayMode);
+replay1dModeBtn.addEventListener("click", () => enterReplayMode("1d"));
+replay2dModeBtn.addEventListener("click", () => enterReplayMode("2d"));
+replay1wModeBtn.addEventListener("click", () => enterReplayMode("1w"));
+replay2wModeBtn.addEventListener("click", () => enterReplayMode("2w"));
+replayModeBtn.addEventListener("click", () => enterReplayMode("1m"));
+replay2mModeBtn.addEventListener("click", () => enterReplayMode("2m"));
+replay3mModeBtn.addEventListener("click", () => enterReplayMode("3m"));
+replay6mModeBtn.addEventListener("click", () => enterReplayMode("6m"));
+
+replayScrubber.addEventListener("input", () => {
+  stopReplay();
+  replayStatus.textContent = `Scrubbing ${REPLAY_PERIODS[replayPeriod].cadence} prices`;
+  updateReplayFrame(Number(replayScrubber.value), !replayActive);
+});
+
+replayScrubber.addEventListener("change", () => {
+  replayStatus.textContent = replayFrameSummary();
+});
+
+replaySpeed.addEventListener("change", () => {
+  if (!replayTimer) return;
+  stopReplay();
+  startReplay();
+});
+
+tickerSearchForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  pinSearchedTicker();
 });
 
 updateSubhead();
