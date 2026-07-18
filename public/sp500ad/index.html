@@ -45,6 +45,7 @@
         </div>
         <div class="filter-group">
           <button class="filter-btn active" data-filter="all">All S&amp;P 500</button>
+          <button class="filter-btn" data-filter="sectors">Sectors</button>
           <button class="filter-btn" data-filter="top50">Top 50</button>
           <button class="filter-btn" data-filter="top250">Top 250</button>
           <button class="filter-btn" data-filter="bottom250">Bottom 250</button>
@@ -52,12 +53,74 @@
           <button class="filter-btn" data-filter="mag7">MAG7</button>
           <button class="filter-btn" data-filter="dow">Dow Jones</button>
         </div>
-        <button class="back-btn" id="backBtn">Back to sectors</button>
       </section>
+
+      <form class="ticker-search" id="tickerSearch">
+        <label for="tickerSearchInput">Pin a ticker</label>
+        <div class="ticker-search-field">
+          <input
+            id="tickerSearchInput"
+            type="search"
+            list="tickerOptions"
+            placeholder="Search NVDA, Apple, SPY…"
+            autocomplete="off"
+            aria-describedby="tickerSearchStatus"
+          />
+          <datalist id="tickerOptions"></datalist>
+          <button type="submit">Pin</button>
+        </div>
+        <button class="back-btn" id="backBtn" type="button">Back to sectors</button>
+        <span class="ticker-search-status" id="tickerSearchStatus" aria-live="polite"></span>
+      </form>
 
       <section class="chart-shell">
         <div class="y-axis" id="yAxis"></div>
         <div class="chart" id="chart"></div>
+      </section>
+
+      <section class="replay-controls" aria-label="Market replay">
+        <div class="replay-heading">
+          <div>
+            <div class="view-mode-toggle" aria-label="Chart mode">
+              <button class="view-mode-btn active" id="liveModeBtn" type="button">Live</button>
+              <button class="view-mode-btn" id="replay1dModeBtn" type="button">1D Replay</button>
+              <button class="view-mode-btn" id="replay2dModeBtn" type="button">2D Replay</button>
+              <button class="view-mode-btn" id="replay1wModeBtn" type="button">1W Replay</button>
+              <button class="view-mode-btn" id="replay2wModeBtn" type="button">2W Replay</button>
+              <button class="view-mode-btn" id="replayModeBtn" type="button">1M Replay</button>
+              <button class="view-mode-btn" id="replay2mModeBtn" type="button">2M Replay</button>
+              <button class="view-mode-btn" id="replay3mModeBtn" type="button">3M Replay</button>
+              <button class="view-mode-btn" id="replay6mModeBtn" type="button">6M Replay</button>
+            </div>
+            <strong id="replayTimestamp">Daily closes</strong>
+          </div>
+          <span class="replay-status" id="replayStatus">Live market view</span>
+        </div>
+        <div class="replay-transport is-disabled" id="replayTransport">
+          <button class="replay-play" id="replayPlay" type="button" aria-label="Play one month replay">
+            <span id="replayPlayIcon">▶</span>
+            <span id="replayPlayLabel">Play</span>
+          </button>
+          <input
+            class="replay-scrubber"
+            id="replayScrubber"
+            type="range"
+            min="0"
+            max="0"
+            value="0"
+            step="1"
+            aria-label="One month replay timeline"
+          />
+          <label class="replay-speed">
+            Speed
+            <select id="replaySpeed">
+              <option value="1200">0.5×</option>
+              <option value="700" selected>1×</option>
+              <option value="350">2×</option>
+            </select>
+          </label>
+          <button class="back-live" id="backLiveBtn" type="button">Back to Live</button>
+        </div>
       </section>
 
       <footer class="footer">
