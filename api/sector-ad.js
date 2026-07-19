@@ -2,7 +2,7 @@ const { readSharedCache, writeSharedCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
 
 const DAILY_CACHE_KEY = 'sector_ad_yahoo_daily_v2';
-const INTRADAY_CACHE_KEY = 'sector_ad_yahoo_intraday_v3';
+const INTRADAY_CACHE_KEY = 'sector_ad_yahoo_intraday_v4';
 const DAILY_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const INTRADAY_MARKET_TTL_MS = 10 * 60 * 1000;
 const INTRADAY_OFF_HOURS_TTL_MS = 12 * 60 * 60 * 1000;
@@ -385,7 +385,7 @@ function buildIntradayResponse() {
   const allRows = [...universe, ...benchmarkUniverse];
   const symbols = [...new Set(allRows.map((stock) => stock.yahooSymbol))];
   return Promise.all([
-    fetchYahooData(symbols, '2d', '15m'),
+    fetchYahooData(symbols, '5d', '15m'),
     fetchYahooData(symbols, '10d', '60m'),
   ]).then(([dayResult, weekResult]) => ({
     asOf: new Date().toISOString(),

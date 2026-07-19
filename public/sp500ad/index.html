@@ -34,6 +34,15 @@
         </div>
       </header>
 
+      <nav class="workspace-nav" aria-label="S&P 500 analysis view">
+        <button class="workspace-nav-btn active" type="button" data-app-view="replay">
+          Market Replay
+        </button>
+        <button class="workspace-nav-btn" type="button" data-app-view="action">
+          Action Board
+        </button>
+      </nav>
+
       <section class="controls">
         <div class="toggle-group" id="metricToggle">
           <button class="toggle-btn active" data-metric="changePercent">1D</button>
@@ -55,6 +64,23 @@
         </div>
       </section>
 
+      <div class="sector-filter-bar" aria-label="Filter directly by sector">
+        <span>Sector</span>
+        <div class="sector-filter-group">
+          <button class="sector-filter-btn" type="button" data-sector="Materials">XLB Materials</button>
+          <button class="sector-filter-btn" type="button" data-sector="Communication Services">XLC Communication</button>
+          <button class="sector-filter-btn" type="button" data-sector="Information Technology">XLK Technology</button>
+          <button class="sector-filter-btn" type="button" data-sector="Consumer Discretionary">XLY Discretionary</button>
+          <button class="sector-filter-btn" type="button" data-sector="Consumer Staples">XLP Staples</button>
+          <button class="sector-filter-btn" type="button" data-sector="Energy">XLE Energy</button>
+          <button class="sector-filter-btn" type="button" data-sector="Financials">XLF Financials</button>
+          <button class="sector-filter-btn" type="button" data-sector="Health Care">XLV Health Care</button>
+          <button class="sector-filter-btn" type="button" data-sector="Industrials">XLI Industrials</button>
+          <button class="sector-filter-btn" type="button" data-sector="Real Estate">XLRE Real Estate</button>
+          <button class="sector-filter-btn" type="button" data-sector="Utilities">XLU Utilities</button>
+        </div>
+      </div>
+
       <form class="ticker-search" id="tickerSearch">
         <label for="tickerSearchInput">Pin a ticker</label>
         <div class="ticker-search-field">
@@ -73,6 +99,7 @@
         <span class="ticker-search-status" id="tickerSearchStatus" aria-live="polite"></span>
       </form>
 
+      <div class="app-view" id="marketReplayView">
       <section class="chart-shell">
         <div class="y-axis" id="yAxis"></div>
         <div class="chart" id="chart"></div>
@@ -123,6 +150,175 @@
         </div>
       </section>
 
+      <section class="momentum-scanner" id="momentumScanner" hidden aria-label="Momentum scan">
+        <div class="momentum-heading">
+          <div>
+            <p class="momentum-kicker">Replay signal</p>
+            <h2>Momentum scan</h2>
+            <p id="momentumDescription">
+              Stocks that stayed near the top throughout this replay window.
+            </p>
+          </div>
+          <div class="momentum-mode" aria-label="Momentum scan type">
+            <button class="momentum-mode-btn active" type="button" data-momentum-mode="persistent">
+              Persistent leaders
+            </button>
+            <button class="momentum-mode-btn" type="button" data-momentum-mode="emerging">
+              Emerging momentum
+            </button>
+          </div>
+        </div>
+        <div class="momentum-list" id="momentumList"></div>
+        <p class="momentum-note">
+          Scores compare symbols in the current view. Select a result to pin it on the chart.
+        </p>
+      </section>
+
+      <section class="momentum-scanner weakness-scanner" id="weaknessScanner" hidden aria-label="Weakness scan">
+        <div class="momentum-heading">
+          <div>
+            <p class="momentum-kicker weakness-kicker">Inverse signal</p>
+            <h2>Weakness scan</h2>
+            <p id="weaknessDescription">
+              Stocks that stayed near the bottom throughout this replay window.
+            </p>
+          </div>
+          <div class="momentum-mode" aria-label="Weakness scan type">
+            <button class="weakness-mode-btn active" type="button" data-weakness-mode="persistent">
+              Persistent laggards
+            </button>
+            <button class="weakness-mode-btn" type="button" data-weakness-mode="emerging">
+              Emerging weakness
+            </button>
+          </div>
+        </div>
+        <div class="momentum-list" id="weaknessList"></div>
+        <p class="momentum-note">
+          Scores compare symbols in the current view. Select a result to pin it on the chart.
+        </p>
+      </section>
+      </div>
+
+      <div class="app-view action-board-view" id="actionBoardView" hidden>
+      <section class="action-board-intro">
+        <p class="momentum-kicker">Stable multi-timeframe watchlist</p>
+        <h2>Action Board</h2>
+        <p>
+          Confluence is independent of the selected replay. Use the shared filters above to
+          recalculate for the full index, a market-cap group, sector ETFs, or a sector drill-down.
+        </p>
+      </section>
+      <section class="action-buckets" aria-label="Actionable signal changes">
+        <div class="action-bucket">
+          <div class="action-bucket-heading">
+            <span class="action-bucket-icon acceleration">↗</span>
+            <div>
+              <h3>New acceleration</h3>
+              <p>Entered positive short-term confluence since the last saved refresh.</p>
+            </div>
+          </div>
+          <div class="action-bucket-list" id="newAccelerationList"></div>
+        </div>
+        <div class="action-bucket">
+          <div class="action-bucket-heading">
+            <span class="action-bucket-icon confirmed">✓</span>
+            <div>
+              <h3>Confirmed leaders</h3>
+              <p>Held positive confluence across several unique data refreshes.</p>
+            </div>
+          </div>
+          <div class="action-bucket-list" id="confirmedLeadersList"></div>
+        </div>
+        <div class="action-bucket">
+          <div class="action-bucket-heading">
+            <span class="action-bucket-icon pullback">↘</span>
+            <div>
+              <h3>Pullback in trend</h3>
+              <p>Long-term leadership remains strong while 1D/2D momentum weakens.</p>
+            </div>
+          </div>
+          <div class="action-bucket-list" id="pullbackTrendList"></div>
+        </div>
+        <div class="action-bucket">
+          <div class="action-bucket-heading">
+            <span class="action-bucket-icon breakdown">!</span>
+            <div>
+              <h3>Breakdown warning</h3>
+              <p>Prior positive confluence is giving way to emerging short-term weakness.</p>
+            </div>
+          </div>
+          <div class="action-bucket-list" id="breakdownWarningList"></div>
+        </div>
+      </section>
+      <p class="action-history-note" id="actionHistoryNote"></p>
+
+      <section class="confluence-scanner" id="confluenceScanner" hidden aria-label="Positive timeframe confluence">
+        <div class="confluence-heading">
+          <div>
+            <p class="momentum-kicker">Multi-timeframe bullish signal</p>
+            <h2>Positive timeframe confluence</h2>
+            <p>Independent of selected replay · recalculates only when the stock universe changes.</p>
+          </div>
+        </div>
+        <div class="confluence-sections">
+          <div class="confluence-section">
+            <div class="confluence-section-heading">
+              <div>
+                <h3>Short-term confluence</h3>
+                <p>1D + 2D acceleration against 1M + 2M leadership</p>
+              </div>
+            </div>
+            <div class="confluence-list" id="shortConfluenceList"></div>
+          </div>
+          <div class="confluence-section">
+            <div class="confluence-section-heading">
+              <div>
+                <h3>Long-term confluence</h3>
+                <p>1W + 2W acceleration against 3M + 6M leadership</p>
+              </div>
+            </div>
+            <div class="confluence-list" id="longConfluenceList"></div>
+          </div>
+        </div>
+        <p class="momentum-note">
+          Scores use full-period rankings, not the selected replay’s top 10. Select a result to pin it.
+        </p>
+      </section>
+
+      <section class="confluence-scanner negative-confluence-scanner" id="negativeConfluenceScanner" hidden aria-label="Negative timeframe confluence">
+        <div class="confluence-heading">
+          <div>
+            <p class="momentum-kicker weakness-kicker">Multi-timeframe bearish signal</p>
+            <h2>Negative timeframe confluence</h2>
+            <p>Independent of selected replay · recalculates only when the stock universe changes.</p>
+          </div>
+        </div>
+        <div class="confluence-sections">
+          <div class="confluence-section">
+            <div class="confluence-section-heading">
+              <div>
+                <h3>Short-term negative confluence</h3>
+                <p>1D + 2D deterioration against 1M + 2M persistent weakness</p>
+              </div>
+            </div>
+            <div class="confluence-list" id="shortNegativeConfluenceList"></div>
+          </div>
+          <div class="confluence-section">
+            <div class="confluence-section-heading">
+              <div>
+                <h3>Long-term negative confluence</h3>
+                <p>1W + 2W deterioration against 3M + 6M persistent weakness</p>
+              </div>
+            </div>
+            <div class="confluence-list" id="longNegativeConfluenceList"></div>
+          </div>
+        </div>
+        <p class="momentum-note">
+          Scores use full-period weakness rankings, not the selected replay’s bottom 10. Select a result to pin it.
+        </p>
+      </section>
+      </div>
+
       <footer class="footer">
         <button class="refresh" id="refresh">Refresh</button>
         <label class="toggle">
@@ -134,6 +330,21 @@
     </main>
 
     <div class="tooltip" id="tooltip"></div>
+    <div class="action-drawer-backdrop" id="actionDrawerBackdrop" hidden></div>
+    <aside class="action-drawer" id="actionDrawer" hidden aria-labelledby="actionDrawerTitle">
+      <div class="action-drawer-header">
+        <div>
+          <p class="momentum-kicker" id="actionDrawerBucket">Action Board detail</p>
+          <h2 id="actionDrawerTitle">--</h2>
+          <p id="actionDrawerCompany"></p>
+        </div>
+        <button class="action-drawer-close" id="actionDrawerClose" type="button" aria-label="Close details">×</button>
+      </div>
+      <div class="action-drawer-body" id="actionDrawerBody"></div>
+      <div class="action-drawer-actions">
+        <button class="action-drawer-pin" id="actionDrawerPin" type="button">Pin on Market Replay</button>
+      </div>
+    </aside>
 
     <script src="/sp500ad/app.js"></script>
   </body>

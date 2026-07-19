@@ -10,6 +10,7 @@ const metricToggle = document.getElementById("metricToggle");
 const metricSubhead = document.getElementById("metricSubhead");
 const backBtn = document.getElementById("backBtn");
 const filterButtons = document.querySelectorAll(".filter-btn");
+const sectorFilterButtons = document.querySelectorAll(".sector-filter-btn");
 const controlsEl = document.querySelector(".controls");
 const tickerSearchForm = document.getElementById("tickerSearch");
 const tickerSearchInput = document.getElementById("tickerSearchInput");
@@ -33,9 +34,40 @@ const replay2mModeBtn = document.getElementById("replay2mModeBtn");
 const replay3mModeBtn = document.getElementById("replay3mModeBtn");
 const replay6mModeBtn = document.getElementById("replay6mModeBtn");
 const backLiveBtn = document.getElementById("backLiveBtn");
+const momentumScanner = document.getElementById("momentumScanner");
+const momentumList = document.getElementById("momentumList");
+const momentumDescription = document.getElementById("momentumDescription");
+const momentumModeButtons = document.querySelectorAll(".momentum-mode-btn");
+const weaknessScanner = document.getElementById("weaknessScanner");
+const weaknessList = document.getElementById("weaknessList");
+const weaknessDescription = document.getElementById("weaknessDescription");
+const weaknessModeButtons = document.querySelectorAll(".weakness-mode-btn");
+const confluenceScanner = document.getElementById("confluenceScanner");
+const shortConfluenceList = document.getElementById("shortConfluenceList");
+const longConfluenceList = document.getElementById("longConfluenceList");
+const negativeConfluenceScanner = document.getElementById("negativeConfluenceScanner");
+const shortNegativeConfluenceList = document.getElementById("shortNegativeConfluenceList");
+const longNegativeConfluenceList = document.getElementById("longNegativeConfluenceList");
+const workspaceNavButtons = document.querySelectorAll(".workspace-nav-btn");
+const marketReplayView = document.getElementById("marketReplayView");
+const actionBoardView = document.getElementById("actionBoardView");
+const newAccelerationList = document.getElementById("newAccelerationList");
+const confirmedLeadersList = document.getElementById("confirmedLeadersList");
+const pullbackTrendList = document.getElementById("pullbackTrendList");
+const breakdownWarningList = document.getElementById("breakdownWarningList");
+const actionHistoryNote = document.getElementById("actionHistoryNote");
+const actionDrawer = document.getElementById("actionDrawer");
+const actionDrawerBackdrop = document.getElementById("actionDrawerBackdrop");
+const actionDrawerClose = document.getElementById("actionDrawerClose");
+const actionDrawerBucket = document.getElementById("actionDrawerBucket");
+const actionDrawerTitle = document.getElementById("actionDrawerTitle");
+const actionDrawerCompany = document.getElementById("actionDrawerCompany");
+const actionDrawerBody = document.getElementById("actionDrawerBody");
+const actionDrawerPin = document.getElementById("actionDrawerPin");
 
 let lastStocks = [];
 let lastBenchmarks = [];
+let lastAsOf = null;
 let selectedMetric = "changePercent";
 let viewMode = "sector"; // sector | subindustry
 let selectedSector = null;
@@ -48,10 +80,15 @@ let replayActive = false;
 let replayValueRange = null;
 let chartProjection = null;
 let replayPeriod = "1m";
+let momentumMode = "persistent";
+let weaknessMode = "persistent";
+let appView = "replay";
+const actionDetailRows = new Map();
+let activeActionDetail = null;
 
 const REPLAY_PERIODS = {
   "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", sessions: 1 },
-  "2d": { field: "replayDay15m", label: "2-day", cadence: "15-minute" },
+  "2d": { field: "replayDay15m", label: "2-day", cadence: "15-minute", sessions: 2 },
   "1w": { field: "replayWeekHourly", label: "1-week", cadence: "hourly", sessions: 5 },
   "2w": { field: "replayWeekHourly", label: "2-week", cadence: "hourly", sessions: 10 },
   "1m": { field: "replayDaily", days: 31, label: "1-month", cadence: "daily" },
@@ -100,6 +137,15 @@ const SECTORS = [
   { gics: "Real Estate", label: "XLRE" },
   { gics: "Utilities", label: "XLU" },
 ];
+
+function syncSectorFilterButtons() {
+  sectorFilterButtons.forEach((button) => {
+    button.classList.toggle(
+      "active",
+      viewMode === "subindustry" && button.dataset.sector === selectedSector
+    );
+  });
+}
 
 const SECTOR_COLORS = {
   "Materials": "#f7b267",
@@ -281,6 +327,10 @@ function splitLabel(text) {
 }
 function updateSubhead() {
   if (!metricSubhead) return;
+  if (appView === "action") {
+    metricSubhead.textContent = "Multi-timeframe leadership and weakness across the selected universe.";
+    return;
+  }
   let base = METRICS[selectedMetric]?.subhead || "";
   if (activeFilter === "top50") {
     base = `${base} (Top 50 market cap)`;
@@ -508,6 +558,7 @@ function buildChart(stocks) {
         }
         viewMode = "subindustry";
         selectedSector = group.key;
+        syncSectorFilterButtons();
         if (backBtn) backBtn.classList.add("visible");
         updateSubhead();
         if (replayActive) {
@@ -666,8 +717,13 @@ function setMetric(metric) {
   buildChart(lastStocks);
 }
 
-function getReplayValue(stock, timestamp) {
-  const points = getReplayPoints(stock);
+function getReplayValueForPeriod(
+  stock,
+  timestamp,
+  period = replayPeriod,
+  cutoffTimestamp = null
+) {
+  const points = getReplayPoints(stock, period, cutoffTimestamp);
   if (!Array.isArray(points) || !points.length || !Number.isFinite(timestamp)) return null;
   let price = null;
   for (let i = points.length - 1; i >= 0; i -= 1) {
@@ -681,10 +737,18 @@ function getReplayValue(stock, timestamp) {
   return ((price / base) - 1) * 100;
 }
 
-function getReplayPoints(stock) {
-  const config = REPLAY_PERIODS[replayPeriod];
-  const points = stock[config.field];
-  if (!Array.isArray(points) || !points.length) return [];
+function getReplayValue(stock, timestamp) {
+  return getReplayValueForPeriod(stock, timestamp, replayPeriod);
+}
+
+function getReplayPoints(stock, period = replayPeriod, cutoffTimestamp = null) {
+  const config = REPLAY_PERIODS[period];
+  const sourcePoints = stock[config.field];
+  if (!Array.isArray(sourcePoints) || !sourcePoints.length) return [];
+  const points = Number.isFinite(cutoffTimestamp)
+    ? sourcePoints.filter((point) => Number.isFinite(point?.[0]) && point[0] <= cutoffTimestamp)
+    : sourcePoints;
+  if (!points.length) return [];
   if (config.sessions) {
     const sessionStarts = [0];
     for (let i = 1; i < points.length; i += 1) {
@@ -713,8 +777,931 @@ function replayStocksAt(index) {
   }));
 }
 
+function getMomentumUniverse() {
+  return getBaseScanUniverse().filter((stock) => {
+    const points = getReplayPoints(stock);
+    return points.length >= Math.max(8, replayFrames.length * 0.7);
+  });
+}
+
+function getBaseScanUniverse() {
+  let stocks = activeFilter === "sectors"
+    ? lastBenchmarks.filter((stock) => stock.symbol !== "SPY")
+    : applyFilter(lastStocks);
+  if (viewMode === "subindustry" && selectedSector) {
+    stocks = stocks.filter((stock) => stock.sector === selectedSector);
+  }
+  return stocks;
+}
+
+function percentileMap(rows, field, higherIsBetter = true) {
+  const sorted = [...rows]
+    .filter((row) => Number.isFinite(row[field]))
+    .sort((a, b) => higherIsBetter ? a[field] - b[field] : b[field] - a[field]);
+  const scores = new Map();
+  sorted.forEach((row, index) => {
+    scores.set(row.symbol, sorted.length <= 1 ? 1 : index / (sorted.length - 1));
+  });
+  return scores;
+}
+
+function calculateReplayScores(
+  universe,
+  frames,
+  period = replayPeriod,
+  cutoffTimestamp = null
+) {
+  if (universe.length < 2 || frames.length < 8) return [];
+
+  const frameValues = frames.map((timestamp) => {
+    const values = universe
+      .map((stock) => ({
+        symbol: stock.symbol,
+        value: getReplayValueForPeriod(stock, timestamp, period, cutoffTimestamp),
+      }))
+      .filter((row) => Number.isFinite(row.value))
+      .sort((a, b) => b.value - a.value);
+    const topCount = Math.max(1, Math.ceil(values.length * 0.2));
+    return {
+      values: new Map(values.map((row) => [row.symbol, row.value])),
+      top: new Set(values.slice(0, topCount).map((row) => row.symbol)),
+      bottom: new Set(values.slice(-topCount).map((row) => row.symbol)),
+      ranks: new Map(values.map((row, index) => [
+        row.symbol,
+        values.length <= 1 ? 1 : 1 - index / (values.length - 1),
+      ])),
+    };
+  });
+
+  const scoredFrames = frameValues.slice(1);
+  const midpoint = Math.floor(frameValues.length / 2);
+  const recentStart = Math.max(midpoint, Math.floor(frameValues.length * 0.66));
+  const rows = universe.map((stock) => {
+    const values = frameValues
+      .map((frame) => frame.values.get(stock.symbol))
+      .filter(Number.isFinite);
+    const finalReturn = values.at(-1);
+    const midpointReturn = frameValues[midpoint]?.values.get(stock.symbol);
+    const recentReturn = Number.isFinite(midpointReturn)
+      ? finalReturn - midpointReturn
+      : null;
+    let positiveMoves = 0;
+    let peakGrowth = 1;
+    let maxDrawdown = 0;
+    for (let i = 0; i < values.length; i += 1) {
+      const growth = 1 + values[i] / 100;
+      peakGrowth = Math.max(peakGrowth, growth);
+      if (peakGrowth > 0) {
+        maxDrawdown = Math.max(maxDrawdown, ((peakGrowth - growth) / peakGrowth) * 100);
+      }
+      if (i > 0 && values[i] > values[i - 1]) positiveMoves += 1;
+    }
+    const top20Pct = scoredFrames.length
+      ? scoredFrames.filter((frame) => frame.top.has(stock.symbol)).length / scoredFrames.length
+      : 0;
+    const recentFrames = frameValues.slice(recentStart);
+    const recentTop20Pct = recentFrames.length
+      ? recentFrames.filter((frame) => frame.top.has(stock.symbol)).length / recentFrames.length
+      : 0;
+    const bottom20Pct = scoredFrames.length
+      ? scoredFrames.filter((frame) => frame.bottom.has(stock.symbol)).length / scoredFrames.length
+      : 0;
+    const recentBottom20Pct = recentFrames.length
+      ? recentFrames.filter((frame) => frame.bottom.has(stock.symbol)).length / recentFrames.length
+      : 0;
+    const startRank = frameValues[midpoint]?.ranks.get(stock.symbol);
+    const endRank = frameValues.at(-1)?.ranks.get(stock.symbol);
+    return {
+      stock,
+      symbol: stock.symbol,
+      finalReturn,
+      recentReturn,
+      top20Pct,
+      recentTop20Pct,
+      consistency: values.length > 1 ? positiveMoves / (values.length - 1) : 0,
+      negativeConsistency: values.length > 1
+        ? (values.length - 1 - positiveMoves) / (values.length - 1)
+        : 0,
+      bottom20Pct,
+      recentBottom20Pct,
+      maxDrawdown,
+      rankImprovement: Number.isFinite(startRank) && Number.isFinite(endRank)
+        ? endRank - startRank
+        : null,
+    };
+  }).filter((row) => Number.isFinite(row.finalReturn));
+
+  const returnRank = percentileMap(rows, "finalReturn");
+  const recentRank = percentileMap(rows, "recentReturn");
+  const resilienceRank = percentileMap(rows, "maxDrawdown", false);
+  const improvementRank = percentileMap(rows, "rankImprovement");
+  const weaknessReturnRank = percentileMap(rows, "finalReturn", false);
+  const recentWeaknessRank = percentileMap(rows, "recentReturn", false);
+  const drawdownSeverityRank = percentileMap(rows, "maxDrawdown");
+  const deteriorationRank = percentileMap(rows, "rankImprovement", false);
+
+  rows.forEach((row) => {
+    row.persistentScore = 100 * (
+      0.35 * (returnRank.get(row.symbol) || 0) +
+      0.30 * row.top20Pct +
+      0.15 * row.consistency +
+      0.10 * (recentRank.get(row.symbol) || 0) +
+      0.10 * (resilienceRank.get(row.symbol) || 0)
+    );
+    row.emergingScore = 100 * (
+      0.35 * (improvementRank.get(row.symbol) || 0) +
+      0.30 * (recentRank.get(row.symbol) || 0) +
+      0.20 * row.recentTop20Pct +
+      0.15 * row.consistency
+    );
+    row.persistentWeaknessScore = 100 * (
+      0.35 * (weaknessReturnRank.get(row.symbol) || 0) +
+      0.30 * row.bottom20Pct +
+      0.15 * row.negativeConsistency +
+      0.10 * (recentWeaknessRank.get(row.symbol) || 0) +
+      0.10 * (drawdownSeverityRank.get(row.symbol) || 0)
+    );
+    row.emergingWeaknessScore = 100 * (
+      0.35 * (deteriorationRank.get(row.symbol) || 0) +
+      0.30 * (recentWeaknessRank.get(row.symbol) || 0) +
+      0.20 * row.recentBottom20Pct +
+      0.15 * row.negativeConsistency
+    );
+  });
+
+  return rows;
+}
+
+function calculateMomentumScores() {
+  const scoreField = momentumMode === "emerging" ? "emergingScore" : "persistentScore";
+  return calculateReplayScores(getMomentumUniverse(), replayFrames)
+    .sort((a, b) => b[scoreField] - a[scoreField]);
+}
+
+function renderMomentumScanner() {
+  if (!momentumScanner || !momentumList) return;
+  const available = replayActive;
+  momentumScanner.hidden = !available;
+  if (!available) return;
+
+  const rows = calculateMomentumScores().slice(0, 10);
+  const subject = activeFilter === "sectors" ? "Sector ETFs" : "Stocks";
+  momentumDescription.textContent = momentumMode === "persistent"
+    ? `${subject} that stayed near the top throughout this replay window.`
+    : `${subject} whose relative strength improved most during the second half.`;
+  momentumModeButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.momentumMode === momentumMode);
+  });
+
+  if (!rows.length) {
+    momentumList.innerHTML = "<p class=\"momentum-empty\">Not enough replay data for this scan.</p>";
+    return;
+  }
+
+  const scoreField = momentumMode === "emerging" ? "emergingScore" : "persistentScore";
+  momentumList.innerHTML = rows.map((row, index) => `
+    <button class="momentum-result" type="button" data-symbol="${row.symbol}">
+      <span class="momentum-rank">${index + 1}</span>
+      <span class="momentum-symbol">
+        <strong>${row.symbol}</strong>
+        <small>${viewMode === "subindustry"
+          ? row.stock.subIndustry || row.stock.sector
+          : row.stock.sector}</small>
+      </span>
+      <span class="momentum-stat">
+        <small>Score</small>
+        <strong>${Math.round(row[scoreField])}</strong>
+      </span>
+      <span class="momentum-stat">
+        <small>Return</small>
+        <strong class="${row.finalReturn >= 0 ? "positive" : "negative"}">${formatPerf(row.finalReturn)}</strong>
+      </span>
+      <span class="momentum-stat">
+        <small>Top 20%</small>
+        <strong>${Math.round(row.top20Pct * 100)}%</strong>
+      </span>
+      <span class="momentum-stat">
+        <small>Drawdown</small>
+        <strong>-${row.maxDrawdown.toFixed(1)}%</strong>
+      </span>
+    </button>
+  `).join("");
+}
+
+function renderWeaknessScanner() {
+  if (!weaknessScanner || !weaknessList) return;
+  weaknessScanner.hidden = !replayActive;
+  if (!replayActive) return;
+
+  const scoreField = weaknessMode === "emerging"
+    ? "emergingWeaknessScore"
+    : "persistentWeaknessScore";
+  const rows = calculateMomentumScores()
+    .sort((a, b) => b[scoreField] - a[scoreField])
+    .slice(0, 10);
+  const subject = activeFilter === "sectors" ? "Sector ETFs" : "Stocks";
+  weaknessDescription.textContent = weaknessMode === "persistent"
+    ? `${subject} that stayed near the bottom throughout this replay window.`
+    : `${subject} whose relative strength deteriorated most during the second half.`;
+  weaknessModeButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.weaknessMode === weaknessMode);
+  });
+
+  if (!rows.length) {
+    weaknessList.innerHTML = "<p class=\"momentum-empty\">Not enough replay data for this scan.</p>";
+    return;
+  }
+
+  weaknessList.innerHTML = rows.map((row, index) => `
+    <button class="momentum-result weakness-result" type="button" data-symbol="${row.symbol}">
+      <span class="momentum-rank">${index + 1}</span>
+      <span class="momentum-symbol">
+        <strong>${row.symbol}</strong>
+        <small>${viewMode === "subindustry"
+          ? row.stock.subIndustry || row.stock.sector
+          : row.stock.sector}</small>
+      </span>
+      <span class="momentum-stat">
+        <small>Score</small>
+        <strong>${Math.round(row[scoreField])}</strong>
+      </span>
+      <span class="momentum-stat">
+        <small>Return</small>
+        <strong class="${row.finalReturn >= 0 ? "positive" : "negative"}">${formatPerf(row.finalReturn)}</strong>
+      </span>
+      <span class="momentum-stat">
+        <small>Bottom 20%</small>
+        <strong>${Math.round(row.bottom20Pct * 100)}%</strong>
+      </span>
+      <span class="momentum-stat">
+        <small>Drawdown</small>
+        <strong>-${row.maxDrawdown.toFixed(1)}%</strong>
+      </span>
+    </button>
+  `).join("");
+}
+
+function calculatePeriodScores(period, cutoffTimestamp = null, universeOverride = null) {
+  let universe = universeOverride
+    ? [...universeOverride]
+    : getBaseScanUniverse();
+  let frames = Array.from(new Set(
+    universe.flatMap((stock) =>
+      getReplayPoints(stock, period, cutoffTimestamp).map((point) => point[0])
+    )
+  )).filter(Number.isFinite).sort((a, b) => a - b);
+  universe = universe.filter((stock) =>
+    getReplayPoints(stock, period, cutoffTimestamp).length >= Math.max(8, frames.length * 0.7)
+  );
+  frames = Array.from(new Set(
+    universe.flatMap((stock) =>
+      getReplayPoints(stock, period, cutoffTimestamp).map((point) => point[0])
+    )
+  )).filter(Number.isFinite).sort((a, b) => a - b);
+  return calculateReplayScores(universe, frames, period, cutoffTimestamp);
+}
+
+function calculateConfluence(
+  trendPeriods,
+  accelerationPeriods,
+  negative = false,
+  periodRows = null,
+  universeOverride = null
+) {
+  const scoreRows = periodRows || new Map(
+    [...trendPeriods, ...accelerationPeriods].map((period) => [
+      period,
+      new Map(calculatePeriodScores(period).map((row) => [row.symbol, row])),
+    ])
+  );
+
+  const universe = universeOverride || getBaseScanUniverse();
+  return universe.map((stock) => {
+    const trendScores = trendPeriods.map((period) =>
+      scoreRows.get(period)?.get(stock.symbol)?.[
+        negative ? "persistentWeaknessScore" : "persistentScore"
+      ]
+    );
+    const accelerationScores = accelerationPeriods.map((period) =>
+      scoreRows.get(period)?.get(stock.symbol)?.[
+        negative ? "emergingWeaknessScore" : "emergingScore"
+      ]
+    );
+    const allScores = [...trendScores, ...accelerationScores];
+    if (allScores.some((score) => !Number.isFinite(score))) return null;
+    const trendAverage = trendScores.reduce((sum, score) => sum + score, 0) / trendScores.length;
+    const accelerationAverage = accelerationScores.reduce((sum, score) => sum + score, 0)
+      / accelerationScores.length;
+    const confirmations = allScores.filter((score) => score >= 65).length;
+    return {
+      stock,
+      symbol: stock.symbol,
+      trendPeriods,
+      accelerationPeriods,
+      trendScores,
+      accelerationScores,
+      confirmations,
+      negative,
+      score: Math.min(
+        100,
+        0.55 * trendAverage +
+          0.45 * accelerationAverage +
+          Math.max(0, confirmations - 2) * 2
+      ),
+    };
+  }).filter(Boolean).sort((a, b) => b.score - a.score);
+}
+
+function confluenceBadges(periods, scores, label, negative = false) {
+  return `
+    <span class="confluence-evidence">
+      <small>${label}</small>
+      <span>${periods.map((period, index) => `
+        <span class="period-badge ${negative ? "negative-badge" : ""} ${scores[index] >= 65 ? "confirmed" : ""}">
+          ${period.toUpperCase()}${scores[index] >= 65 ? " ✓" : ""}
+        </span>
+      `).join("")}</span>
+    </span>
+  `;
+}
+
+function renderConfluenceRows(target, rows, negative = false) {
+  if (!target) return;
+  if (!rows.length) {
+    target.innerHTML = "<p class=\"momentum-empty\">Not enough data for this confluence scan.</p>";
+    return;
+  }
+  target.innerHTML = rows.slice(0, 10).map((row, index) => `
+    <button class="confluence-result ${negative ? "negative-confluence-result" : ""}" type="button" data-symbol="${row.symbol}">
+      <span class="momentum-rank">${index + 1}</span>
+      <span class="momentum-symbol">
+        <strong>${row.symbol}</strong>
+        <small>${viewMode === "subindustry"
+          ? row.stock.subIndustry || row.stock.sector
+          : row.stock.sector}</small>
+      </span>
+      <span class="confluence-score">
+        <small>Confluence</small>
+        <strong>${Math.round(row.score)}</strong>
+      </span>
+      ${confluenceBadges(
+        row.trendPeriods,
+        row.trendScores,
+        negative ? "Weak trend" : "Trend",
+        negative
+      )}
+      ${confluenceBadges(
+        row.accelerationPeriods,
+        row.accelerationScores,
+        negative ? "Deterioration" : "Acceleration",
+        negative
+      )}
+    </button>
+  `).join("");
+}
+
+const ACTION_HISTORY_KEY = "sp500ad-action-history-v2";
+
+function actionUniverseKey() {
+  return [
+    activeFilter,
+    viewMode,
+    selectedSector || "all-sectors",
+  ].join("|");
+}
+
+function readActionHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(ACTION_HISTORY_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeActionHistory(history) {
+  try {
+    localStorage.setItem(ACTION_HISTORY_KEY, JSON.stringify(history));
+  } catch {
+    // Signal history is helpful but should never block the live application.
+  }
+}
+
+function scoreSnapshot(rows) {
+  return Object.fromEntries(rows.map((row) => [row.symbol, Math.round(row.score * 10) / 10]));
+}
+
+function currentSignalAsOf() {
+  const timestamps = getBaseScanUniverse()
+    .flatMap((stock) => stock.replayDay15m || [])
+    .map((point) => point?.[0])
+    .filter(Number.isFinite);
+  const latest = timestamps.length ? Math.max(...timestamps) : null;
+  return Number.isFinite(latest)
+    ? new Date(latest * 1000).toISOString()
+    : lastAsOf;
+}
+
+function storeActionSnapshot(key, snapshot, asOf = currentSignalAsOf()) {
+  if (!asOf) return;
+  const history = readActionHistory();
+  const entries = Array.isArray(history[key]) ? history[key] : [];
+  if (!entries.some((entry) => entry.asOf === asOf)) {
+    entries.push({ asOf, ...snapshot });
+  }
+  history[key] = entries.slice(-20);
+  writeActionHistory(history);
+}
+
+function buildConfluenceSnapshot(cutoffTimestamp) {
+  const periodRows = new Map(
+    Object.keys(REPLAY_PERIODS).map((period) => [
+      period,
+      new Map(
+        calculatePeriodScores(period, cutoffTimestamp)
+          .map((row) => [row.symbol, row])
+      ),
+    ])
+  );
+  const positiveShort = calculateConfluence(
+    ["1m", "2m"], ["1d", "2d"], false, periodRows
+  );
+  const positiveLong = calculateConfluence(
+    ["3m", "6m"], ["1w", "2w"], false, periodRows
+  );
+  const negativeShort = calculateConfluence(
+    ["1m", "2m"], ["1d", "2d"], true, periodRows
+  );
+  return {
+    positiveShort: scoreSnapshot(positiveShort),
+    positiveLong: scoreSnapshot(positiveLong),
+    negativeShort: scoreSnapshot(negativeShort),
+  };
+}
+
+function seedHistoricalActionHistory(key) {
+  const history = readActionHistory();
+  if (Array.isArray(history[key]) && history[key].length) return;
+  const source = getBaseScanUniverse()
+    .map((stock) => stock.replayDay15m || [])
+    .sort((a, b) => b.length - a.length)[0] || [];
+  const sessions = new Map();
+  source.forEach((point) => {
+    if (!Number.isFinite(point?.[0])) return;
+    const dateKey = new Date(point[0] * 1000).toLocaleDateString("en-CA", {
+      timeZone: "America/New_York",
+    });
+    sessions.set(dateKey, Math.max(sessions.get(dateKey) || 0, point[0]));
+  });
+  const cutoffs = [...sessions.values()].sort((a, b) => a - b).slice(-3);
+  if (cutoffs.length < 2) return;
+  history[key] = cutoffs.map((cutoffTimestamp) => ({
+    asOf: new Date(cutoffTimestamp * 1000).toISOString(),
+    ...buildConfluenceSnapshot(cutoffTimestamp),
+  }));
+  writeActionHistory(history);
+}
+
+function periodReturn(stock, period) {
+  const points = getReplayPoints(stock, period);
+  const first = points[0]?.[1];
+  const last = points.at(-1)?.[1];
+  return Number.isFinite(first) && first !== 0 && Number.isFinite(last)
+    ? ((last / first) - 1) * 100
+    : null;
+}
+
+function relativeStrengthContext(stock, period, sectorSignals) {
+  const spy = lastBenchmarks.find((benchmark) => benchmark.symbol === "SPY");
+  const sectorEtf = lastBenchmarks.find((benchmark) =>
+    benchmark.symbol !== "SPY" && benchmark.sector === stock.sector
+  );
+  const stockReturn = periodReturn(stock, period);
+  const spyReturn = periodReturn(spy || {}, period);
+  const sectorReturn = periodReturn(sectorEtf || {}, period);
+  return {
+    period,
+    sectorSymbol: sectorEtf?.symbol || "Sector",
+    stockReturn,
+    spyReturn,
+    sectorReturn,
+    vsSpy: Number.isFinite(stockReturn) && Number.isFinite(spyReturn)
+      ? stockReturn - spyReturn
+      : null,
+    vsSector: Number.isFinite(stockReturn) && Number.isFinite(sectorReturn)
+      ? stockReturn - sectorReturn
+      : null,
+    sectorSignals: sectorSignals.get(stock.sector) || {},
+  };
+}
+
+function classifyRelativeStrength(context) {
+  const sectorPositive = Math.max(
+    context.sectorSignals.positiveShort || 0,
+    context.sectorSignals.positiveLong || 0
+  );
+  const sectorNegative = context.sectorSignals.negativeShort || 0;
+  if (activeFilter === "sectors") {
+    if ((context.vsSpy || 0) > 0 && sectorPositive >= 60) return "Sector leader";
+    if ((context.vsSpy || 0) < 0 && sectorNegative >= 60) return "Sector breakdown";
+    return "Mixed sector";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0 && sectorNegative >= 60) {
+    return "Fighting its sector";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0 && sectorPositive >= 60) {
+    return "Broadly confirmed";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0) {
+    return "Stock-specific leader";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) <= 0 && sectorPositive >= 60) {
+    return "Sector carried";
+  }
+  if ((context.vsSpy || 0) < 0 && (context.vsSector || 0) < 0 && sectorNegative >= 60) {
+    return "Broad breakdown";
+  }
+  return "Mixed confirmation";
+}
+
+function addRelativeStrength(rows, periods, sectorSignals) {
+  rows.forEach((row) => {
+    row.relativeStrength = periods.map((period) =>
+      relativeStrengthContext(row.stock, period, sectorSignals)
+    );
+    row.relativeClassification = classifyRelativeStrength(row.relativeStrength[0]);
+  });
+}
+
+function renderActionBucket(target, rows, scoreLabel, bucketKey) {
+  if (!target) return;
+  if (!rows.length) {
+    target.innerHTML = "<p class=\"action-bucket-empty\">No current matches.</p>";
+    return;
+  }
+  target.innerHTML = rows.slice(0, 5).map((row) => `
+    <button class="action-bucket-result" type="button" data-symbol="${row.symbol}" data-bucket="${bucketKey}">
+      <span class="momentum-symbol">
+        <strong>${row.symbol}</strong>
+        <small>${viewMode === "subindustry"
+          ? row.stock.subIndustry || row.stock.sector
+          : row.stock.sector}</small>
+        <small class="relative-classification">${row.relativeClassification || ""}</small>
+      </span>
+          <span class="action-relative-strength">
+            ${(row.relativeStrength || []).map((context) => `
+              <small>
+                <b>${context.period === "1d" ? "OPEN" : context.period.toUpperCase()}</b>
+                <span class="${Number.isFinite(context.stockReturn) && context.stockReturn >= 0 ? "positive" : "negative"}">
+                  ${row.symbol} ${formatPerf(context.stockReturn)}
+                </span>
+                <span class="${Number.isFinite(context.spyReturn) && context.spyReturn >= 0 ? "positive" : "negative"}">
+                  SPY ${formatPerf(context.spyReturn)}
+                </span>
+                ${activeFilter === "sectors" ? "" : `
+                  <span class="${Number.isFinite(context.sectorReturn) && context.sectorReturn >= 0 ? "positive" : "negative"}">
+                    ${context.sectorSymbol} ${formatPerf(context.sectorReturn)}
+                  </span>
+                `}
+              </small>
+        `).join("")}
+      </span>
+      ${row.status ? `<span class="action-status ${row.status.toLowerCase()}">${row.status}</span>` : ""}
+      <span class="action-bucket-score">
+        <small>${scoreLabel}</small>
+        <strong>${Math.round(row.bucketScore)}</strong>
+      </span>
+    </button>
+  `).join("");
+}
+
+function renderActionBuckets(
+  positiveShort,
+  positiveLong,
+  negativeShort,
+  sectorSignals = new Map()
+) {
+  const key = actionUniverseKey();
+  seedHistoricalActionHistory(key);
+  const history = readActionHistory();
+  const signalAsOf = currentSignalAsOf();
+  const priorSnapshots = (Array.isArray(history[key]) ? history[key] : [])
+    .filter((entry) => entry.asOf !== signalAsOf)
+    .slice(-5);
+  const previous = priorSnapshots.at(-1);
+  const positiveShortBySymbol = new Map(positiveShort.map((row) => [row.symbol, row]));
+  const positiveLongBySymbol = new Map(positiveLong.map((row) => [row.symbol, row]));
+  const negativeShortBySymbol = new Map(negativeShort.map((row) => [row.symbol, row]));
+  const sectorBoard = activeFilter === "sectors";
+  const thresholds = sectorBoard
+    ? {
+        acceleration: 60,
+        confirmedShort: 55,
+        confirmedLong: 45,
+        pullbackSignalLong: 60,
+        pullbackSignalWeakness: 50,
+        pullbackDevelopingLong: 50,
+        pullbackDevelopingWeakness: 40,
+        breakdownSignal: 60,
+        breakdownDeveloping: 55,
+        priorStrong: 60,
+        priorPositive: 55,
+      }
+    : {
+        acceleration: 65,
+        confirmedShort: 60,
+        confirmedLong: 50,
+        pullbackSignalLong: 65,
+        pullbackSignalWeakness: 55,
+        pullbackDevelopingLong: 55,
+        pullbackDevelopingWeakness: 45,
+        breakdownSignal: 65,
+        breakdownDeveloping: 55,
+        priorStrong: 65,
+        priorPositive: 60,
+      };
+  const sectorTotals = new Map();
+  const sectorLeaders = new Map();
+  positiveShort.forEach((row) => {
+    const sector = row.stock.sector;
+    sectorTotals.set(sector, (sectorTotals.get(sector) || 0) + 1);
+    if (row.score >= 60) sectorLeaders.set(sector, (sectorLeaders.get(sector) || 0) + 1);
+  });
+
+  const newAcceleration = positiveShort
+    .filter((row) =>
+      row.score >= thresholds.acceleration &&
+      previous &&
+      (previous.positiveShort?.[row.symbol] || 0) < thresholds.acceleration
+    )
+    .map((row) => {
+      const supportingScore = positiveLongBySymbol.get(row.symbol)?.score || 0;
+      return {
+        ...row,
+        status: supportingScore >= thresholds.acceleration
+          ? "Confirmed"
+          : supportingScore >= thresholds.confirmedLong
+            ? "Building"
+            : "Early",
+        bucketScore: row.score,
+      };
+    });
+
+  const confirmedLeaders = positiveShort
+    .filter((row) => {
+      const longScore = positiveLongBySymbol.get(row.symbol)?.score || 0;
+      const recent = priorSnapshots.slice(-2);
+      const sessionScores = [
+        ...recent.map((snapshot) => snapshot.positiveShort?.[row.symbol] || 0),
+        row.score,
+      ];
+      return row.score >= thresholds.confirmedShort &&
+        longScore >= thresholds.confirmedLong &&
+        recent.length >= 2 &&
+        sessionScores.filter((score) => score >= thresholds.confirmedShort).length >= 2;
+    })
+    .map((row) => ({
+      ...row,
+      bucketScore: (row.score + (positiveLongBySymbol.get(row.symbol)?.score || 0)) / 2,
+    }))
+    .sort((a, b) => b.bucketScore - a.bucketScore);
+
+  const pullbackTrend = positiveLong
+    .map((row) => {
+      const shortPositive = positiveShortBySymbol.get(row.symbol)?.score || 0;
+      const shortNegative = negativeShortBySymbol.get(row.symbol)?.score || 0;
+      const fullSignal =
+        row.score >= thresholds.pullbackSignalLong &&
+        shortPositive < thresholds.acceleration &&
+        shortNegative >= thresholds.pullbackSignalWeakness;
+      const developing =
+        row.score >= thresholds.pullbackDevelopingLong &&
+        shortPositive < thresholds.acceleration + 5 &&
+        shortNegative >= thresholds.pullbackDevelopingWeakness;
+      if (!fullSignal && !developing) return null;
+      return {
+        ...row,
+        status: fullSignal ? "Signal" : "Developing",
+        bucketScore: (row.score + shortNegative) / 2,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) =>
+      (a.status === b.status ? b.bucketScore - a.bucketScore : a.status === "Signal" ? -1 : 1)
+    );
+
+  const breakdownWarning = negativeShort
+    .map((row) => {
+      const wasStronglyPositive = priorSnapshots.some((snapshot) =>
+        (snapshot.positiveShort?.[row.symbol] || 0) >= thresholds.priorStrong ||
+        (snapshot.positiveLong?.[row.symbol] || 0) >= thresholds.priorStrong
+      );
+      const wasPositive = priorSnapshots.some((snapshot) =>
+        (snapshot.positiveShort?.[row.symbol] || 0) >= thresholds.priorPositive ||
+        (snapshot.positiveLong?.[row.symbol] || 0) >= thresholds.priorPositive
+      );
+      const fullSignal = row.score >= thresholds.breakdownSignal && wasStronglyPositive;
+      const developing = row.score >= thresholds.breakdownDeveloping && wasPositive;
+      if (!fullSignal && !developing) return null;
+      return {
+        ...row,
+        status: fullSignal ? "Signal" : "Developing",
+        bucketScore: row.score,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) =>
+      (a.status === b.status ? b.bucketScore - a.bucketScore : a.status === "Signal" ? -1 : 1)
+    );
+
+  addRelativeStrength(newAcceleration, ["1d", "1w", "1m"], sectorSignals);
+  addRelativeStrength(confirmedLeaders, ["1m", "3m"], sectorSignals);
+  addRelativeStrength(pullbackTrend, ["1d", "1w", "1m"], sectorSignals);
+  addRelativeStrength(breakdownWarning, ["1w", "1m"], sectorSignals);
+
+  actionDetailRows.clear();
+  [
+    ["acceleration", "New acceleration", newAcceleration],
+    ["leaders", "Confirmed leaders", confirmedLeaders],
+    ["pullback", "Pullback in trend", pullbackTrend],
+    ["breakdown", "Breakdown warning", breakdownWarning],
+  ].forEach(([keyName, label, rows]) => {
+    rows.forEach((row) => {
+      const snapshots = priorSnapshots.filter((snapshot) =>
+        (snapshot.positiveShort?.[row.symbol] || 0) >= 60 ||
+        (snapshot.positiveLong?.[row.symbol] || 0) >= 60 ||
+        (snapshot.negativeShort?.[row.symbol] || 0) >= 60
+      ).length;
+      const sectorTotal = sectorTotals.get(row.stock.sector) || 0;
+      actionDetailRows.set(`${keyName}:${row.symbol}`, {
+        ...row,
+        bucketLabel: label,
+        signalSnapshots: snapshots,
+        sectorBreadth: sectorTotal
+          ? ((sectorLeaders.get(row.stock.sector) || 0) / sectorTotal) * 100
+          : null,
+      });
+    });
+  });
+
+  renderActionBucket(newAccelerationList, newAcceleration, "Confluence", "acceleration");
+  renderActionBucket(confirmedLeadersList, confirmedLeaders, "Combined", "leaders");
+  renderActionBucket(pullbackTrendList, pullbackTrend, "Setup", "pullback");
+  renderActionBucket(breakdownWarningList, breakdownWarning, "Warning", "breakdown");
+  if (actionHistoryNote) {
+    actionHistoryNote.textContent = priorSnapshots.length
+      ? `${priorSnapshots.length + 1} unique snapshots tracked locally for this universe.`
+      : "Signal history starts with this data snapshot; change-based buckets will populate after future refreshes.";
+  }
+
+  storeActionSnapshot(key, {
+    positiveShort: scoreSnapshot(positiveShort),
+    positiveLong: scoreSnapshot(positiveLong),
+    negativeShort: scoreSnapshot(negativeShort),
+  });
+}
+
+function distanceFromDayAverage(stock, days) {
+  const closes = (stock.replayDaily || [])
+    .map((point) => point[1])
+    .filter(Number.isFinite)
+    .slice(-days);
+  if (!closes.length || !Number.isFinite(stock.currentPrice)) return null;
+  const average = closes.reduce((sum, value) => sum + value, 0) / closes.length;
+  return average > 0 ? ((stock.currentPrice / average) - 1) * 100 : null;
+}
+
+function closeActionDrawer() {
+  if (!actionDrawer) return;
+  actionDrawer.hidden = true;
+  actionDrawerBackdrop.hidden = true;
+  document.body.classList.remove("drawer-open");
+  activeActionDetail = null;
+}
+
+function openActionDrawer(bucket, symbol) {
+  const row = actionDetailRows.get(`${bucket}:${symbol}`);
+  if (!row || !actionDrawer) return;
+  activeActionDetail = row;
+  const distance5d = distanceFromDayAverage(row.stock, 5);
+  const distance20d = distanceFromDayAverage(row.stock, 20);
+  actionDrawerBucket.textContent = row.bucketLabel;
+  actionDrawerTitle.textContent = row.symbol;
+  actionDrawerCompany.textContent = `${row.stock.security} · ${row.stock.subIndustry || row.stock.sector}`;
+  actionDrawerBody.innerHTML = `
+    <div class="action-detail-summary">
+      <span>${row.relativeClassification || "Mixed confirmation"}</span>
+      ${row.status ? `<span>${row.status}</span>` : ""}
+    </div>
+    <div class="action-detail-grid">
+      <div><small>From 5D average</small><strong class="${(distance5d || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance5d)}</strong></div>
+      <div><small>From 20D average</small><strong class="${(distance20d || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance20d)}</strong></div>
+      <div><small>Sector breadth</small><strong>${Number.isFinite(row.sectorBreadth) ? `${Math.round(row.sectorBreadth)}%` : "--"}</strong></div>
+      <div><small>Prior signal snapshots</small><strong>${row.signalSnapshots}</strong></div>
+    </div>
+  `;
+  actionDrawer.hidden = false;
+  actionDrawerBackdrop.hidden = false;
+  document.body.classList.add("drawer-open");
+}
+
+function renderConfluenceScanner() {
+  if (!confluenceScanner || !negativeConfluenceScanner) return;
+  const available = getBaseScanUniverse().length >= 2;
+  confluenceScanner.hidden = !available;
+  negativeConfluenceScanner.hidden = !available;
+  if (!available) return;
+  const periodRows = new Map(
+    Object.keys(REPLAY_PERIODS).map((period) => [
+      period,
+      new Map(calculatePeriodScores(period).map((row) => [row.symbol, row])),
+    ])
+  );
+  const positiveShort = calculateConfluence(
+    ["1m", "2m"], ["1d", "2d"], false, periodRows
+  );
+  const positiveLong = calculateConfluence(
+    ["3m", "6m"], ["1w", "2w"], false, periodRows
+  );
+  const negativeShort = calculateConfluence(
+    ["1m", "2m"], ["1d", "2d"], true, periodRows
+  );
+  const negativeLong = calculateConfluence(
+    ["3m", "6m"], ["1w", "2w"], true, periodRows
+  );
+  const sectorUniverse = lastBenchmarks.filter((benchmark) => benchmark.symbol !== "SPY");
+  const sectorPeriodRows = new Map(
+    Object.keys(REPLAY_PERIODS).map((period) => [
+      period,
+      new Map(
+        calculatePeriodScores(period, null, sectorUniverse)
+          .map((row) => [row.symbol, row])
+      ),
+    ])
+  );
+  const sectorPositiveShort = calculateConfluence(
+    ["1m", "2m"],
+    ["1d", "2d"],
+    false,
+    sectorPeriodRows,
+    sectorUniverse
+  );
+  const sectorPositiveLong = calculateConfluence(
+    ["3m", "6m"],
+    ["1w", "2w"],
+    false,
+    sectorPeriodRows,
+    sectorUniverse
+  );
+  const sectorNegativeShort = calculateConfluence(
+    ["1m", "2m"],
+    ["1d", "2d"],
+    true,
+    sectorPeriodRows,
+    sectorUniverse
+  );
+  const sectorSignals = new Map(sectorUniverse.map((benchmark) => [
+    benchmark.sector,
+    {
+      positiveShort: sectorPositiveShort.find((row) => row.symbol === benchmark.symbol)?.score || 0,
+      positiveLong: sectorPositiveLong.find((row) => row.symbol === benchmark.symbol)?.score || 0,
+      negativeShort: sectorNegativeShort.find((row) => row.symbol === benchmark.symbol)?.score || 0,
+    },
+  ]));
+  renderConfluenceRows(shortConfluenceList, positiveShort);
+  renderConfluenceRows(longConfluenceList, positiveLong);
+  renderConfluenceRows(shortNegativeConfluenceList, negativeShort, true);
+  renderConfluenceRows(longNegativeConfluenceList, negativeLong, true);
+  renderActionBuckets(positiveShort, positiveLong, negativeShort, sectorSignals);
+}
+
+function setAppView(view) {
+  appView = view === "action" ? "action" : "replay";
+  const showActionBoard = appView === "action";
+  marketReplayView.hidden = showActionBoard;
+  actionBoardView.hidden = !showActionBoard;
+  controlsEl.classList.toggle("action-board-active", showActionBoard);
+  workspaceNavButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.appView === appView);
+  });
+  if (showActionBoard) {
+    stopReplay();
+    updateSubhead();
+    renderConfluenceScanner();
+  } else {
+    if (replayActive) updateReplaySubhead();
+    else updateSubhead();
+    renderCurrentChart();
+  }
+}
+
 function renderCurrentChart() {
   buildChart(replayActive ? replayStocksAt(replayFrameIndex) : lastStocks);
+  if (appView === "action") {
+    renderConfluenceScanner();
+  } else {
+    renderMomentumScanner();
+    renderWeaknessScanner();
+  }
 }
 
 function populateTickerSearch() {
@@ -761,10 +1748,12 @@ function pinSearchedTicker() {
   if (stayInSubindustry) {
     viewMode = "subindustry";
     selectedSector = match.sector;
+    syncSectorFilterButtons();
     if (backBtn) backBtn.classList.add("visible");
   } else {
     viewMode = "sector";
     selectedSector = null;
+    syncSectorFilterButtons();
     if (backBtn) backBtn.classList.remove("visible");
   }
   filterButtons.forEach((button) => {
@@ -778,7 +1767,8 @@ function pinSearchedTicker() {
     calculateReplayRange();
     updateReplaySubhead();
   }
-  renderCurrentChart();
+  if (appView === "action") setAppView("replay");
+  else renderCurrentChart();
 }
 
 function buildReplayTimeline() {
@@ -847,6 +1837,10 @@ function formatReplayDate(timestamp) {
 
 function updateReplaySubhead() {
   if (!metricSubhead) return;
+  if (appView === "action") {
+    metricSubhead.textContent = "Multi-timeframe leadership and weakness across the selected universe.";
+    return;
+  }
   let suffix = "";
   if (activeFilter !== "all") {
     const activeButton = document.querySelector(`.filter-btn[data-filter="${activeFilter}"]`);
@@ -941,6 +1935,14 @@ function setReplayUi(active) {
   metricToggle.querySelectorAll(".toggle-btn").forEach((button) => {
     button.disabled = active;
   });
+  if (!active) {
+    if (appView === "action") {
+      renderConfluenceScanner();
+    } else {
+      renderMomentumScanner();
+      renderWeaknessScanner();
+    }
+  }
 }
 
 function enterReplayMode(period = "1m") {
@@ -1003,6 +2005,7 @@ async function loadData(forceRefresh = false) {
       throw new Error(data.error || `Failed to load data (HTTP ${res.status})`);
     }
     asOfEl.textContent = formatDate(data.asOf);
+    lastAsOf = data.asOf || null;
     cacheEl.textContent = data.cacheFresh ? "Fresh" : "Stale";
 
     lastStocks = data.stocks || [];
@@ -1059,6 +2062,7 @@ filterButtons.forEach((button) => {
     });
     viewMode = "sector";
     selectedSector = null;
+    syncSectorFilterButtons();
     if (backBtn) backBtn.classList.remove("visible");
     updateSubhead();
     if (replayActive) {
@@ -1073,6 +2077,7 @@ if (backBtn) {
   backBtn.addEventListener("click", () => {
     viewMode = "sector";
     selectedSector = null;
+    syncSectorFilterButtons();
     backBtn.classList.remove("visible");
     updateSubhead();
     if (replayActive) {
@@ -1082,6 +2087,25 @@ if (backBtn) {
     renderCurrentChart();
   });
 }
+
+sectorFilterButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    activeFilter = "all";
+    viewMode = "subindustry";
+    selectedSector = button.dataset.sector;
+    filterButtons.forEach((filterButton) => {
+      filterButton.classList.toggle("active", filterButton.dataset.filter === "all");
+    });
+    syncSectorFilterButtons();
+    if (backBtn) backBtn.classList.add("visible");
+    updateSubhead();
+    if (replayActive) {
+      calculateReplayRange();
+      updateReplaySubhead();
+    }
+    renderCurrentChart();
+  });
+});
 
 window.addEventListener("resize", () => {
   renderCurrentChart();
@@ -1126,6 +2150,81 @@ replaySpeed.addEventListener("change", () => {
 tickerSearchForm.addEventListener("submit", (event) => {
   event.preventDefault();
   pinSearchedTicker();
+});
+
+momentumModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    momentumMode = button.dataset.momentumMode || "persistent";
+    renderMomentumScanner();
+  });
+});
+
+weaknessModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    weaknessMode = button.dataset.weaknessMode || "persistent";
+    renderWeaknessScanner();
+  });
+});
+
+if (momentumList) {
+  momentumList.addEventListener("click", (event) => {
+    const result = event.target.closest(".momentum-result[data-symbol]");
+    if (!result) return;
+    pinnedSymbols.add(result.dataset.symbol);
+    tickerSearchStatus.textContent = `Pinned ${result.dataset.symbol} from momentum scan.`;
+    renderCurrentChart();
+  });
+}
+
+if (weaknessList) {
+  weaknessList.addEventListener("click", (event) => {
+    const result = event.target.closest(".momentum-result[data-symbol]");
+    if (!result) return;
+    pinnedSymbols.add(result.dataset.symbol);
+    tickerSearchStatus.textContent = `Pinned ${result.dataset.symbol} from weakness scan.`;
+    renderCurrentChart();
+  });
+}
+
+[shortConfluenceList, longConfluenceList, shortNegativeConfluenceList, longNegativeConfluenceList]
+  .forEach((list) => {
+  if (!list) return;
+  list.addEventListener("click", (event) => {
+    const result = event.target.closest(".confluence-result[data-symbol]");
+    if (!result) return;
+    pinnedSymbols.add(result.dataset.symbol);
+    tickerSearchStatus.textContent = `Pinned ${result.dataset.symbol} from timeframe confluence.`;
+    setAppView("replay");
+  });
+});
+
+workspaceNavButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setAppView(button.dataset.appView);
+  });
+});
+
+[newAccelerationList, confirmedLeadersList, pullbackTrendList, breakdownWarningList]
+  .forEach((list) => {
+    if (!list) return;
+    list.addEventListener("click", (event) => {
+      const result = event.target.closest(".action-bucket-result[data-symbol]");
+      if (!result) return;
+      openActionDrawer(result.dataset.bucket, result.dataset.symbol);
+    });
+  });
+
+actionDrawerClose?.addEventListener("click", closeActionDrawer);
+actionDrawerBackdrop?.addEventListener("click", closeActionDrawer);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !actionDrawer?.hidden) closeActionDrawer();
+});
+actionDrawerPin?.addEventListener("click", () => {
+  if (!activeActionDetail) return;
+  pinnedSymbols.add(activeActionDetail.symbol);
+  tickerSearchStatus.textContent = `Pinned ${activeActionDetail.symbol} from Action Board.`;
+  closeActionDrawer();
+  setAppView("replay");
 });
 
 updateSubhead();
