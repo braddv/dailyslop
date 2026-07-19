@@ -4,6 +4,7 @@ import { buildSignalSnapshot, historicalCutoffs } from "./_lib/signals.js";
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 const OUTCOME_RESULT_LIMIT = 5000;
 const OUTCOME_MATERIALIZATION_VERSION = 2;
+let schemaPromise = null;
 
 async function ensureSchema() {
   await sql`
@@ -95,6 +96,16 @@ async function ensureSchema() {
       SELECT 1 FROM signal_snapshots s WHERE s.snapshot_at = r.snapshot_at
     )
   `;
+}
+
+function ensureSchemaReady() {
+  if (!schemaPromise) {
+    schemaPromise = ensureSchema().catch((error) => {
+      schemaPromise = null;
+      throw error;
+    });
+  }
+  return schemaPromise;
 }
 
 async function refreshSignalOutcomes(force = false) {
@@ -428,28 +439,44 @@ async function capture(req) {
 async function history(req) {
   const limit = Math.min(30, Math.max(1, Number(req.query?.limit) || 10));
   const includeOutcomes = String(req.query?.includeOutcomes || "").toLowerCase() === "true";
-  await refreshSignalOutcomes();
-  const rows = await sql`
-    WITH recent AS (
-      SELECT snapshot_at, source_as_of, run_kind
-      FROM signal_runs
-      ORDER BY snapshot_at DESC
-      LIMIT ${limit}
-    )
-    SELECT
-      s.snapshot_at, r.source_as_of, r.run_kind, s.symbol, s.security, s.sector,
-      s.sub_industry, s.market_cap, s.is_sector, s.positive_short, s.positive_long,
-      s.negative_short, s.negative_long, s.buckets, s.current_price, s.return_1d, s.return_1w,
-      s.return_1m, s.distance_5d, s.distance_20d
-    FROM signal_snapshots s
-    JOIN recent r USING (snapshot_at)
-    ORDER BY s.snapshot_at DESC, s.symbol ASC
-  `;
+  const compact = String(req.query?.compact || "").toLowerCase() === "true";
+  const rows = compact
+    ? await sql`
+        WITH recent AS (
+          SELECT snapshot_at
+          FROM signal_runs
+          ORDER BY snapshot_at DESC
+          LIMIT ${limit}
+        )
+        SELECT
+          s.snapshot_at, s.symbol, s.is_sector, s.positive_short, s.positive_long,
+          s.negative_short, s.negative_long
+        FROM signal_snapshots s
+        JOIN recent r USING (snapshot_at)
+        ORDER BY s.snapshot_at DESC, s.symbol ASC
+      `
+    : await sql`
+        WITH recent AS (
+          SELECT snapshot_at, source_as_of, run_kind
+          FROM signal_runs
+          ORDER BY snapshot_at DESC
+          LIMIT ${limit}
+        )
+        SELECT
+          s.snapshot_at, r.source_as_of, r.run_kind, s.symbol, s.security, s.sector,
+          s.sub_industry, s.market_cap, s.is_sector, s.positive_short, s.positive_long,
+          s.negative_short, s.negative_long, s.buckets, s.current_price, s.return_1d, s.return_1w,
+          s.return_1m, s.distance_5d, s.distance_20d
+        FROM signal_snapshots s
+        JOIN recent r USING (snapshot_at)
+        ORDER BY s.snapshot_at DESC, s.symbol ASC
+      `;
   const response = {
     sessions: [...new Set(rows.map((row) => new Date(row.snapshot_at).toISOString()))],
     rows,
   };
   if (!includeOutcomes) return response;
+  await refreshSignalOutcomes();
   const [outcomeCount] = await sql`
     SELECT COUNT(*)::int AS total
     FROM signal_outcomes
@@ -479,7 +506,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: "DATABASE_URL is not configured" });
   }
   try {
-    await ensureSchema();
+    await ensureSchemaReady();
     const mode = String(req.query?.mode || "").toLowerCase();
     if (mode === "capture") {
       const result = await capture(req);
