@@ -1,4 +1,4 @@
-const { readCache, writeCache } = require('./_lib/cache');
+const { readSharedCache, writeSharedCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
 
 const DAILY_CACHE_KEY = 'sector_ad_yahoo_daily_v2';
@@ -504,8 +504,12 @@ module.exports = async function handler(req, res) {
   const intradayTtl = isUsMarketHours()
     ? INTRADAY_MARKET_TTL_MS
     : INTRADAY_OFF_HOURS_TTL_MS;
-  let daily = refresh ? null : readCache(DAILY_CACHE_KEY, DAILY_CACHE_TTL_MS);
-  let intraday = refresh ? null : readCache(INTRADAY_CACHE_KEY, intradayTtl);
+  let daily = refresh
+    ? null
+    : await readSharedCache(DAILY_CACHE_KEY, DAILY_CACHE_TTL_MS);
+  let intraday = refresh
+    ? null
+    : await readSharedCache(INTRADAY_CACHE_KEY, intradayTtl);
   let dailyFresh = hasValidStocks(daily);
   let intradayFresh = hasValidIntraday(intraday);
 
@@ -521,9 +525,9 @@ module.exports = async function handler(req, res) {
   if (dailyAttempt?.value) {
     daily = dailyAttempt.value;
     dailyFresh = true;
-    writeCache(DAILY_CACHE_KEY, daily);
+    await writeSharedCache(DAILY_CACHE_KEY, daily, 7 * DAY_MS);
   } else if (!dailyFresh) {
-    daily = readCache(DAILY_CACHE_KEY, 7 * DAY_MS);
+    daily = await readSharedCache(DAILY_CACHE_KEY, 7 * DAY_MS);
     if (!hasValidStocks(daily)) daily = seedData;
     daily = {
       ...daily,
@@ -537,9 +541,9 @@ module.exports = async function handler(req, res) {
   if (intradayAttempt?.value) {
     intraday = intradayAttempt.value;
     intradayFresh = true;
-    writeCache(INTRADAY_CACHE_KEY, intraday);
+    await writeSharedCache(INTRADAY_CACHE_KEY, intraday, 2 * DAY_MS);
   } else if (!intradayFresh) {
-    intraday = readCache(INTRADAY_CACHE_KEY, 2 * DAY_MS);
+    intraday = await readSharedCache(INTRADAY_CACHE_KEY, 2 * DAY_MS);
     if (!hasValidIntraday(intraday)) {
       intraday = { asOf: daily.asOf, failures: [], stocks: [] };
     }
