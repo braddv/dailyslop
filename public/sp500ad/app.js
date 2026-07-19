@@ -73,15 +73,6 @@ const signalHistorySummary = document.getElementById("signalHistorySummary");
 const signalChangeList = document.getElementById("signalChangeList");
 const signalPersistenceList = document.getElementById("signalPersistenceList");
 const historySideButtons = document.querySelectorAll(".history-side-btn");
-const signalResultsView = document.getElementById("signalResultsView");
-const resultsSideButtons = document.querySelectorAll(".results-side-btn");
-const resultsSetupButtons = document.querySelectorAll(".results-setup-btn");
-const signalOutcomeTitle = document.getElementById("signalOutcomeTitle");
-const signalOutcomeDescription = document.getElementById("signalOutcomeDescription");
-const signalOutcome1Summary = document.getElementById("signalOutcome1Summary");
-const signalOutcome3Summary = document.getElementById("signalOutcome3Summary");
-const signalOutcome5Summary = document.getElementById("signalOutcome5Summary");
-const signalOutcomeList = document.getElementById("signalOutcomeList");
 const actionDrawer = document.getElementById("actionDrawer");
 const actionDrawerBackdrop = document.getElementById("actionDrawerBackdrop");
 const actionDrawerClose = document.getElementById("actionDrawerClose");
@@ -115,8 +106,6 @@ let actionBoardSide = "bullish";
 let signalHistoryData = null;
 let selectedHistorySession = null;
 let signalHistorySide = "bullish";
-let signalResultsSide = "bullish";
-let signalResultsSetup = "pullback";
 
 const REPLAY_PERIODS = {
   "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", sessions: 1 },
@@ -1912,162 +1901,6 @@ function bucketBadges(buckets, allowedBuckets = Object.keys(HISTORY_BUCKETS)) {
     }).join("");
 }
 
-function renderSignalOutcomes() {
-  if (!signalOutcome1Summary || !signalOutcome3Summary || !signalOutcome5Summary || !signalOutcomeList) return;
-  const bearish = signalResultsSide === "bearish";
-  const setupGroups = {
-    bullish: [
-      ["pullback", "Pullback in trend"],
-      ["acceleration", "New acceleration"],
-      ["leader", "Confirmed leader"],
-      ["breakdown", "Breakdown warning"],
-    ],
-    bearish: [
-      ["bounce", "Bounce in downtrend"],
-      ["weakness", "New weakness"],
-      ["laggard", "Confirmed loser"],
-      ["breakout", "Breakout warning"],
-    ],
-  };
-  const setupGroup = setupGroups[bearish ? "bearish" : "bullish"];
-  const allowedSetups = setupGroup.map(([type]) => type);
-  if (!allowedSetups.includes(signalResultsSetup)) {
-    signalResultsSetup = allowedSetups[0];
-  }
-  const signalType = signalResultsSetup;
-  resultsSetupButtons.forEach((button, index) => {
-    const [type, label] = setupGroup[index];
-    button.dataset.resultsSetup = type;
-    button.textContent = label;
-  });
-  resultsSideButtons.forEach((button) => {
-    button.classList.toggle("active", button.dataset.resultsSide === signalResultsSide);
-  });
-  resultsSetupButtons.forEach((button) => {
-    button.classList.toggle("active", button.dataset.resultsSetup === signalType);
-  });
-  signalResultsView?.classList.toggle("bearish-history", signalResultsSide === "bearish");
-  const expectedDirection = {
-    pullback: 1,
-    acceleration: 1,
-    leader: 1,
-    breakdown: -1,
-    bounce: -1,
-    weakness: -1,
-    laggard: -1,
-    breakout: 1,
-  }[signalType];
-  const allowed = historyAllowedSymbols();
-  const sectorMode = activeFilter === "sectors";
-  const outcomes = (signalHistoryData?.outcomes || []).filter((row) =>
-    row.signal_type === signalType &&
-    Boolean(row.is_sector) === sectorMode &&
-    allowed.has(row.symbol)
-  );
-  const hasOutcome = (row, field) =>
-    row[field] !== null &&
-    row[field] !== undefined &&
-    Number.isFinite(Number(row[field]));
-  const renderSummary = (element, field, horizon) => {
-    const matured = outcomes.filter((row) => hasOutcome(row, field));
-    const pending = outcomes.length - matured.length;
-    const successes = matured.filter((row) =>
-      Number(row[field]) * expectedDirection > 0
-    ).length;
-    const averageReturn = matured.length
-      ? matured.reduce((sum, row) => sum + Number(row[field]), 0) / matured.length
-      : null;
-    element.innerHTML = `
-      <div><small>Signals</small><strong>${outcomes.length}</strong></div>
-      <div><small>Matured</small><strong>${matured.length}</strong></div>
-      <div><small>Success rate</small><strong>${matured.length ? `${Math.round((successes / matured.length) * 100)}%` : "--"}</strong></div>
-      <div><small>Average return</small><strong class="${(averageReturn || 0) >= 0 ? "positive" : "negative"}">${formatPerf(averageReturn)}</strong></div>
-      ${pending ? `<p>${pending} signal${pending === 1 ? "" : "s"} pending ${horizon} later snapshot${horizon === 1 ? "" : "s"}.</p>` : ""}
-    `;
-  };
-  const setupCopy = {
-    pullback: {
-      title: "Pullback in trend outcomes",
-      description: "First 3 PM pullback signal measured at the next, third, and fifth 3 PM trading-session snapshots · positive return counts as success.",
-    },
-    acceleration: {
-      title: "New acceleration outcomes",
-      description: "First new-acceleration signal firing at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · positive return counts as success.",
-    },
-    leader: {
-      title: "Confirmed leader outcomes",
-      description: "First entry into confirmed-leader status at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · positive return counts as success.",
-    },
-    breakdown: {
-      title: "Breakdown warning outcomes",
-      description: "First breakdown warning at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · negative return counts as success.",
-    },
-    bounce: {
-      title: "Bounce in downtrend outcomes",
-      description: "First 3 PM downtrend-bounce signal measured at the next, third, and fifth 3 PM trading-session snapshots · negative return counts as success.",
-    },
-    weakness: {
-      title: "New weakness outcomes",
-      description: "First new-weakness signal firing at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · negative return counts as success.",
-    },
-    laggard: {
-      title: "Confirmed loser outcomes",
-      description: "First entry into confirmed-loser status at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · negative return counts as success.",
-    },
-    breakout: {
-      title: "Breakout warning outcomes",
-      description: "First breakout warning at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · positive return counts as success.",
-    },
-  };
-  signalOutcomeTitle.textContent = setupCopy[signalType].title;
-  const truncationNote = signalHistoryData?.outcomesTruncated
-    ? ` Showing the newest ${signalHistoryData.outcomes.length.toLocaleString()} of ${Number(signalHistoryData.outcomeTotal).toLocaleString()} stored events.`
-    : "";
-  signalOutcomeDescription.textContent = `${setupCopy[signalType].description}${truncationNote}`;
-  renderSummary(signalOutcome1Summary, "one_session_return", 1);
-  renderSummary(signalOutcome3Summary, "three_session_return", 3);
-  renderSummary(signalOutcome5Summary, "five_session_return", 5);
-  signalOutcomeList.innerHTML = outcomes.length ? outcomes.slice(0, 30).map((row) => {
-    const oneValue = Number(row.one_session_return);
-    const threeValue = Number(row.three_session_return);
-    const fiveValue = Number(row.five_session_return);
-    const oneComplete = hasOutcome(row, "one_session_return");
-    const threeComplete = hasOutcome(row, "three_session_return");
-    const fiveComplete = hasOutcome(row, "five_session_return");
-    const oneSuccess = oneComplete && oneValue * expectedDirection > 0;
-    const threeSuccess = threeComplete && threeValue * expectedDirection > 0;
-    const fiveSuccess = fiveComplete && fiveValue * expectedDirection > 0;
-    return `
-      <button class="signal-outcome-row" type="button" data-symbol="${row.symbol}">
-        <span class="signal-history-symbol">
-          <strong>${row.symbol}</strong>
-          <small>${viewMode === "subindustry" ? row.sub_industry || row.sector : row.sector}</small>
-        </span>
-        <span>
-          <small>Signal</small>
-          <strong>${historyDateLabel(row.snapshot_at)}</strong>
-        </span>
-        <span>
-          <small>Entry</small>
-          <strong>${Number.isFinite(Number(row.entry_price)) ? `$${Number(row.entry_price).toFixed(2)}` : "--"}</strong>
-        </span>
-        <span class="${oneComplete ? oneSuccess ? "positive" : "negative" : "pending"}">
-          <small>1 session</small>
-          <strong>${oneComplete ? formatPerf(oneValue) : "Pending"}</strong>
-        </span>
-        <span class="${threeComplete ? threeSuccess ? "positive" : "negative" : "pending"}">
-          <small>3 sessions</small>
-          <strong>${threeComplete ? formatPerf(threeValue) : "Pending"}</strong>
-        </span>
-        <span class="${fiveComplete ? fiveSuccess ? "positive" : "negative" : "pending"}">
-          <small>5 sessions</small>
-          <strong>${fiveComplete ? formatPerf(fiveValue) : "Pending"}</strong>
-        </span>
-      </button>
-    `;
-  }).join("") : "<p class=\"signal-history-empty\">No first-entry signals recorded for this setup yet.</p>";
-}
-
 function renderSignalHistory() {
   if (!signalHistoryView || !signalHistoryData) return;
   const rows = filteredHistoryRows();
@@ -2203,13 +2036,11 @@ async function loadSignalHistory() {
     if (!response.ok) throw new Error(data.error || `History unavailable (${response.status})`);
     signalHistoryData = data;
     if (appView === "action") renderConfluenceScanner();
-    else if (appView === "results") renderSignalOutcomes();
     else renderSignalHistory();
   } catch (error) {
-    signalHistoryData = { sessions: [], rows: [], outcomes: [] };
+    signalHistoryData = { sessions: [], rows: [] };
     signalHistoryStatus.textContent = error.message;
     if (appView === "action") renderConfluenceScanner();
-    else if (appView === "results") renderSignalOutcomes();
     else renderSignalHistory();
   }
 }
@@ -2302,15 +2133,13 @@ function renderConfluenceScanner() {
 }
 
 function setAppView(view) {
-  appView = ["action", "history", "results"].includes(view) ? view : "replay";
+  appView = ["action", "history"].includes(view) ? view : "replay";
   const showActionBoard = appView === "action";
   const showHistory = appView === "history";
-  const showResults = appView === "results";
-  marketReplayView.hidden = showActionBoard || showHistory || showResults;
+  marketReplayView.hidden = showActionBoard || showHistory;
   actionBoardView.hidden = !showActionBoard;
   signalHistoryView.hidden = !showHistory;
-  signalResultsView.hidden = !showResults;
-  controlsEl.classList.toggle("action-board-active", showActionBoard || showHistory || showResults);
+  controlsEl.classList.toggle("action-board-active", showActionBoard || showHistory);
   workspaceNavButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.appView === appView);
   });
@@ -2328,11 +2157,6 @@ function setAppView(view) {
     updateSubhead();
     if (signalHistoryData) renderSignalHistory();
     else loadSignalHistory();
-  } else if (showResults) {
-    stopReplay();
-    updateSubhead();
-    if (signalHistoryData) renderSignalOutcomes();
-    else loadSignalHistory();
   } else {
     if (replayActive) updateReplaySubhead();
     else updateSubhead();
@@ -2346,8 +2170,6 @@ function renderCurrentChart() {
     renderConfluenceScanner();
   } else if (appView === "history") {
     renderSignalHistory();
-  } else if (appView === "results") {
-    renderSignalOutcomes();
   } else {
     renderMomentumScanner();
     renderWeaknessScanner();
@@ -2868,21 +2690,6 @@ historySideButtons.forEach((button) => {
   });
 });
 
-resultsSideButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    signalResultsSide = button.dataset.resultsSide === "bearish" ? "bearish" : "bullish";
-    signalResultsSetup = signalResultsSide === "bearish" ? "bounce" : "pullback";
-    renderSignalOutcomes();
-  });
-});
-
-resultsSetupButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    signalResultsSetup = button.dataset.resultsSetup;
-    renderSignalOutcomes();
-  });
-});
-
 signalSessionPicker?.addEventListener("click", (event) => {
   const button = event.target.closest(".signal-session-btn[data-session]");
   if (!button) return;
@@ -2890,14 +2697,12 @@ signalSessionPicker?.addEventListener("click", (event) => {
   renderSignalHistory();
 });
 
-[signalChangeList, signalPersistenceList, signalOutcomeList].forEach((list) => {
+[signalChangeList, signalPersistenceList].forEach((list) => {
   list?.addEventListener("click", (event) => {
     const result = event.target.closest("[data-symbol]");
     if (!result) return;
     pinnedSymbols.add(result.dataset.symbol);
-    tickerSearchStatus.textContent = `Pinned ${result.dataset.symbol} from ${
-      list === signalOutcomeList ? "Signal Results" : "Signal History"
-    }.`;
+    tickerSearchStatus.textContent = `Pinned ${result.dataset.symbol} from Signal History.`;
     setAppView("replay");
   });
 });

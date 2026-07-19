@@ -427,6 +427,7 @@ async function capture(req) {
 
 async function history(req) {
   const limit = Math.min(30, Math.max(1, Number(req.query?.limit) || 10));
+  const includeOutcomes = String(req.query?.includeOutcomes || "").toLowerCase() === "true";
   await refreshSignalOutcomes();
   const rows = await sql`
     WITH recent AS (
@@ -444,6 +445,11 @@ async function history(req) {
     JOIN recent r USING (snapshot_at)
     ORDER BY s.snapshot_at DESC, s.symbol ASC
   `;
+  const response = {
+    sessions: [...new Set(rows.map((row) => new Date(row.snapshot_at).toISOString()))],
+    rows,
+  };
+  if (!includeOutcomes) return response;
   const [outcomeCount] = await sql`
     SELECT COUNT(*)::int AS total
     FROM signal_outcomes
@@ -460,8 +466,7 @@ async function history(req) {
   `;
   const outcomeTotal = Number(outcomeCount?.total) || 0;
   return {
-    sessions: [...new Set(rows.map((row) => new Date(row.snapshot_at).toISOString()))],
-    rows,
+    ...response,
     outcomes,
     outcomeTotal,
     outcomesTruncated: outcomes.length < outcomeTotal,
