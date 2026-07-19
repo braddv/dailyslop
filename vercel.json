@@ -64,7 +64,7 @@
   "crons": [
     {
       "path": "/api/signal-history?mode=capture",
-      "schedule": "0 19,20 * * 1-5"
+      "schedule": "0 20 * * 1-5"
     }
   ]
 }

@@ -203,8 +203,8 @@ async function capture(req, mode) {
   if (!authorized(req)) return { status: 401, body: { error: "Unauthorized" } };
   if (mode === "capture") {
     const ny = newYorkHour();
-    if (["Sat", "Sun"].includes(ny.weekday) || ny.hour !== 15 || ny.minute > 20) {
-      return { status: 200, body: { skipped: true, reason: "Not the 3 PM New York capture window" } };
+    if (["Sat", "Sun"].includes(ny.weekday) || ![15, 16].includes(ny.hour) || ny.minute > 20) {
+      return { status: 200, body: { skipped: true, reason: "Not the daily 3 PM snapshot window" } };
     }
   }
   const payload = await fetchMarketPayload(req, mode === "capture");
