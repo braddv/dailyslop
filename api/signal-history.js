@@ -48,11 +48,183 @@ async function ensureSchema() {
     ON signal_snapshots (sector, snapshot_at DESC)
   `;
   await sql`
+    CREATE TABLE IF NOT EXISTS signal_outcomes (
+      snapshot_at TIMESTAMPTZ NOT NULL,
+      symbol TEXT NOT NULL,
+      signal_type TEXT NOT NULL,
+      security TEXT,
+      sector TEXT,
+      sub_industry TEXT,
+      is_sector BOOLEAN NOT NULL DEFAULT FALSE,
+      entry_price DOUBLE PRECISION,
+      outcome_1_at TIMESTAMPTZ,
+      outcome_1_price DOUBLE PRECISION,
+      one_session_return DOUBLE PRECISION,
+      outcome_3_at TIMESTAMPTZ,
+      outcome_3_price DOUBLE PRECISION,
+      three_session_return DOUBLE PRECISION,
+      outcome_5_at TIMESTAMPTZ,
+      outcome_5_price DOUBLE PRECISION,
+      five_session_return DOUBLE PRECISION,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (snapshot_at, symbol, signal_type)
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS signal_outcomes_type_time_idx
+    ON signal_outcomes (signal_type, snapshot_at DESC)
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS signal_outcome_state (
+      id BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),
+      last_snapshot_at TIMESTAMPTZ,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
     DELETE FROM signal_runs r
     WHERE NOT EXISTS (
       SELECT 1 FROM signal_snapshots s WHERE s.snapshot_at = r.snapshot_at
     )
   `;
+}
+
+async function refreshSignalOutcomes(force = false) {
+  const [latest] = await sql`
+    SELECT MAX(snapshot_at) AS snapshot_at
+    FROM signal_snapshots
+  `;
+  if (!latest?.snapshot_at) return { refreshed: false, snapshotAt: null };
+  const [state] = await sql`
+    SELECT last_snapshot_at
+    FROM signal_outcome_state
+    WHERE id = TRUE
+  `;
+  if (
+    !force &&
+    state?.last_snapshot_at &&
+    new Date(state.last_snapshot_at).getTime() === new Date(latest.snapshot_at).getTime()
+  ) {
+    return { refreshed: false, snapshotAt: latest.snapshot_at };
+  }
+  await sql`
+    INSERT INTO signal_outcomes (
+      snapshot_at, symbol, signal_type, security, sector, sub_industry, is_sector,
+      entry_price, outcome_1_at, outcome_1_price, one_session_return,
+      outcome_3_at, outcome_3_price, three_session_return,
+      outcome_5_at, outcome_5_price, five_session_return, updated_at
+    )
+    WITH ordered AS (
+      SELECT
+        s.snapshot_at,
+        s.symbol,
+        s.security,
+        s.sector,
+        s.sub_industry,
+        s.is_sector,
+        s.buckets,
+        s.current_price,
+        LAG(s.buckets) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS previous_buckets,
+        LEAD(s.snapshot_at, 1) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS outcome_1_at,
+        LEAD(s.current_price, 1) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS outcome_1_price,
+        LEAD(s.snapshot_at, 3) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS outcome_3_at,
+        LEAD(s.current_price, 3) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS outcome_3_price,
+        LEAD(s.snapshot_at, 5) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS outcome_5_at,
+        LEAD(s.current_price, 5) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS outcome_5_price
+      FROM signal_snapshots s
+    ),
+    events AS (
+      SELECT
+        o.*,
+        signal.signal_type
+      FROM ordered o
+      CROSS JOIN LATERAL (
+        VALUES ('pullback'), ('acceleration'), ('bounce'), ('weakness')
+      ) AS signal(signal_type)
+      WHERE
+        o.previous_buckets IS NOT NULL
+        AND o.buckets ? signal.signal_type
+        AND NOT (o.previous_buckets ? signal.signal_type)
+    )
+    SELECT
+      e.snapshot_at,
+      e.symbol,
+      e.signal_type,
+      e.security,
+      e.sector,
+      e.sub_industry,
+      e.is_sector,
+      e.current_price,
+      e.outcome_1_at,
+      e.outcome_1_price,
+      CASE
+        WHEN e.current_price > 0 AND e.outcome_1_price IS NOT NULL
+        THEN ((e.outcome_1_price / e.current_price) - 1) * 100
+        ELSE NULL
+      END,
+      e.outcome_3_at,
+      e.outcome_3_price,
+      CASE
+        WHEN e.current_price > 0 AND e.outcome_3_price IS NOT NULL
+        THEN ((e.outcome_3_price / e.current_price) - 1) * 100
+        ELSE NULL
+      END,
+      e.outcome_5_at,
+      e.outcome_5_price,
+      CASE
+        WHEN e.current_price > 0 AND e.outcome_5_price IS NOT NULL
+        THEN ((e.outcome_5_price / e.current_price) - 1) * 100
+        ELSE NULL
+      END,
+      NOW()
+    FROM events e
+    ON CONFLICT (snapshot_at, symbol, signal_type)
+    DO UPDATE SET
+      security = EXCLUDED.security,
+      sector = EXCLUDED.sector,
+      sub_industry = EXCLUDED.sub_industry,
+      is_sector = EXCLUDED.is_sector,
+      entry_price = EXCLUDED.entry_price,
+      outcome_1_at = EXCLUDED.outcome_1_at,
+      outcome_1_price = EXCLUDED.outcome_1_price,
+      one_session_return = EXCLUDED.one_session_return,
+      outcome_3_at = EXCLUDED.outcome_3_at,
+      outcome_3_price = EXCLUDED.outcome_3_price,
+      three_session_return = EXCLUDED.three_session_return,
+      outcome_5_at = EXCLUDED.outcome_5_at,
+      outcome_5_price = EXCLUDED.outcome_5_price,
+      five_session_return = EXCLUDED.five_session_return,
+      updated_at = NOW()
+  `;
+  await sql`
+    INSERT INTO signal_outcome_state (id, last_snapshot_at, updated_at)
+    VALUES (TRUE, ${latest.snapshot_at}, NOW())
+    ON CONFLICT (id)
+    DO UPDATE SET last_snapshot_at = EXCLUDED.last_snapshot_at, updated_at = NOW()
+  `;
+  return { refreshed: true, snapshotAt: latest.snapshot_at };
 }
 
 function storedRows(rows) {
@@ -219,6 +391,7 @@ async function capture(req, mode) {
     if (prior.length > 5) prior.shift();
     saved += result.rows.length;
   }
+  const outcomes = await refreshSignalOutcomes(true);
   return {
     status: 200,
     body: {
@@ -226,12 +399,14 @@ async function capture(req, mode) {
       mode,
       sessions: cutoffs.map((cutoff) => new Date(cutoff * 1000).toISOString()),
       rowsSaved: saved,
+      outcomesRefreshed: outcomes.refreshed,
     },
   };
 }
 
 async function history(req) {
   const limit = Math.min(30, Math.max(1, Number(req.query?.limit) || 10));
+  await refreshSignalOutcomes();
   const rows = await sql`
     WITH recent AS (
       SELECT snapshot_at, source_as_of, run_kind
@@ -248,9 +423,20 @@ async function history(req) {
     JOIN recent r USING (snapshot_at)
     ORDER BY s.snapshot_at DESC, s.symbol ASC
   `;
+  const outcomes = await sql`
+    SELECT
+      snapshot_at, symbol, security, sector, sub_industry, is_sector, entry_price,
+      outcome_1_at, outcome_1_price, one_session_return,
+      outcome_3_at, outcome_3_price, three_session_return,
+      outcome_5_at, outcome_5_price, five_session_return, signal_type
+    FROM signal_outcomes
+    ORDER BY snapshot_at DESC, symbol ASC
+    LIMIT 500
+  `;
   return {
     sessions: [...new Set(rows.map((row) => new Date(row.snapshot_at).toISOString()))],
     rows,
+    outcomes,
   };
 }
 
