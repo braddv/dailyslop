@@ -44,6 +44,9 @@
         <button class="workspace-nav-btn" type="button" data-app-view="history">
           Signal History
         </button>
+        <button class="workspace-nav-btn" type="button" data-app-view="results">
+          Signal Results
+        </button>
       </nav>
 
       <section class="controls">
@@ -369,6 +372,55 @@
             </div>
             <div class="signal-persistence-list" id="signalPersistenceList"></div>
           </div>
+        </section>
+      </div>
+
+      <div class="app-view signal-results-view" id="signalResultsView" hidden>
+        <section class="signal-history-intro">
+          <div class="action-board-title-row">
+            <div>
+              <p class="momentum-kicker">Mechanical forward test</p>
+              <h2>Signal Results</h2>
+            </div>
+            <div class="action-side-toggle" aria-label="Signal Results direction">
+              <button class="results-side-btn active" type="button" data-results-side="bullish">Bullish</button>
+              <button class="results-side-btn" type="button" data-results-side="bearish">Bearish</button>
+            </div>
+          </div>
+          <p id="signalOutcomeDescription">
+            First 3 PM pullback signal measured at the next, third, and fifth 3 PM trading-session snapshots.
+          </p>
+          <div class="signal-setup-toggle" aria-label="Signal setup">
+            <button class="results-setup-btn active" id="resultsSetupPrimary" type="button" data-results-setup="pullback">
+              Pullback in trend
+            </button>
+            <button class="results-setup-btn" id="resultsSetupSecondary" type="button" data-results-setup="acceleration">
+              New acceleration
+            </button>
+          </div>
+        </section>
+        <section class="signal-outcomes" aria-label="Signal outcome tests">
+          <div class="signal-history-panel-heading">
+            <div>
+              <p class="momentum-kicker">Same entries, three exit horizons</p>
+              <h3 id="signalOutcomeTitle">Pullback in trend outcomes</h3>
+            </div>
+          </div>
+          <div class="signal-result-horizons">
+            <div>
+              <h4>Sell after 1 session</h4>
+              <div class="signal-outcome-summary" id="signalOutcome1Summary"></div>
+            </div>
+            <div>
+              <h4>Sell after 3 sessions</h4>
+              <div class="signal-outcome-summary" id="signalOutcome3Summary"></div>
+            </div>
+            <div>
+              <h4>Sell after 5 sessions</h4>
+              <div class="signal-outcome-summary" id="signalOutcome5Summary"></div>
+            </div>
+          </div>
+          <div class="signal-outcome-list" id="signalOutcomeList"></div>
         </section>
       </div>
 
