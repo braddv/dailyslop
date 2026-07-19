@@ -65,4 +65,56 @@ function writeCache(key, value) {
   }
 }
 
-module.exports = { readCache, writeCache };
+async function getRuntimeCache() {
+  const { getCache } = await import('@vercel/functions');
+  return getCache({ namespace: 'dailyslop' });
+}
+
+async function readSharedCache(key, maxAgeMs) {
+  if (!process.env.VERCEL) return readCache(key, maxAgeMs);
+
+  try {
+    const envelope = await (await getRuntimeCache()).get(key);
+    if (
+      envelope &&
+      Number.isFinite(envelope.cachedAt) &&
+      Date.now() - envelope.cachedAt <= maxAgeMs
+    ) {
+      return envelope.value;
+    }
+  } catch {
+    // Fall through to the per-instance cache if Runtime Cache is unavailable.
+  }
+
+  return readCache(key, maxAgeMs);
+}
+
+async function writeSharedCache(key, value, retentionMs) {
+  if (!process.env.VERCEL) {
+    writeCache(key, value);
+    return;
+  }
+
+  try {
+    await (await getRuntimeCache()).set(
+      key,
+      { cachedAt: Date.now(), value },
+      {
+        name: key,
+        ttl: Math.max(1, Math.ceil(retentionMs / 1000)),
+      }
+    );
+    return;
+  } catch {
+    // Retain best-effort caching if Runtime Cache is temporarily unavailable.
+  }
+
+  writeCache(key, value);
+}
+
+module.exports = {
+  readCache,
+  writeCache,
+  readSharedCache,
+  writeSharedCache,
+};
