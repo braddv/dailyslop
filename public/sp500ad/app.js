@@ -103,6 +103,7 @@ let appView = "replay";
 const actionDetailRows = new Map();
 let activeActionDetail = null;
 let actionBoardSide = "bullish";
+let actionHistoryData = null;
 let signalHistoryData = null;
 let selectedHistorySession = null;
 let signalHistorySide = "bullish";
@@ -1249,10 +1250,11 @@ function newYorkDateKey(value) {
 }
 
 function serverActionSnapshots() {
-  if (!signalHistoryData?.sessions?.length || !signalHistoryData?.rows?.length) return [];
+  const historyData = signalHistoryData || actionHistoryData;
+  if (!historyData?.sessions?.length || !historyData?.rows?.length) return [];
   const currentAsOf = currentSignalAsOf();
   const currentDate = currentAsOf ? newYorkDateKey(currentAsOf) : null;
-  const sessions = signalHistoryData.sessions
+  const sessions = historyData.sessions
     .filter((asOf) => !currentDate || newYorkDateKey(asOf) < currentDate)
     .sort((a, b) => new Date(a) - new Date(b))
     .slice(-5);
@@ -1265,7 +1267,7 @@ function serverActionSnapshots() {
       negativeShort: {},
       negativeLong: {},
     };
-    signalHistoryData.rows.forEach((row) => {
+    historyData.rows.forEach((row) => {
       if (
         Boolean(row.is_sector) !== sectorMode ||
         new Date(row.snapshot_at).toISOString() !== asOf
@@ -2027,21 +2029,34 @@ function renderSignalHistory() {
   `).join("") : "<p class=\"signal-history-empty\">No persistent signals in this filtered history.</p>";
 }
 
-async function loadSignalHistory() {
-  if (!signalHistoryStatus) return;
-  signalHistoryStatus.textContent = "Loading stored snapshots…";
+async function loadSignalHistory(scope = appView === "action" ? "action" : "history") {
+  const actionOnly = scope === "action";
+  if (!actionOnly && !signalHistoryStatus) return;
+  if (actionOnly) {
+    if (actionHistoryNote) actionHistoryNote.textContent = "Loading shared server baseline…";
+  } else {
+    signalHistoryStatus.textContent = "Loading stored snapshots…";
+  }
   try {
-    const response = await fetch("/api/signal-history?limit=20");
+    const response = await fetch(actionOnly
+      ? "/api/signal-history?limit=6&compact=true"
+      : "/api/signal-history?limit=20");
     const data = await readApiJson(response);
     if (!response.ok) throw new Error(data.error || `History unavailable (${response.status})`);
-    signalHistoryData = data;
+    if (actionOnly) actionHistoryData = data;
+    else signalHistoryData = data;
     if (appView === "action") renderConfluenceScanner();
-    else renderSignalHistory();
+    else if (appView === "history" && !actionOnly) renderSignalHistory();
   } catch (error) {
-    signalHistoryData = { sessions: [], rows: [] };
-    signalHistoryStatus.textContent = error.message;
+    if (actionOnly) {
+      actionHistoryData = { sessions: [], rows: [] };
+      if (actionHistoryNote) actionHistoryNote.textContent = error.message;
+    } else {
+      signalHistoryData = { sessions: [], rows: [] };
+      signalHistoryStatus.textContent = error.message;
+    }
     if (appView === "action") renderConfluenceScanner();
-    else renderSignalHistory();
+    else if (appView === "history" && !actionOnly) renderSignalHistory();
   }
 }
 
@@ -2146,17 +2161,17 @@ function setAppView(view) {
   if (showActionBoard) {
     stopReplay();
     updateSubhead();
-    if (signalHistoryData) {
+    if (signalHistoryData || actionHistoryData) {
       renderConfluenceScanner();
     } else {
       if (actionHistoryNote) actionHistoryNote.textContent = "Loading shared server baseline…";
-      loadSignalHistory();
+      loadSignalHistory("action");
     }
   } else if (showHistory) {
     stopReplay();
     updateSubhead();
     if (signalHistoryData) renderSignalHistory();
-    else loadSignalHistory();
+    else loadSignalHistory("history");
   } else {
     if (replayActive) updateReplaySubhead();
     else updateSubhead();
