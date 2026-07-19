@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const zlib = require('zlib');
 
 function getCandidateDirs() {
   const out = [];
@@ -80,6 +81,11 @@ async function readSharedCache(key, maxAgeMs) {
       Number.isFinite(envelope.cachedAt) &&
       Date.now() - envelope.cachedAt <= maxAgeMs
     ) {
+      if (envelope.encoding === 'gzip-base64' && typeof envelope.value === 'string') {
+        return JSON.parse(
+          zlib.gunzipSync(Buffer.from(envelope.value, 'base64')).toString('utf8')
+        );
+      }
       return envelope.value;
     }
   } catch {
@@ -96,9 +102,16 @@ async function writeSharedCache(key, value, retentionMs) {
   }
 
   try {
+    const compressed = zlib
+      .gzipSync(JSON.stringify(value))
+      .toString('base64');
     await (await getRuntimeCache()).set(
       key,
-      { cachedAt: Date.now(), value },
+      {
+        cachedAt: Date.now(),
+        encoding: 'gzip-base64',
+        value: compressed,
+      },
       {
         name: key,
         ttl: Math.max(1, Math.ceil(retentionMs / 1000)),
