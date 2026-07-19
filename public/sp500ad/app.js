@@ -1250,7 +1250,7 @@ function newYorkDateKey(value) {
 }
 
 function serverActionSnapshots() {
-  const historyData = signalHistoryData || actionHistoryData;
+  const historyData = actionHistoryData || signalHistoryData;
   if (!historyData?.sessions?.length || !historyData?.rows?.length) return [];
   const currentAsOf = currentSignalAsOf();
   const currentDate = currentAsOf ? newYorkDateKey(currentAsOf) : null;
@@ -2161,7 +2161,7 @@ function setAppView(view) {
   if (showActionBoard) {
     stopReplay();
     updateSubhead();
-    if (signalHistoryData || actionHistoryData) {
+    if (actionHistoryData) {
       renderConfluenceScanner();
     } else {
       if (actionHistoryNote) actionHistoryNote.textContent = "Loading shared server baseline…";
