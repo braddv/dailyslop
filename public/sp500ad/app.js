@@ -2158,7 +2158,7 @@ async function loadSignalHistory() {
   if (!signalHistoryStatus) return;
   signalHistoryStatus.textContent = "Loading stored snapshots…";
   try {
-    const response = await fetch("/api/signal-history?limit=10");
+    const response = await fetch("/api/signal-history?limit=20");
     const data = await readApiJson(response);
     if (!response.ok) throw new Error(data.error || `History unavailable (${response.status})`);
     signalHistoryData = data;
