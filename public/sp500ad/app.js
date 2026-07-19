@@ -56,6 +56,23 @@ const confirmedLeadersList = document.getElementById("confirmedLeadersList");
 const pullbackTrendList = document.getElementById("pullbackTrendList");
 const breakdownWarningList = document.getElementById("breakdownWarningList");
 const actionHistoryNote = document.getElementById("actionHistoryNote");
+const actionSideButtons = document.querySelectorAll(".action-side-btn");
+const actionBucketTitles = [1, 2, 3, 4].map((index) =>
+  document.getElementById(`actionBucketTitle${index}`)
+);
+const actionBucketDescriptions = [1, 2, 3, 4].map((index) =>
+  document.getElementById(`actionBucketDescription${index}`)
+);
+const actionBucketIcons = [1, 2, 3, 4].map((index) =>
+  document.getElementById(`actionBucketIcon${index}`)
+);
+const signalHistoryView = document.getElementById("signalHistoryView");
+const signalHistoryStatus = document.getElementById("signalHistoryStatus");
+const signalSessionPicker = document.getElementById("signalSessionPicker");
+const signalHistorySummary = document.getElementById("signalHistorySummary");
+const signalChangeList = document.getElementById("signalChangeList");
+const signalPersistenceList = document.getElementById("signalPersistenceList");
+const historySideButtons = document.querySelectorAll(".history-side-btn");
 const actionDrawer = document.getElementById("actionDrawer");
 const actionDrawerBackdrop = document.getElementById("actionDrawerBackdrop");
 const actionDrawerClose = document.getElementById("actionDrawerClose");
@@ -85,6 +102,10 @@ let weaknessMode = "persistent";
 let appView = "replay";
 const actionDetailRows = new Map();
 let activeActionDetail = null;
+let actionBoardSide = "bullish";
+let signalHistoryData = null;
+let selectedHistorySession = null;
+let signalHistorySide = "bullish";
 
 const REPLAY_PERIODS = {
   "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", sessions: 1 },
@@ -745,9 +766,40 @@ function getReplayPoints(stock, period = replayPeriod, cutoffTimestamp = null) {
   const config = REPLAY_PERIODS[period];
   const sourcePoints = stock[config.field];
   if (!Array.isArray(sourcePoints) || !sourcePoints.length) return [];
-  const points = Number.isFinite(cutoffTimestamp)
-    ? sourcePoints.filter((point) => Number.isFinite(point?.[0]) && point[0] <= cutoffTimestamp)
-    : sourcePoints;
+  let points;
+  if (Number.isFinite(cutoffTimestamp) && config.field === "replayDaily") {
+    const cutoffDate = new Date(cutoffTimestamp * 1000).toLocaleDateString("en-CA", {
+      timeZone: "America/New_York",
+    });
+    points = sourcePoints.filter((point) =>
+      Number.isFinite(point?.[0]) &&
+      point[0] <= cutoffTimestamp &&
+      new Date(point[0] * 1000).toLocaleDateString("en-CA", {
+        timeZone: "America/New_York",
+      }) < cutoffDate
+    );
+    const intradaySources = [stock.replayDay15m || [], stock.replayWeekHourly || []];
+    let livePrice = null;
+    let liveTimestamp = -Infinity;
+    intradaySources.forEach((source) => {
+      source.forEach((point) => {
+        if (
+          Number.isFinite(point?.[0]) &&
+          point[0] <= cutoffTimestamp &&
+          point[0] > liveTimestamp &&
+          Number.isFinite(point?.[1])
+        ) {
+          livePrice = point[1];
+          liveTimestamp = point[0];
+        }
+      });
+    });
+    if (Number.isFinite(livePrice)) points = [...points, [cutoffTimestamp, livePrice]];
+  } else {
+    points = Number.isFinite(cutoffTimestamp)
+      ? sourcePoints.filter((point) => Number.isFinite(point?.[0]) && point[0] <= cutoffTimestamp)
+      : sourcePoints;
+  }
   if (!points.length) return [];
   if (config.sessions) {
     const sessionStarts = [0];
@@ -1190,6 +1242,43 @@ function scoreSnapshot(rows) {
   return Object.fromEntries(rows.map((row) => [row.symbol, Math.round(row.score * 10) / 10]));
 }
 
+function newYorkDateKey(value) {
+  return new Date(value).toLocaleDateString("en-CA", {
+    timeZone: "America/New_York",
+  });
+}
+
+function serverActionSnapshots() {
+  if (!signalHistoryData?.sessions?.length || !signalHistoryData?.rows?.length) return [];
+  const currentAsOf = currentSignalAsOf();
+  const currentDate = currentAsOf ? newYorkDateKey(currentAsOf) : null;
+  const sessions = signalHistoryData.sessions
+    .filter((asOf) => !currentDate || newYorkDateKey(asOf) < currentDate)
+    .sort((a, b) => new Date(a) - new Date(b))
+    .slice(-5);
+  const sectorMode = activeFilter === "sectors";
+  return sessions.map((asOf) => {
+    const snapshot = {
+      asOf,
+      positiveShort: {},
+      positiveLong: {},
+      negativeShort: {},
+      negativeLong: {},
+    };
+    signalHistoryData.rows.forEach((row) => {
+      if (
+        Boolean(row.is_sector) !== sectorMode ||
+        new Date(row.snapshot_at).toISOString() !== asOf
+      ) return;
+      snapshot.positiveShort[row.symbol] = Number(row.positive_short) || 0;
+      snapshot.positiveLong[row.symbol] = Number(row.positive_long) || 0;
+      snapshot.negativeShort[row.symbol] = Number(row.negative_short) || 0;
+      snapshot.negativeLong[row.symbol] = Number(row.negative_long) || 0;
+    });
+    return snapshot;
+  });
+}
+
 function currentSignalAsOf() {
   const timestamps = getBaseScanUniverse()
     .flatMap((stock) => stock.replayDay15m || [])
@@ -1231,10 +1320,14 @@ function buildConfluenceSnapshot(cutoffTimestamp) {
   const negativeShort = calculateConfluence(
     ["1m", "2m"], ["1d", "2d"], true, periodRows
   );
+  const negativeLong = calculateConfluence(
+    ["3m", "6m"], ["1w", "2w"], true, periodRows
+  );
   return {
     positiveShort: scoreSnapshot(positiveShort),
     positiveLong: scoreSnapshot(positiveLong),
     negativeShort: scoreSnapshot(negativeShort),
+    negativeLong: scoreSnapshot(negativeLong),
   };
 }
 
@@ -1323,12 +1416,33 @@ function classifyRelativeStrength(context) {
   return "Mixed confirmation";
 }
 
-function addRelativeStrength(rows, periods, sectorSignals) {
+function classifyRelativeWeakness(context) {
+  const sectorNegative = context.sectorSignals.negativeShort || 0;
+  if (activeFilter === "sectors") {
+    if ((context.vsSpy || 0) < 0 && sectorNegative >= 60) return "Sector laggard";
+    if ((context.vsSpy || 0) > 0) return "Sector rebound";
+    return "Mixed sector";
+  }
+  if ((context.vsSpy || 0) < 0 && (context.vsSector || 0) < 0 && sectorNegative >= 60) {
+    return "Broad weakness";
+  }
+  if ((context.vsSpy || 0) < 0 && (context.vsSector || 0) < 0) {
+    return "Stock-specific laggard";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0 && sectorNegative >= 60) {
+    return "Fighting downtrend";
+  }
+  return "Mixed confirmation";
+}
+
+function addRelativeStrength(rows, periods, sectorSignals, negative = false) {
   rows.forEach((row) => {
     row.relativeStrength = periods.map((period) =>
       relativeStrengthContext(row.stock, period, sectorSignals)
     );
-    row.relativeClassification = classifyRelativeStrength(row.relativeStrength[0]);
+    row.relativeClassification = negative
+      ? classifyRelativeWeakness(row.relativeStrength[0])
+      : classifyRelativeStrength(row.relativeStrength[0]);
   });
 }
 
@@ -1378,19 +1492,26 @@ function renderActionBuckets(
   positiveShort,
   positiveLong,
   negativeShort,
+  negativeLong,
   sectorSignals = new Map()
 ) {
   const key = actionUniverseKey();
-  seedHistoricalActionHistory(key);
-  const history = readActionHistory();
-  const signalAsOf = currentSignalAsOf();
-  const priorSnapshots = (Array.isArray(history[key]) ? history[key] : [])
-    .filter((entry) => entry.asOf !== signalAsOf)
-    .slice(-5);
+  const serverSnapshots = serverActionSnapshots();
+  const usingServerHistory = serverSnapshots.length > 0;
+  let priorSnapshots = serverSnapshots;
+  if (!usingServerHistory) {
+    seedHistoricalActionHistory(key);
+    const history = readActionHistory();
+    const signalAsOf = currentSignalAsOf();
+    priorSnapshots = (Array.isArray(history[key]) ? history[key] : [])
+      .filter((entry) => entry.asOf !== signalAsOf)
+      .slice(-5);
+  }
   const previous = priorSnapshots.at(-1);
   const positiveShortBySymbol = new Map(positiveShort.map((row) => [row.symbol, row]));
   const positiveLongBySymbol = new Map(positiveLong.map((row) => [row.symbol, row]));
   const negativeShortBySymbol = new Map(negativeShort.map((row) => [row.symbol, row]));
+  const negativeLongBySymbol = new Map(negativeLong.map((row) => [row.symbol, row]));
   const sectorBoard = activeFilter === "sectors";
   const thresholds = sectorBoard
     ? {
@@ -1513,18 +1634,137 @@ function renderActionBuckets(
       (a.status === b.status ? b.bucketScore - a.bucketScore : a.status === "Signal" ? -1 : 1)
     );
 
-  addRelativeStrength(newAcceleration, ["1d", "1w", "1m"], sectorSignals);
-  addRelativeStrength(confirmedLeaders, ["1m", "3m"], sectorSignals);
-  addRelativeStrength(pullbackTrend, ["1d", "1w", "1m"], sectorSignals);
-  addRelativeStrength(breakdownWarning, ["1w", "1m"], sectorSignals);
+  const newWeakness = negativeShort
+    .filter((row) =>
+      row.score >= thresholds.acceleration &&
+      previous &&
+      (previous.negativeShort?.[row.symbol] || 0) < thresholds.acceleration
+    )
+    .map((row) => {
+      const supportingScore = negativeLongBySymbol.get(row.symbol)?.score || 0;
+      return {
+        ...row,
+        status: supportingScore >= thresholds.acceleration
+          ? "Confirmed"
+          : supportingScore >= thresholds.confirmedLong
+            ? "Building"
+            : "Early",
+        bucketScore: row.score,
+      };
+    });
+
+  const confirmedLaggards = negativeShort
+    .filter((row) => {
+      const longScore = negativeLongBySymbol.get(row.symbol)?.score || 0;
+      const recent = priorSnapshots.slice(-2);
+      const sessionScores = [
+        ...recent.map((snapshot) => snapshot.negativeShort?.[row.symbol] || 0),
+        row.score,
+      ];
+      return row.score >= thresholds.confirmedShort &&
+        longScore >= thresholds.confirmedLong &&
+        recent.length >= 2 &&
+        sessionScores.filter((score) => score >= thresholds.confirmedShort).length >= 2;
+    })
+    .map((row) => ({
+      ...row,
+      bucketScore: (row.score + (negativeLongBySymbol.get(row.symbol)?.score || 0)) / 2,
+    }))
+    .sort((a, b) => b.bucketScore - a.bucketScore);
+
+  const bounceInDowntrend = negativeLong
+    .map((row) => {
+      const shortNegative = negativeShortBySymbol.get(row.symbol)?.score || 0;
+      const shortPositive = positiveShortBySymbol.get(row.symbol)?.score || 0;
+      const fullSignal =
+        row.score >= thresholds.pullbackSignalLong &&
+        shortNegative < thresholds.acceleration &&
+        shortPositive >= thresholds.pullbackSignalWeakness;
+      const developing =
+        row.score >= thresholds.pullbackDevelopingLong &&
+        shortNegative < thresholds.acceleration + 5 &&
+        shortPositive >= thresholds.pullbackDevelopingWeakness;
+      if (!fullSignal && !developing) return null;
+      return {
+        ...row,
+        status: fullSignal ? "Signal" : "Developing",
+        bucketScore: (row.score + shortPositive) / 2,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) =>
+      (a.status === b.status ? b.bucketScore - a.bucketScore : a.status === "Signal" ? -1 : 1)
+    );
+
+  const breakoutWarning = positiveShort
+    .map((row) => {
+      const wasStronglyNegative = priorSnapshots.some((snapshot) =>
+        (snapshot.negativeShort?.[row.symbol] || 0) >= thresholds.priorStrong ||
+        (snapshot.negativeLong?.[row.symbol] || 0) >= thresholds.priorStrong
+      );
+      const wasNegative = priorSnapshots.some((snapshot) =>
+        (snapshot.negativeShort?.[row.symbol] || 0) >= thresholds.priorPositive ||
+        (snapshot.negativeLong?.[row.symbol] || 0) >= thresholds.priorPositive
+      );
+      const fullSignal = row.score >= thresholds.breakdownSignal && wasStronglyNegative;
+      const developing = row.score >= thresholds.breakdownDeveloping && wasNegative;
+      if (!fullSignal && !developing) return null;
+      return {
+        ...row,
+        status: fullSignal ? "Signal" : "Developing",
+        bucketScore: row.score,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) =>
+      (a.status === b.status ? b.bucketScore - a.bucketScore : a.status === "Signal" ? -1 : 1)
+    );
+
+  const bullish = [
+    ["acceleration", "New acceleration", newAcceleration, ["1d", "1w", "1m"], "Confluence"],
+    ["leaders", "Confirmed leaders", confirmedLeaders, ["1m", "3m"], "Combined"],
+    ["pullback", "Pullback in trend", pullbackTrend, ["1d", "1w", "1m"], "Setup"],
+    ["breakdown", "Breakdown warning", breakdownWarning, ["1w", "1m"], "Warning"],
+  ];
+  const bearish = [
+    ["weakness", "New weakness", newWeakness, ["1d", "1w", "1m"], "Confluence"],
+    ["laggards", "Confirmed laggards", confirmedLaggards, ["1m", "3m"], "Combined"],
+    ["bounce", "Bounce in downtrend", bounceInDowntrend, ["1d", "1w", "1m"], "Setup"],
+    ["breakout", "Breakout warning", breakoutWarning, ["1w", "1m"], "Warning"],
+  ];
+  bullish.forEach(([, , rows, periods]) => addRelativeStrength(rows, periods, sectorSignals));
+  bearish.forEach(([, , rows, periods]) => addRelativeStrength(rows, periods, sectorSignals, true));
+  const activeBuckets = actionBoardSide === "bearish" ? bearish : bullish;
+  const descriptions = actionBoardSide === "bearish"
+    ? [
+        "Entered negative short-term confluence since the prior shared snapshot.",
+        "Held negative confluence across several shared snapshots.",
+        "Long-term weakness remains intact while 1D/2D momentum rebounds.",
+        "Prior negative confluence is giving way to positive acceleration.",
+      ]
+    : [
+        "Entered positive short-term confluence since the prior shared snapshot.",
+        "Held positive confluence across several shared snapshots.",
+        "Long-term leadership remains strong while 1D/2D momentum weakens.",
+        "Prior positive confluence is giving way to emerging short-term weakness.",
+      ];
+  activeBuckets.forEach(([, label], index) => {
+    if (actionBucketTitles[index]) actionBucketTitles[index].textContent = label;
+    if (actionBucketDescriptions[index]) {
+      actionBucketDescriptions[index].textContent = descriptions[index];
+    }
+  });
+  const icons = actionBoardSide === "bearish" ? ["↘", "✓", "↗", "!"] : ["↗", "✓", "↘", "!"];
+  actionBucketIcons.forEach((icon, index) => {
+    if (icon) icon.textContent = icons[index];
+  });
+  actionBoardView.classList.toggle("bearish-board", actionBoardSide === "bearish");
+  actionSideButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.actionSide === actionBoardSide);
+  });
 
   actionDetailRows.clear();
-  [
-    ["acceleration", "New acceleration", newAcceleration],
-    ["leaders", "Confirmed leaders", confirmedLeaders],
-    ["pullback", "Pullback in trend", pullbackTrend],
-    ["breakdown", "Breakdown warning", breakdownWarning],
-  ].forEach(([keyName, label, rows]) => {
+  activeBuckets.forEach(([keyName, label, rows]) => {
     rows.forEach((row) => {
       const snapshots = priorSnapshots.filter((snapshot) =>
         (snapshot.positiveShort?.[row.symbol] || 0) >= 60 ||
@@ -1543,21 +1783,31 @@ function renderActionBuckets(
     });
   });
 
-  renderActionBucket(newAccelerationList, newAcceleration, "Confluence", "acceleration");
-  renderActionBucket(confirmedLeadersList, confirmedLeaders, "Combined", "leaders");
-  renderActionBucket(pullbackTrendList, pullbackTrend, "Setup", "pullback");
-  renderActionBucket(breakdownWarningList, breakdownWarning, "Warning", "breakdown");
+  const bucketTargets = [
+    newAccelerationList,
+    confirmedLeadersList,
+    pullbackTrendList,
+    breakdownWarningList,
+  ];
+  activeBuckets.forEach(([keyName, , rows, , scoreLabel], index) => {
+    renderActionBucket(bucketTargets[index], rows, scoreLabel, keyName);
+  });
   if (actionHistoryNote) {
-    actionHistoryNote.textContent = priorSnapshots.length
-      ? `${priorSnapshots.length + 1} unique snapshots tracked locally for this universe.`
+    actionHistoryNote.textContent = usingServerHistory
+      ? `Live signals compared with ${priorSnapshots.length} shared server snapshots through ${historyDateLabel(priorSnapshots.at(-1).asOf)}.`
+      : priorSnapshots.length
+        ? `${priorSnapshots.length + 1} browser snapshots available as a temporary fallback.`
       : "Signal history starts with this data snapshot; change-based buckets will populate after future refreshes.";
   }
 
-  storeActionSnapshot(key, {
-    positiveShort: scoreSnapshot(positiveShort),
-    positiveLong: scoreSnapshot(positiveLong),
-    negativeShort: scoreSnapshot(negativeShort),
-  });
+  if (!usingServerHistory) {
+    storeActionSnapshot(key, {
+      positiveShort: scoreSnapshot(positiveShort),
+      positiveLong: scoreSnapshot(positiveLong),
+      negativeShort: scoreSnapshot(negativeShort),
+      negativeLong: scoreSnapshot(negativeLong),
+    });
+  }
 }
 
 function distanceFromDayAverage(stock, days) {
@@ -1604,31 +1854,239 @@ function openActionDrawer(bucket, symbol) {
   document.body.classList.add("drawer-open");
 }
 
+const HISTORY_BUCKETS = {
+  acceleration: { label: "New acceleration", className: "acceleration" },
+  leader: { label: "Confirmed leader", className: "leader" },
+  pullback: { label: "Pullback", className: "pullback" },
+  breakdown: { label: "Breakdown", className: "breakdown" },
+  weakness: { label: "New weakness", className: "weakness" },
+  laggard: { label: "Confirmed laggard", className: "laggard" },
+  bounce: { label: "Downtrend bounce", className: "bounce" },
+  breakout: { label: "Breakout warning", className: "breakout" },
+};
+const HISTORY_BUCKET_GROUPS = {
+  bullish: ["acceleration", "leader", "pullback", "breakdown"],
+  bearish: ["weakness", "laggard", "bounce", "breakout"],
+};
+
+function historyDateLabel(value, includeTime = false) {
+  const date = new Date(value);
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+    ...(includeTime ? { hour: "numeric", minute: "2-digit" } : {}),
+  }).format(date);
+}
+
+function historyAllowedSymbols() {
+  return new Set(getBaseScanUniverse().map((stock) => stock.symbol));
+}
+
+function filteredHistoryRows() {
+  if (!signalHistoryData?.rows) return [];
+  const allowed = historyAllowedSymbols();
+  const sectorMode = activeFilter === "sectors";
+  return signalHistoryData.rows.filter((row) =>
+    Boolean(row.is_sector) === sectorMode && allowed.has(row.symbol)
+  );
+}
+
+function bucketBadges(buckets, allowedBuckets = Object.keys(HISTORY_BUCKETS)) {
+  return (Array.isArray(buckets) ? buckets : [])
+    .filter((bucket) => allowedBuckets.includes(bucket))
+    .map((bucket) => {
+      const config = HISTORY_BUCKETS[bucket] || { label: bucket, className: "" };
+      return `<span class="history-bucket ${config.className}">${config.label}</span>`;
+    }).join("");
+}
+
+function renderSignalHistory() {
+  if (!signalHistoryView || !signalHistoryData) return;
+  const rows = filteredHistoryRows();
+  const sessions = signalHistoryData.sessions || [];
+  if (!selectedHistorySession || !sessions.includes(selectedHistorySession)) {
+    selectedHistorySession = sessions[0] || null;
+  }
+  signalSessionPicker.innerHTML = sessions.map((session) => `
+    <button class="signal-session-btn ${session === selectedHistorySession ? "active" : ""}"
+      type="button" data-session="${session}">
+      ${historyDateLabel(session)}
+    </button>
+  `).join("");
+  if (!sessions.length) {
+    signalHistoryStatus.textContent = "No server snapshots yet. Run the one-week backfill after deployment.";
+    signalHistorySummary.innerHTML = "";
+    signalChangeList.innerHTML = "<p class=\"signal-history-empty\">History will appear after the first saved snapshot.</p>";
+    signalPersistenceList.innerHTML = "";
+    return;
+  }
+  const selectedRows = rows.filter((row) =>
+    new Date(row.snapshot_at).toISOString() === selectedHistorySession
+  );
+  const activeHistoryBuckets = HISTORY_BUCKET_GROUPS[signalHistorySide];
+  historySideButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.historySide === signalHistorySide);
+  });
+  signalHistoryView.classList.toggle("bearish-history", signalHistorySide === "bearish");
+  const bucketCounts = activeHistoryBuckets.map((bucket) => ({
+    bucket,
+    count: selectedRows.filter((row) => (row.buckets || []).includes(bucket)).length,
+  }));
+  signalHistoryStatus.textContent =
+    `${sessions.length} server snapshots · selected ${historyDateLabel(selectedHistorySession, true)} ET`;
+  signalHistorySummary.innerHTML = bucketCounts.map(({ bucket, count }) => `
+    <div class="signal-summary-card ${HISTORY_BUCKETS[bucket].className}">
+      <small>${HISTORY_BUCKETS[bucket].label}</small>
+      <strong>${count}</strong>
+    </div>
+  `).join("");
+
+  const changes = selectedRows
+    .filter((row) =>
+      Array.isArray(row.buckets) &&
+      row.buckets.some((bucket) => activeHistoryBuckets.includes(bucket))
+    )
+    .sort((a, b) => {
+      const aScore = signalHistorySide === "bearish"
+        ? Math.max(Number(a.negative_short), Number(a.negative_long))
+        : Math.max(Number(a.positive_short), Number(a.positive_long));
+      const bScore = signalHistorySide === "bearish"
+        ? Math.max(Number(b.negative_short), Number(b.negative_long))
+        : Math.max(Number(b.positive_short), Number(b.positive_long));
+      return bScore - aScore;
+    })
+    .slice(0, 30);
+  signalChangeList.innerHTML = changes.length ? changes.map((row) => `
+    <button class="signal-history-row" type="button" data-symbol="${row.symbol}">
+      <span class="signal-history-symbol">
+        <strong>${row.symbol}</strong>
+        <small>${viewMode === "subindustry" ? row.sub_industry || row.sector : row.sector}</small>
+      </span>
+      <span class="signal-history-buckets">${bucketBadges(row.buckets, activeHistoryBuckets)}</span>
+      <span class="signal-history-return ${Number(row.return_1m) >= 0 ? "positive" : "negative"}">
+        <small>1M</small>
+        <strong>${formatPerf(Number(row.return_1m))}</strong>
+      </span>
+    </button>
+  `).join("") : "<p class=\"signal-history-empty\">No bucket changes in this filtered snapshot.</p>";
+
+  const bySymbol = new Map();
+  rows.forEach((row) => {
+    if (!bySymbol.has(row.symbol)) bySymbol.set(row.symbol, []);
+    bySymbol.get(row.symbol).push(row);
+  });
+  const persistent = [...bySymbol.entries()].map(([symbol, symbolRows]) => {
+    const ordered = symbolRows.sort((a, b) => new Date(a.snapshot_at) - new Date(b.snapshot_at));
+    const activeSessions = ordered.filter((row) =>
+      (row.buckets || []).some((bucket) => activeHistoryBuckets.includes(bucket))
+    ).length;
+    const positiveSessions = ordered.filter((row) =>
+      (row.buckets || []).some((bucket) => bucket === "acceleration" || bucket === "leader")
+    ).length;
+    const negativeSessions = ordered.filter((row) =>
+      (row.buckets || []).some((bucket) => bucket === "weakness" || bucket === "laggard")
+    ).length;
+    return {
+      symbol,
+      row: ordered.at(-1),
+      ordered,
+      activeSessions,
+      positiveSessions,
+      negativeSessions,
+    };
+  }).filter((item) => item.activeSessions)
+    .sort((a, b) =>
+      (signalHistorySide === "bearish" ? b.negativeSessions - a.negativeSessions : b.positiveSessions - a.positiveSessions) ||
+      b.activeSessions - a.activeSessions ||
+      (signalHistorySide === "bearish"
+        ? Number(b.row.negative_long) - Number(a.row.negative_long)
+        : Number(b.row.positive_long) - Number(a.row.positive_long))
+    )
+    .slice(0, 20);
+  signalPersistenceList.innerHTML = persistent.length ? persistent.map((item) => `
+    <button class="signal-persistence-row" type="button" data-symbol="${item.symbol}">
+      <span class="signal-history-symbol">
+        <strong>${item.symbol}</strong>
+        <small>${item.row.sector}</small>
+      </span>
+      <span class="signal-timeline">
+        ${sessions.slice().reverse().map((session) => {
+          const row = item.ordered.find((candidate) =>
+            new Date(candidate.snapshot_at).toISOString() === session
+          );
+          const bucket = row?.buckets?.find((candidate) => activeHistoryBuckets.includes(candidate));
+          return `<i class="${bucket || "empty"}" title="${historyDateLabel(session)}${bucket ? ` · ${HISTORY_BUCKETS[bucket]?.label || bucket}` : ""}"></i>`;
+        }).join("")}
+      </span>
+      <span class="signal-session-count">
+        <strong>${item.activeSessions}</strong>
+        <small>sessions</small>
+      </span>
+    </button>
+  `).join("") : "<p class=\"signal-history-empty\">No persistent signals in this filtered history.</p>";
+}
+
+async function loadSignalHistory() {
+  if (!signalHistoryStatus) return;
+  signalHistoryStatus.textContent = "Loading stored snapshots…";
+  try {
+    const response = await fetch("/api/signal-history?limit=10");
+    const data = await readApiJson(response);
+    if (!response.ok) throw new Error(data.error || `History unavailable (${response.status})`);
+    signalHistoryData = data;
+    if (appView === "action") renderConfluenceScanner();
+    else renderSignalHistory();
+  } catch (error) {
+    signalHistoryData = { sessions: [], rows: [] };
+    signalHistoryStatus.textContent = error.message;
+    if (appView === "action") renderConfluenceScanner();
+    else renderSignalHistory();
+  }
+}
+
 function renderConfluenceScanner() {
   if (!confluenceScanner || !negativeConfluenceScanner) return;
-  const available = getBaseScanUniverse().length >= 2;
-  confluenceScanner.hidden = !available;
-  negativeConfluenceScanner.hidden = !available;
+  const visibleUniverse = getBaseScanUniverse();
+  const available = visibleUniverse.length >= 2;
+  const actionBoardBullish = appView === "action" && actionBoardSide === "bullish";
+  const actionBoardBearish = appView === "action" && actionBoardSide === "bearish";
+  confluenceScanner.hidden = !available || actionBoardBearish;
+  negativeConfluenceScanner.hidden = !available || actionBoardBullish;
   if (!available) return;
+  const sectorUniverse = lastBenchmarks.filter((benchmark) => benchmark.symbol !== "SPY");
+  const scoreUniverse = appView === "action"
+    ? activeFilter === "sectors"
+      ? sectorUniverse
+      : lastStocks
+    : visibleUniverse;
   const periodRows = new Map(
     Object.keys(REPLAY_PERIODS).map((period) => [
       period,
-      new Map(calculatePeriodScores(period).map((row) => [row.symbol, row])),
+      new Map(
+        calculatePeriodScores(period, null, scoreUniverse)
+          .map((row) => [row.symbol, row])
+      ),
     ])
   );
-  const positiveShort = calculateConfluence(
-    ["1m", "2m"], ["1d", "2d"], false, periodRows
+  const allPositiveShort = calculateConfluence(
+    ["1m", "2m"], ["1d", "2d"], false, periodRows, scoreUniverse
   );
-  const positiveLong = calculateConfluence(
-    ["3m", "6m"], ["1w", "2w"], false, periodRows
+  const allPositiveLong = calculateConfluence(
+    ["3m", "6m"], ["1w", "2w"], false, periodRows, scoreUniverse
   );
-  const negativeShort = calculateConfluence(
-    ["1m", "2m"], ["1d", "2d"], true, periodRows
+  const allNegativeShort = calculateConfluence(
+    ["1m", "2m"], ["1d", "2d"], true, periodRows, scoreUniverse
   );
-  const negativeLong = calculateConfluence(
-    ["3m", "6m"], ["1w", "2w"], true, periodRows
+  const allNegativeLong = calculateConfluence(
+    ["3m", "6m"], ["1w", "2w"], true, periodRows, scoreUniverse
   );
-  const sectorUniverse = lastBenchmarks.filter((benchmark) => benchmark.symbol !== "SPY");
+  const allowedSymbols = new Set(visibleUniverse.map((stock) => stock.symbol));
+  const visibleRows = (rows) => rows.filter((row) => allowedSymbols.has(row.symbol));
+  const positiveShort = visibleRows(allPositiveShort);
+  const positiveLong = visibleRows(allPositiveLong);
+  const negativeShort = visibleRows(allNegativeShort);
+  const negativeLong = visibleRows(allNegativeLong);
   const sectorPeriodRows = new Map(
     Object.keys(REPLAY_PERIODS).map((period) => [
       period,
@@ -1671,22 +2129,34 @@ function renderConfluenceScanner() {
   renderConfluenceRows(longConfluenceList, positiveLong);
   renderConfluenceRows(shortNegativeConfluenceList, negativeShort, true);
   renderConfluenceRows(longNegativeConfluenceList, negativeLong, true);
-  renderActionBuckets(positiveShort, positiveLong, negativeShort, sectorSignals);
+  renderActionBuckets(positiveShort, positiveLong, negativeShort, negativeLong, sectorSignals);
 }
 
 function setAppView(view) {
-  appView = view === "action" ? "action" : "replay";
+  appView = ["action", "history"].includes(view) ? view : "replay";
   const showActionBoard = appView === "action";
-  marketReplayView.hidden = showActionBoard;
+  const showHistory = appView === "history";
+  marketReplayView.hidden = showActionBoard || showHistory;
   actionBoardView.hidden = !showActionBoard;
-  controlsEl.classList.toggle("action-board-active", showActionBoard);
+  signalHistoryView.hidden = !showHistory;
+  controlsEl.classList.toggle("action-board-active", showActionBoard || showHistory);
   workspaceNavButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.appView === appView);
   });
   if (showActionBoard) {
     stopReplay();
     updateSubhead();
-    renderConfluenceScanner();
+    if (signalHistoryData) {
+      renderConfluenceScanner();
+    } else {
+      if (actionHistoryNote) actionHistoryNote.textContent = "Loading shared server baseline…";
+      loadSignalHistory();
+    }
+  } else if (showHistory) {
+    stopReplay();
+    updateSubhead();
+    if (signalHistoryData) renderSignalHistory();
+    else loadSignalHistory();
   } else {
     if (replayActive) updateReplaySubhead();
     else updateSubhead();
@@ -1698,6 +2168,8 @@ function renderCurrentChart() {
   buildChart(replayActive ? replayStocksAt(replayFrameIndex) : lastStocks);
   if (appView === "action") {
     renderConfluenceScanner();
+  } else if (appView === "history") {
+    renderSignalHistory();
   } else {
     renderMomentumScanner();
     renderWeaknessScanner();
@@ -2201,6 +2673,37 @@ if (weaknessList) {
 workspaceNavButtons.forEach((button) => {
   button.addEventListener("click", () => {
     setAppView(button.dataset.appView);
+  });
+});
+
+actionSideButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    actionBoardSide = button.dataset.actionSide === "bearish" ? "bearish" : "bullish";
+    renderConfluenceScanner();
+  });
+});
+
+historySideButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    signalHistorySide = button.dataset.historySide === "bearish" ? "bearish" : "bullish";
+    renderSignalHistory();
+  });
+});
+
+signalSessionPicker?.addEventListener("click", (event) => {
+  const button = event.target.closest(".signal-session-btn[data-session]");
+  if (!button) return;
+  selectedHistorySession = button.dataset.session;
+  renderSignalHistory();
+});
+
+[signalChangeList, signalPersistenceList].forEach((list) => {
+  list?.addEventListener("click", (event) => {
+    const result = event.target.closest("[data-symbol]");
+    if (!result) return;
+    pinnedSymbols.add(result.dataset.symbol);
+    tickerSearchStatus.textContent = `Pinned ${result.dataset.symbol} from Signal History.`;
+    setAppView("replay");
   });
 });
 
