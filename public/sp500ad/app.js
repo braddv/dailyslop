@@ -93,6 +93,7 @@ let activeFilter = "all";
 let replayFrames = [];
 let replayFrameIndex = 0;
 let replayTimer = null;
+let resizeRenderFrame = null;
 let replayActive = false;
 let replayValueRange = null;
 let chartProjection = null;
@@ -2180,15 +2181,17 @@ function setAppView(view) {
 }
 
 function renderCurrentChart() {
-  buildChart(replayActive ? replayStocksAt(replayFrameIndex) : lastStocks);
   if (appView === "action") {
     renderConfluenceScanner();
-  } else if (appView === "history") {
-    renderSignalHistory();
-  } else {
-    renderMomentumScanner();
-    renderWeaknessScanner();
+    return;
   }
+  if (appView === "history") {
+    renderSignalHistory();
+    return;
+  }
+  buildChart(replayActive ? replayStocksAt(replayFrameIndex) : lastStocks);
+  renderMomentumScanner();
+  renderWeaknessScanner();
 }
 
 function populateTickerSearch() {
@@ -2595,7 +2598,12 @@ sectorFilterButtons.forEach((button) => {
 });
 
 window.addEventListener("resize", () => {
-  renderCurrentChart();
+  if (appView !== "replay") return;
+  if (resizeRenderFrame !== null) cancelAnimationFrame(resizeRenderFrame);
+  resizeRenderFrame = requestAnimationFrame(() => {
+    resizeRenderFrame = null;
+    if (appView === "replay") renderCurrentChart();
+  });
 });
 
 replayPlayBtn.addEventListener("click", () => {
