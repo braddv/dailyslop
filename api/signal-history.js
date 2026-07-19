@@ -3,6 +3,7 @@ import { buildSignalSnapshot, historicalCutoffs } from "./_lib/signals.js";
 
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 const OUTCOME_RESULT_LIMIT = 5000;
+const OUTCOME_MATERIALIZATION_VERSION = 2;
 
 async function ensureSchema() {
   await sql`
@@ -80,8 +81,13 @@ async function ensureSchema() {
     CREATE TABLE IF NOT EXISTS signal_outcome_state (
       id BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),
       last_snapshot_at TIMESTAMPTZ,
+      materialization_version INTEGER NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `;
+  await sql`
+    ALTER TABLE signal_outcome_state
+    ADD COLUMN IF NOT EXISTS materialization_version INTEGER NOT NULL DEFAULT 0
   `;
   await sql`
     DELETE FROM signal_runs r
@@ -98,13 +104,14 @@ async function refreshSignalOutcomes(force = false) {
   `;
   if (!latest?.snapshot_at) return { refreshed: false, snapshotAt: null };
   const [state] = await sql`
-    SELECT last_snapshot_at
+    SELECT last_snapshot_at, materialization_version
     FROM signal_outcome_state
     WHERE id = TRUE
   `;
   if (
     !force &&
     state?.last_snapshot_at &&
+    Number(state.materialization_version) === OUTCOME_MATERIALIZATION_VERSION &&
     new Date(state.last_snapshot_at).getTime() === new Date(latest.snapshot_at).getTime()
   ) {
     return { refreshed: false, snapshotAt: latest.snapshot_at };
@@ -162,7 +169,15 @@ async function refreshSignalOutcomes(force = false) {
         signal.signal_type
       FROM ordered o
       CROSS JOIN LATERAL (
-        VALUES ('pullback'), ('acceleration'), ('bounce'), ('weakness')
+        VALUES
+          ('pullback'),
+          ('acceleration'),
+          ('leader'),
+          ('breakdown'),
+          ('bounce'),
+          ('weakness'),
+          ('laggard'),
+          ('breakout')
       ) AS signal(signal_type)
       WHERE
         o.previous_buckets IS NOT NULL
@@ -220,10 +235,17 @@ async function refreshSignalOutcomes(force = false) {
       updated_at = NOW()
   `;
   await sql`
-    INSERT INTO signal_outcome_state (id, last_snapshot_at, updated_at)
-    VALUES (TRUE, ${latest.snapshot_at}, NOW())
+    INSERT INTO signal_outcome_state (
+      id, last_snapshot_at, materialization_version, updated_at
+    )
+    VALUES (
+      TRUE, ${latest.snapshot_at}, ${OUTCOME_MATERIALIZATION_VERSION}, NOW()
+    )
     ON CONFLICT (id)
-    DO UPDATE SET last_snapshot_at = EXCLUDED.last_snapshot_at, updated_at = NOW()
+    DO UPDATE SET
+      last_snapshot_at = EXCLUDED.last_snapshot_at,
+      materialization_version = EXCLUDED.materialization_version,
+      updated_at = NOW()
   `;
   return { refreshed: true, snapshotAt: latest.snapshot_at };
 }

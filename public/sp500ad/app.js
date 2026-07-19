@@ -76,8 +76,6 @@ const historySideButtons = document.querySelectorAll(".history-side-btn");
 const signalResultsView = document.getElementById("signalResultsView");
 const resultsSideButtons = document.querySelectorAll(".results-side-btn");
 const resultsSetupButtons = document.querySelectorAll(".results-setup-btn");
-const resultsSetupPrimary = document.getElementById("resultsSetupPrimary");
-const resultsSetupSecondary = document.getElementById("resultsSetupSecondary");
 const signalOutcomeTitle = document.getElementById("signalOutcomeTitle");
 const signalOutcomeDescription = document.getElementById("signalOutcomeDescription");
 const signalOutcome1Summary = document.getElementById("signalOutcome1Summary");
@@ -1917,17 +1915,31 @@ function bucketBadges(buckets, allowedBuckets = Object.keys(HISTORY_BUCKETS)) {
 function renderSignalOutcomes() {
   if (!signalOutcome1Summary || !signalOutcome3Summary || !signalOutcome5Summary || !signalOutcomeList) return;
   const bearish = signalResultsSide === "bearish";
-  const allowedSetups = bearish ? ["bounce", "weakness"] : ["pullback", "acceleration"];
+  const setupGroups = {
+    bullish: [
+      ["pullback", "Pullback in trend"],
+      ["acceleration", "New acceleration"],
+      ["leader", "Confirmed leader"],
+      ["breakdown", "Breakdown warning"],
+    ],
+    bearish: [
+      ["bounce", "Bounce in downtrend"],
+      ["weakness", "New weakness"],
+      ["laggard", "Confirmed loser"],
+      ["breakout", "Breakout warning"],
+    ],
+  };
+  const setupGroup = setupGroups[bearish ? "bearish" : "bullish"];
+  const allowedSetups = setupGroup.map(([type]) => type);
   if (!allowedSetups.includes(signalResultsSetup)) {
     signalResultsSetup = allowedSetups[0];
   }
   const signalType = signalResultsSetup;
-  if (resultsSetupPrimary && resultsSetupSecondary) {
-    resultsSetupPrimary.dataset.resultsSetup = allowedSetups[0];
-    resultsSetupPrimary.textContent = bearish ? "Bounce in downtrend" : "Pullback in trend";
-    resultsSetupSecondary.dataset.resultsSetup = allowedSetups[1];
-    resultsSetupSecondary.textContent = bearish ? "New weakness" : "New acceleration";
-  }
+  resultsSetupButtons.forEach((button, index) => {
+    const [type, label] = setupGroup[index];
+    button.dataset.resultsSetup = type;
+    button.textContent = label;
+  });
   resultsSideButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.resultsSide === signalResultsSide);
   });
@@ -1935,7 +1947,16 @@ function renderSignalOutcomes() {
     button.classList.toggle("active", button.dataset.resultsSetup === signalType);
   });
   signalResultsView?.classList.toggle("bearish-history", signalResultsSide === "bearish");
-  const expectedDirection = bearish ? -1 : 1;
+  const expectedDirection = {
+    pullback: 1,
+    acceleration: 1,
+    leader: 1,
+    breakdown: -1,
+    bounce: -1,
+    weakness: -1,
+    laggard: -1,
+    breakout: 1,
+  }[signalType];
   const allowed = historyAllowedSymbols();
   const sectorMode = activeFilter === "sectors";
   const outcomes = (signalHistoryData?.outcomes || []).filter((row) =>
@@ -1973,6 +1994,14 @@ function renderSignalOutcomes() {
       title: "New acceleration outcomes",
       description: "First new-acceleration signal firing at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · positive return counts as success.",
     },
+    leader: {
+      title: "Confirmed leader outcomes",
+      description: "First entry into confirmed-leader status at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · positive return counts as success.",
+    },
+    breakdown: {
+      title: "Breakdown warning outcomes",
+      description: "First breakdown warning at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · negative return counts as success.",
+    },
     bounce: {
       title: "Bounce in downtrend outcomes",
       description: "First 3 PM downtrend-bounce signal measured at the next, third, and fifth 3 PM trading-session snapshots · negative return counts as success.",
@@ -1980,6 +2009,14 @@ function renderSignalOutcomes() {
     weakness: {
       title: "New weakness outcomes",
       description: "First new-weakness signal firing at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · negative return counts as success.",
+    },
+    laggard: {
+      title: "Confirmed loser outcomes",
+      description: "First entry into confirmed-loser status at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · negative return counts as success.",
+    },
+    breakout: {
+      title: "Breakout warning outcomes",
+      description: "First breakout warning at 3 PM measured at the next, third, and fifth 3 PM trading-session snapshots · positive return counts as success.",
     },
   };
   signalOutcomeTitle.textContent = setupCopy[signalType].title;
