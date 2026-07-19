@@ -2042,7 +2042,7 @@ function renderSignalHistory() {
     </button>
   `).join("");
   if (!sessions.length) {
-    signalHistoryStatus.textContent = "No server snapshots yet. Run the one-week backfill after deployment.";
+    signalHistoryStatus.textContent = "No server snapshots have been saved yet.";
     signalHistorySummary.innerHTML = "";
     signalChangeList.innerHTML = "<p class=\"signal-history-empty\">History will appear after the first saved snapshot.</p>";
     signalPersistenceList.innerHTML = "";

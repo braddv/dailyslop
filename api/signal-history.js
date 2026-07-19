@@ -371,22 +371,20 @@ async function priorSnapshots(limit = 5) {
   return [...grouped.values()];
 }
 
-async function capture(req, mode) {
+async function capture(req) {
   if (!authorized(req)) return { status: 401, body: { error: "Unauthorized" } };
-  if (mode === "capture") {
-    const ny = newYorkHour();
-    if (["Sat", "Sun"].includes(ny.weekday) || ![15, 16].includes(ny.hour) || ny.minute > 20) {
-      return { status: 200, body: { skipped: true, reason: "Not the daily 3 PM snapshot window" } };
-    }
+  const ny = newYorkHour();
+  if (["Sat", "Sun"].includes(ny.weekday) || ![15, 16].includes(ny.hour) || ny.minute > 20) {
+    return { status: 200, body: { skipped: true, reason: "Not the daily 3 PM snapshot window" } };
   }
-  const payload = await fetchMarketPayload(req, mode === "capture");
-  const cutoffs = historicalCutoffs(payload, mode === "backfill" ? 5 : 1);
+  const payload = await fetchMarketPayload(req, true);
+  const cutoffs = historicalCutoffs(payload, 1);
   if (!cutoffs.length) throw new Error("No eligible 3 PM market sessions found");
-  const prior = mode === "backfill" ? [] : await priorSnapshots();
+  const prior = await priorSnapshots();
   let saved = 0;
   for (const cutoff of cutoffs) {
     const result = buildSignalSnapshot(payload, cutoff, prior);
-    await persistSnapshot(result.rows, payload.asOf, mode);
+    await persistSnapshot(result.rows, payload.asOf, "capture");
     prior.push(result.snapshot);
     if (prior.length > 5) prior.shift();
     saved += result.rows.length;
@@ -396,7 +394,7 @@ async function capture(req, mode) {
     status: 200,
     body: {
       success: true,
-      mode,
+      mode: "capture",
       sessions: cutoffs.map((cutoff) => new Date(cutoff * 1000).toISOString()),
       rowsSaved: saved,
       outcomesRefreshed: outcomes.refreshed,
@@ -448,11 +446,8 @@ export default async function handler(req, res) {
   try {
     await ensureSchema();
     const mode = String(req.query?.mode || "").toLowerCase();
-    if (mode === "capture" || mode === "backfill") {
-      if (mode === "backfill" && req.method !== "POST") {
-        return res.status(405).json({ error: "Backfill requires POST" });
-      }
-      const result = await capture(req, mode);
+    if (mode === "capture") {
+      const result = await capture(req);
       return res.status(result.status).json(result.body);
     }
     if (req.method !== "GET") return res.status(405).json({ error: "Method Not Allowed" });
