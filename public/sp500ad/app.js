@@ -1983,7 +1983,10 @@ function renderSignalOutcomes() {
     },
   };
   signalOutcomeTitle.textContent = setupCopy[signalType].title;
-  signalOutcomeDescription.textContent = setupCopy[signalType].description;
+  const truncationNote = signalHistoryData?.outcomesTruncated
+    ? ` Showing the newest ${signalHistoryData.outcomes.length.toLocaleString()} of ${Number(signalHistoryData.outcomeTotal).toLocaleString()} stored events.`
+    : "";
+  signalOutcomeDescription.textContent = `${setupCopy[signalType].description}${truncationNote}`;
   renderSummary(signalOutcome1Summary, "one_session_return", 1);
   renderSummary(signalOutcome3Summary, "three_session_return", 3);
   renderSummary(signalOutcome5Summary, "five_session_return", 5);

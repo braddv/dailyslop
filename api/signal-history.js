@@ -2,6 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { buildSignalSnapshot, historicalCutoffs } from "./_lib/signals.js";
 
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
+const OUTCOME_RESULT_LIMIT = 5000;
 
 async function ensureSchema() {
   await sql`
@@ -421,6 +422,10 @@ async function history(req) {
     JOIN recent r USING (snapshot_at)
     ORDER BY s.snapshot_at DESC, s.symbol ASC
   `;
+  const [outcomeCount] = await sql`
+    SELECT COUNT(*)::int AS total
+    FROM signal_outcomes
+  `;
   const outcomes = await sql`
     SELECT
       snapshot_at, symbol, security, sector, sub_industry, is_sector, entry_price,
@@ -429,12 +434,15 @@ async function history(req) {
       outcome_5_at, outcome_5_price, five_session_return, signal_type
     FROM signal_outcomes
     ORDER BY snapshot_at DESC, symbol ASC
-    LIMIT 500
+    LIMIT ${OUTCOME_RESULT_LIMIT}
   `;
+  const outcomeTotal = Number(outcomeCount?.total) || 0;
   return {
     sessions: [...new Set(rows.map((row) => new Date(row.snapshot_at).toISOString()))],
     rows,
     outcomes,
+    outcomeTotal,
+    outcomesTruncated: outcomes.length < outcomeTotal,
   };
 }
 
