@@ -56,6 +56,14 @@ const confirmedLeadersList = document.getElementById("confirmedLeadersList");
 const pullbackTrendList = document.getElementById("pullbackTrendList");
 const breakdownWarningList = document.getElementById("breakdownWarningList");
 const actionHistoryNote = document.getElementById("actionHistoryNote");
+const actionDrawer = document.getElementById("actionDrawer");
+const actionDrawerBackdrop = document.getElementById("actionDrawerBackdrop");
+const actionDrawerClose = document.getElementById("actionDrawerClose");
+const actionDrawerBucket = document.getElementById("actionDrawerBucket");
+const actionDrawerTitle = document.getElementById("actionDrawerTitle");
+const actionDrawerCompany = document.getElementById("actionDrawerCompany");
+const actionDrawerBody = document.getElementById("actionDrawerBody");
+const actionDrawerPin = document.getElementById("actionDrawerPin");
 
 let lastStocks = [];
 let lastBenchmarks = [];
@@ -75,6 +83,8 @@ let replayPeriod = "1m";
 let momentumMode = "persistent";
 let weaknessMode = "persistent";
 let appView = "replay";
+const actionDetailRows = new Map();
+let activeActionDetail = null;
 
 const REPLAY_PERIODS = {
   "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", sessions: 1 },
@@ -1322,14 +1332,14 @@ function addRelativeStrength(rows, periods, sectorSignals) {
   });
 }
 
-function renderActionBucket(target, rows, scoreLabel) {
+function renderActionBucket(target, rows, scoreLabel, bucketKey) {
   if (!target) return;
   if (!rows.length) {
     target.innerHTML = "<p class=\"action-bucket-empty\">No current matches.</p>";
     return;
   }
   target.innerHTML = rows.slice(0, 5).map((row) => `
-    <button class="action-bucket-result" type="button" data-symbol="${row.symbol}">
+    <button class="action-bucket-result" type="button" data-symbol="${row.symbol}" data-bucket="${bucketKey}">
       <span class="momentum-symbol">
         <strong>${row.symbol}</strong>
         <small>${viewMode === "subindustry"
@@ -1381,20 +1391,55 @@ function renderActionBuckets(
   const positiveShortBySymbol = new Map(positiveShort.map((row) => [row.symbol, row]));
   const positiveLongBySymbol = new Map(positiveLong.map((row) => [row.symbol, row]));
   const negativeShortBySymbol = new Map(negativeShort.map((row) => [row.symbol, row]));
+  const sectorBoard = activeFilter === "sectors";
+  const thresholds = sectorBoard
+    ? {
+        acceleration: 60,
+        confirmedShort: 55,
+        confirmedLong: 45,
+        pullbackSignalLong: 60,
+        pullbackSignalWeakness: 50,
+        pullbackDevelopingLong: 50,
+        pullbackDevelopingWeakness: 40,
+        breakdownSignal: 60,
+        breakdownDeveloping: 55,
+        priorStrong: 60,
+        priorPositive: 55,
+      }
+    : {
+        acceleration: 65,
+        confirmedShort: 60,
+        confirmedLong: 50,
+        pullbackSignalLong: 65,
+        pullbackSignalWeakness: 55,
+        pullbackDevelopingLong: 55,
+        pullbackDevelopingWeakness: 45,
+        breakdownSignal: 65,
+        breakdownDeveloping: 55,
+        priorStrong: 65,
+        priorPositive: 60,
+      };
+  const sectorTotals = new Map();
+  const sectorLeaders = new Map();
+  positiveShort.forEach((row) => {
+    const sector = row.stock.sector;
+    sectorTotals.set(sector, (sectorTotals.get(sector) || 0) + 1);
+    if (row.score >= 60) sectorLeaders.set(sector, (sectorLeaders.get(sector) || 0) + 1);
+  });
 
   const newAcceleration = positiveShort
     .filter((row) =>
-      row.score >= 65 &&
+      row.score >= thresholds.acceleration &&
       previous &&
-      (previous.positiveShort?.[row.symbol] || 0) < 65
+      (previous.positiveShort?.[row.symbol] || 0) < thresholds.acceleration
     )
     .map((row) => {
       const supportingScore = positiveLongBySymbol.get(row.symbol)?.score || 0;
       return {
         ...row,
-        status: supportingScore >= 65
+        status: supportingScore >= thresholds.acceleration
           ? "Confirmed"
-          : supportingScore >= 50
+          : supportingScore >= thresholds.confirmedLong
             ? "Building"
             : "Early",
         bucketScore: row.score,
@@ -1409,10 +1454,10 @@ function renderActionBuckets(
         ...recent.map((snapshot) => snapshot.positiveShort?.[row.symbol] || 0),
         row.score,
       ];
-      return row.score >= 60 &&
-        longScore >= 50 &&
+      return row.score >= thresholds.confirmedShort &&
+        longScore >= thresholds.confirmedLong &&
         recent.length >= 2 &&
-        sessionScores.filter((score) => score >= 60).length >= 2;
+        sessionScores.filter((score) => score >= thresholds.confirmedShort).length >= 2;
     })
     .map((row) => ({
       ...row,
@@ -1424,8 +1469,14 @@ function renderActionBuckets(
     .map((row) => {
       const shortPositive = positiveShortBySymbol.get(row.symbol)?.score || 0;
       const shortNegative = negativeShortBySymbol.get(row.symbol)?.score || 0;
-      const fullSignal = row.score >= 65 && shortPositive < 65 && shortNegative >= 55;
-      const developing = row.score >= 55 && shortPositive < 70 && shortNegative >= 45;
+      const fullSignal =
+        row.score >= thresholds.pullbackSignalLong &&
+        shortPositive < thresholds.acceleration &&
+        shortNegative >= thresholds.pullbackSignalWeakness;
+      const developing =
+        row.score >= thresholds.pullbackDevelopingLong &&
+        shortPositive < thresholds.acceleration + 5 &&
+        shortNegative >= thresholds.pullbackDevelopingWeakness;
       if (!fullSignal && !developing) return null;
       return {
         ...row,
@@ -1441,15 +1492,15 @@ function renderActionBuckets(
   const breakdownWarning = negativeShort
     .map((row) => {
       const wasStronglyPositive = priorSnapshots.some((snapshot) =>
-        (snapshot.positiveShort?.[row.symbol] || 0) >= 65 ||
-        (snapshot.positiveLong?.[row.symbol] || 0) >= 65
+        (snapshot.positiveShort?.[row.symbol] || 0) >= thresholds.priorStrong ||
+        (snapshot.positiveLong?.[row.symbol] || 0) >= thresholds.priorStrong
       );
       const wasPositive = priorSnapshots.some((snapshot) =>
-        (snapshot.positiveShort?.[row.symbol] || 0) >= 60 ||
-        (snapshot.positiveLong?.[row.symbol] || 0) >= 60
+        (snapshot.positiveShort?.[row.symbol] || 0) >= thresholds.priorPositive ||
+        (snapshot.positiveLong?.[row.symbol] || 0) >= thresholds.priorPositive
       );
-      const fullSignal = row.score >= 65 && wasStronglyPositive;
-      const developing = row.score >= 55 && wasPositive;
+      const fullSignal = row.score >= thresholds.breakdownSignal && wasStronglyPositive;
+      const developing = row.score >= thresholds.breakdownDeveloping && wasPositive;
       if (!fullSignal && !developing) return null;
       return {
         ...row,
@@ -1467,10 +1518,35 @@ function renderActionBuckets(
   addRelativeStrength(pullbackTrend, ["1d", "1w", "1m"], sectorSignals);
   addRelativeStrength(breakdownWarning, ["1w", "1m"], sectorSignals);
 
-  renderActionBucket(newAccelerationList, newAcceleration, "Confluence");
-  renderActionBucket(confirmedLeadersList, confirmedLeaders, "Combined");
-  renderActionBucket(pullbackTrendList, pullbackTrend, "Setup");
-  renderActionBucket(breakdownWarningList, breakdownWarning, "Warning");
+  actionDetailRows.clear();
+  [
+    ["acceleration", "New acceleration", newAcceleration],
+    ["leaders", "Confirmed leaders", confirmedLeaders],
+    ["pullback", "Pullback in trend", pullbackTrend],
+    ["breakdown", "Breakdown warning", breakdownWarning],
+  ].forEach(([keyName, label, rows]) => {
+    rows.forEach((row) => {
+      const snapshots = priorSnapshots.filter((snapshot) =>
+        (snapshot.positiveShort?.[row.symbol] || 0) >= 60 ||
+        (snapshot.positiveLong?.[row.symbol] || 0) >= 60 ||
+        (snapshot.negativeShort?.[row.symbol] || 0) >= 60
+      ).length;
+      const sectorTotal = sectorTotals.get(row.stock.sector) || 0;
+      actionDetailRows.set(`${keyName}:${row.symbol}`, {
+        ...row,
+        bucketLabel: label,
+        signalSnapshots: snapshots,
+        sectorBreadth: sectorTotal
+          ? ((sectorLeaders.get(row.stock.sector) || 0) / sectorTotal) * 100
+          : null,
+      });
+    });
+  });
+
+  renderActionBucket(newAccelerationList, newAcceleration, "Confluence", "acceleration");
+  renderActionBucket(confirmedLeadersList, confirmedLeaders, "Combined", "leaders");
+  renderActionBucket(pullbackTrendList, pullbackTrend, "Setup", "pullback");
+  renderActionBucket(breakdownWarningList, breakdownWarning, "Warning", "breakdown");
   if (actionHistoryNote) {
     actionHistoryNote.textContent = priorSnapshots.length
       ? `${priorSnapshots.length + 1} unique snapshots tracked locally for this universe.`
@@ -1482,6 +1558,50 @@ function renderActionBuckets(
     positiveLong: scoreSnapshot(positiveLong),
     negativeShort: scoreSnapshot(negativeShort),
   });
+}
+
+function distanceFromDayAverage(stock, days) {
+  const closes = (stock.replayDaily || [])
+    .map((point) => point[1])
+    .filter(Number.isFinite)
+    .slice(-days);
+  if (!closes.length || !Number.isFinite(stock.currentPrice)) return null;
+  const average = closes.reduce((sum, value) => sum + value, 0) / closes.length;
+  return average > 0 ? ((stock.currentPrice / average) - 1) * 100 : null;
+}
+
+function closeActionDrawer() {
+  if (!actionDrawer) return;
+  actionDrawer.hidden = true;
+  actionDrawerBackdrop.hidden = true;
+  document.body.classList.remove("drawer-open");
+  activeActionDetail = null;
+}
+
+function openActionDrawer(bucket, symbol) {
+  const row = actionDetailRows.get(`${bucket}:${symbol}`);
+  if (!row || !actionDrawer) return;
+  activeActionDetail = row;
+  const distance5d = distanceFromDayAverage(row.stock, 5);
+  const distance20d = distanceFromDayAverage(row.stock, 20);
+  actionDrawerBucket.textContent = row.bucketLabel;
+  actionDrawerTitle.textContent = row.symbol;
+  actionDrawerCompany.textContent = `${row.stock.security} · ${row.stock.subIndustry || row.stock.sector}`;
+  actionDrawerBody.innerHTML = `
+    <div class="action-detail-summary">
+      <span>${row.relativeClassification || "Mixed confirmation"}</span>
+      ${row.status ? `<span>${row.status}</span>` : ""}
+    </div>
+    <div class="action-detail-grid">
+      <div><small>From 5D average</small><strong class="${(distance5d || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance5d)}</strong></div>
+      <div><small>From 20D average</small><strong class="${(distance20d || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance20d)}</strong></div>
+      <div><small>Sector breadth</small><strong>${Number.isFinite(row.sectorBreadth) ? `${Math.round(row.sectorBreadth)}%` : "--"}</strong></div>
+      <div><small>Prior signal snapshots</small><strong>${row.signalSnapshots}</strong></div>
+    </div>
+  `;
+  actionDrawer.hidden = false;
+  actionDrawerBackdrop.hidden = false;
+  document.body.classList.add("drawer-open");
 }
 
 function renderConfluenceScanner() {
@@ -2090,11 +2210,22 @@ workspaceNavButtons.forEach((button) => {
     list.addEventListener("click", (event) => {
       const result = event.target.closest(".action-bucket-result[data-symbol]");
       if (!result) return;
-      pinnedSymbols.add(result.dataset.symbol);
-      tickerSearchStatus.textContent = `Pinned ${result.dataset.symbol} from Action Board.`;
-      setAppView("replay");
+      openActionDrawer(result.dataset.bucket, result.dataset.symbol);
     });
   });
+
+actionDrawerClose?.addEventListener("click", closeActionDrawer);
+actionDrawerBackdrop?.addEventListener("click", closeActionDrawer);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !actionDrawer?.hidden) closeActionDrawer();
+});
+actionDrawerPin?.addEventListener("click", () => {
+  if (!activeActionDetail) return;
+  pinnedSymbols.add(activeActionDetail.symbol);
+  tickerSearchStatus.textContent = `Pinned ${activeActionDetail.symbol} from Action Board.`;
+  closeActionDrawer();
+  setAppView("replay");
+});
 
 updateSubhead();
 setMetric("changePercent");

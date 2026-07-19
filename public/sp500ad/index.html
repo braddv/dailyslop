@@ -330,6 +330,21 @@
     </main>
 
     <div class="tooltip" id="tooltip"></div>
+    <div class="action-drawer-backdrop" id="actionDrawerBackdrop" hidden></div>
+    <aside class="action-drawer" id="actionDrawer" hidden aria-labelledby="actionDrawerTitle">
+      <div class="action-drawer-header">
+        <div>
+          <p class="momentum-kicker" id="actionDrawerBucket">Action Board detail</p>
+          <h2 id="actionDrawerTitle">--</h2>
+          <p id="actionDrawerCompany"></p>
+        </div>
+        <button class="action-drawer-close" id="actionDrawerClose" type="button" aria-label="Close details">×</button>
+      </div>
+      <div class="action-drawer-body" id="actionDrawerBody"></div>
+      <div class="action-drawer-actions">
+        <button class="action-drawer-pin" id="actionDrawerPin" type="button">Pin on Market Replay</button>
+      </div>
+    </aside>
 
     <script src="/sp500ad/app.js"></script>
   </body>

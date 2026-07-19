@@ -258,6 +258,138 @@ h1 {
   border-color: rgba(86, 194, 255, 0.35);
 }
 
+.action-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 13, 0.66);
+  backdrop-filter: blur(3px);
+  z-index: 30;
+}
+
+.action-drawer[hidden],
+.action-drawer-backdrop[hidden] {
+  display: none;
+}
+
+.action-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  display: flex;
+  width: min(440px, 92vw);
+  height: 100vh;
+  padding: 28px;
+  flex-direction: column;
+  color: var(--text);
+  background: #111826;
+  border-left: 1px solid rgba(86, 194, 255, 0.22);
+  box-shadow: -24px 0 70px rgba(0, 0, 0, 0.42);
+  z-index: 31;
+}
+
+.action-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.action-drawer-header h2 {
+  margin: 4px 0 2px;
+  color: #56c2ff;
+  font-size: 2rem;
+}
+
+.action-drawer-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.action-drawer-close {
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.action-drawer-body {
+  display: grid;
+  gap: 20px;
+  padding: 22px 0;
+  overflow-y: auto;
+}
+
+.action-detail-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-detail-summary span {
+  padding: 5px 9px;
+  border: 1px solid rgba(86, 194, 255, 0.2);
+  border-radius: 999px;
+  color: #b8e5ff;
+  background: rgba(86, 194, 255, 0.08);
+  font-size: 0.72rem;
+}
+
+.action-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.action-detail-grid > div {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(7, 11, 18, 0.46);
+}
+
+.action-detail-grid small {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+.action-detail-grid strong {
+  font-size: 1.15rem;
+}
+
+.action-detail-grid .positive {
+  color: #65d6a6;
+}
+
+.action-detail-grid .negative {
+  color: #ff8f9c;
+}
+
+.action-drawer-actions {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.action-drawer-pin {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 16px;
+  color: #06101a;
+  background: #56c2ff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.drawer-open {
+  overflow: hidden;
+}
+
 .action-bucket-result .momentum-symbol {
   min-width: 92px;
 }
