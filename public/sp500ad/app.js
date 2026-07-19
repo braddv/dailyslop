@@ -1031,8 +1031,10 @@ function renderWeaknessScanner() {
   `).join("");
 }
 
-function calculatePeriodScores(period, cutoffTimestamp = null) {
-  let universe = getBaseScanUniverse();
+function calculatePeriodScores(period, cutoffTimestamp = null, universeOverride = null) {
+  let universe = universeOverride
+    ? [...universeOverride]
+    : getBaseScanUniverse();
   let frames = Array.from(new Set(
     universe.flatMap((stock) =>
       getReplayPoints(stock, period, cutoffTimestamp).map((point) => point[0])
@@ -1053,7 +1055,8 @@ function calculateConfluence(
   trendPeriods,
   accelerationPeriods,
   negative = false,
-  periodRows = null
+  periodRows = null,
+  universeOverride = null
 ) {
   const scoreRows = periodRows || new Map(
     [...trendPeriods, ...accelerationPeriods].map((period) => [
@@ -1062,7 +1065,8 @@ function calculateConfluence(
     ])
   );
 
-  return getBaseScanUniverse().map((stock) => {
+  const universe = universeOverride || getBaseScanUniverse();
+  return universe.map((stock) => {
     const trendScores = trendPeriods.map((period) =>
       scoreRows.get(period)?.get(stock.symbol)?.[
         negative ? "persistentWeaknessScore" : "persistentScore"
@@ -1247,6 +1251,77 @@ function seedHistoricalActionHistory(key) {
   writeActionHistory(history);
 }
 
+function periodReturn(stock, period) {
+  const points = getReplayPoints(stock, period);
+  const first = points[0]?.[1];
+  const last = points.at(-1)?.[1];
+  return Number.isFinite(first) && first !== 0 && Number.isFinite(last)
+    ? ((last / first) - 1) * 100
+    : null;
+}
+
+function relativeStrengthContext(stock, period, sectorSignals) {
+  const spy = lastBenchmarks.find((benchmark) => benchmark.symbol === "SPY");
+  const sectorEtf = lastBenchmarks.find((benchmark) =>
+    benchmark.symbol !== "SPY" && benchmark.sector === stock.sector
+  );
+  const stockReturn = periodReturn(stock, period);
+  const spyReturn = periodReturn(spy || {}, period);
+  const sectorReturn = periodReturn(sectorEtf || {}, period);
+  return {
+    period,
+    sectorSymbol: sectorEtf?.symbol || "Sector",
+    stockReturn,
+    spyReturn,
+    sectorReturn,
+    vsSpy: Number.isFinite(stockReturn) && Number.isFinite(spyReturn)
+      ? stockReturn - spyReturn
+      : null,
+    vsSector: Number.isFinite(stockReturn) && Number.isFinite(sectorReturn)
+      ? stockReturn - sectorReturn
+      : null,
+    sectorSignals: sectorSignals.get(stock.sector) || {},
+  };
+}
+
+function classifyRelativeStrength(context) {
+  const sectorPositive = Math.max(
+    context.sectorSignals.positiveShort || 0,
+    context.sectorSignals.positiveLong || 0
+  );
+  const sectorNegative = context.sectorSignals.negativeShort || 0;
+  if (activeFilter === "sectors") {
+    if ((context.vsSpy || 0) > 0 && sectorPositive >= 60) return "Sector leader";
+    if ((context.vsSpy || 0) < 0 && sectorNegative >= 60) return "Sector breakdown";
+    return "Mixed sector";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0 && sectorNegative >= 60) {
+    return "Fighting its sector";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0 && sectorPositive >= 60) {
+    return "Broadly confirmed";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0) {
+    return "Stock-specific leader";
+  }
+  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) <= 0 && sectorPositive >= 60) {
+    return "Sector carried";
+  }
+  if ((context.vsSpy || 0) < 0 && (context.vsSector || 0) < 0 && sectorNegative >= 60) {
+    return "Broad breakdown";
+  }
+  return "Mixed confirmation";
+}
+
+function addRelativeStrength(rows, periods, sectorSignals) {
+  rows.forEach((row) => {
+    row.relativeStrength = periods.map((period) =>
+      relativeStrengthContext(row.stock, period, sectorSignals)
+    );
+    row.relativeClassification = classifyRelativeStrength(row.relativeStrength[0]);
+  });
+}
+
 function renderActionBucket(target, rows, scoreLabel) {
   if (!target) return;
   if (!rows.length) {
@@ -1260,6 +1335,25 @@ function renderActionBucket(target, rows, scoreLabel) {
         <small>${viewMode === "subindustry"
           ? row.stock.subIndustry || row.stock.sector
           : row.stock.sector}</small>
+        <small class="relative-classification">${row.relativeClassification || ""}</small>
+      </span>
+          <span class="action-relative-strength">
+            ${(row.relativeStrength || []).map((context) => `
+              <small>
+                <b>${context.period === "1d" ? "OPEN" : context.period.toUpperCase()}</b>
+                <span class="${Number.isFinite(context.stockReturn) && context.stockReturn >= 0 ? "positive" : "negative"}">
+                  ${row.symbol} ${formatPerf(context.stockReturn)}
+                </span>
+                <span class="${Number.isFinite(context.spyReturn) && context.spyReturn >= 0 ? "positive" : "negative"}">
+                  SPY ${formatPerf(context.spyReturn)}
+                </span>
+                ${activeFilter === "sectors" ? "" : `
+                  <span class="${Number.isFinite(context.sectorReturn) && context.sectorReturn >= 0 ? "positive" : "negative"}">
+                    ${context.sectorSymbol} ${formatPerf(context.sectorReturn)}
+                  </span>
+                `}
+              </small>
+        `).join("")}
       </span>
       ${row.status ? `<span class="action-status ${row.status.toLowerCase()}">${row.status}</span>` : ""}
       <span class="action-bucket-score">
@@ -1270,7 +1364,12 @@ function renderActionBucket(target, rows, scoreLabel) {
   `).join("");
 }
 
-function renderActionBuckets(positiveShort, positiveLong, negativeShort) {
+function renderActionBuckets(
+  positiveShort,
+  positiveLong,
+  negativeShort,
+  sectorSignals = new Map()
+) {
   const key = actionUniverseKey();
   seedHistoricalActionHistory(key);
   const history = readActionHistory();
@@ -1363,6 +1462,11 @@ function renderActionBuckets(positiveShort, positiveLong, negativeShort) {
       (a.status === b.status ? b.bucketScore - a.bucketScore : a.status === "Signal" ? -1 : 1)
     );
 
+  addRelativeStrength(newAcceleration, ["1d", "1w", "1m"], sectorSignals);
+  addRelativeStrength(confirmedLeaders, ["1m", "3m"], sectorSignals);
+  addRelativeStrength(pullbackTrend, ["1d", "1w", "1m"], sectorSignals);
+  addRelativeStrength(breakdownWarning, ["1w", "1m"], sectorSignals);
+
   renderActionBucket(newAccelerationList, newAcceleration, "Confluence");
   renderActionBucket(confirmedLeadersList, confirmedLeaders, "Combined");
   renderActionBucket(pullbackTrendList, pullbackTrend, "Setup");
@@ -1404,11 +1508,50 @@ function renderConfluenceScanner() {
   const negativeLong = calculateConfluence(
     ["3m", "6m"], ["1w", "2w"], true, periodRows
   );
+  const sectorUniverse = lastBenchmarks.filter((benchmark) => benchmark.symbol !== "SPY");
+  const sectorPeriodRows = new Map(
+    Object.keys(REPLAY_PERIODS).map((period) => [
+      period,
+      new Map(
+        calculatePeriodScores(period, null, sectorUniverse)
+          .map((row) => [row.symbol, row])
+      ),
+    ])
+  );
+  const sectorPositiveShort = calculateConfluence(
+    ["1m", "2m"],
+    ["1d", "2d"],
+    false,
+    sectorPeriodRows,
+    sectorUniverse
+  );
+  const sectorPositiveLong = calculateConfluence(
+    ["3m", "6m"],
+    ["1w", "2w"],
+    false,
+    sectorPeriodRows,
+    sectorUniverse
+  );
+  const sectorNegativeShort = calculateConfluence(
+    ["1m", "2m"],
+    ["1d", "2d"],
+    true,
+    sectorPeriodRows,
+    sectorUniverse
+  );
+  const sectorSignals = new Map(sectorUniverse.map((benchmark) => [
+    benchmark.sector,
+    {
+      positiveShort: sectorPositiveShort.find((row) => row.symbol === benchmark.symbol)?.score || 0,
+      positiveLong: sectorPositiveLong.find((row) => row.symbol === benchmark.symbol)?.score || 0,
+      negativeShort: sectorNegativeShort.find((row) => row.symbol === benchmark.symbol)?.score || 0,
+    },
+  ]));
   renderConfluenceRows(shortConfluenceList, positiveShort);
   renderConfluenceRows(longConfluenceList, positiveLong);
   renderConfluenceRows(shortNegativeConfluenceList, negativeShort, true);
   renderConfluenceRows(longNegativeConfluenceList, negativeLong, true);
-  renderActionBuckets(positiveShort, positiveLong, negativeShort);
+  renderActionBuckets(positiveShort, positiveLong, negativeShort, sectorSignals);
 }
 
 function setAppView(view) {

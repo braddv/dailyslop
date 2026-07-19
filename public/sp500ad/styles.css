@@ -258,6 +258,42 @@ h1 {
   border-color: rgba(86, 194, 255, 0.35);
 }
 
+.action-bucket-result .momentum-symbol {
+  min-width: 92px;
+}
+
+.relative-classification {
+  color: rgba(230, 233, 242, 0.76) !important;
+}
+
+.action-relative-strength {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-relative-strength small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.58rem;
+}
+
+.action-relative-strength b {
+  color: var(--text);
+}
+
+.action-relative-strength .positive {
+  color: #65d6a6;
+}
+
+.action-relative-strength .negative {
+  color: #ff8f9c;
+}
+
 .action-bucket-score {
   display: flex;
   align-items: flex-end;
