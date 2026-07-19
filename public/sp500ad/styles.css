@@ -156,6 +156,63 @@ h1 {
   padding-top: 4px;
 }
 
+.action-board-title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.action-side-toggle {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(10, 14, 22, 0.72);
+}
+
+.action-side-btn,
+.history-side-btn {
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 11px;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.action-side-btn.active,
+.history-side-btn.active {
+  color: #65d6a6;
+  background: rgba(101, 214, 166, 0.12);
+}
+
+.bearish-board .action-side-btn.active {
+  color: #ff8f9c;
+  background: rgba(255, 143, 156, 0.12);
+}
+
+.bearish-history .history-side-btn.active {
+  color: #ff8f9c;
+  background: rgba(255, 143, 156, 0.12);
+}
+
+.bearish-board .action-bucket-icon.acceleration,
+.bearish-board .action-bucket-icon.confirmed {
+  color: #ff8f9c;
+  background: rgba(255, 143, 156, 0.12);
+}
+
+.bearish-board .action-status {
+  border-color: rgba(255, 143, 156, 0.28);
+  color: #ff8f9c;
+  background: rgba(255, 143, 156, 0.08);
+}
+
 .action-board-intro h2 {
   margin: 0;
   font-size: 1.35rem;
@@ -170,6 +227,276 @@ h1 {
 
 .action-board-view .confluence-scanner {
   margin-left: 0;
+}
+
+.signal-history-intro {
+  margin: 8px 0 16px;
+}
+
+.signal-history-intro h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.signal-history-intro > p:last-child {
+  max-width: 760px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.signal-history-status {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.signal-session-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.signal-session-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--muted);
+  background: rgba(10, 14, 22, 0.58);
+  font: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.signal-session-btn.active {
+  border-color: rgba(86, 194, 255, 0.48);
+  color: var(--text);
+  background: rgba(86, 194, 255, 0.14);
+}
+
+.signal-history-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.signal-summary-card {
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(18, 22, 33, 0.82);
+}
+
+.signal-summary-card small {
+  display: block;
+  color: var(--muted);
+}
+
+.signal-summary-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.4rem;
+}
+
+.signal-summary-card.acceleration,
+.signal-summary-card.leader {
+  border-color: rgba(101, 214, 166, 0.22);
+}
+
+.signal-summary-card.pullback {
+  border-color: rgba(247, 178, 103, 0.22);
+}
+
+.signal-summary-card.breakdown {
+  border-color: rgba(255, 143, 156, 0.22);
+}
+
+.signal-summary-card.weakness,
+.signal-summary-card.laggard,
+.signal-summary-card.breakout {
+  border-color: rgba(255, 143, 156, 0.22);
+}
+
+.signal-summary-card.bounce {
+  border-color: rgba(247, 178, 103, 0.22);
+}
+
+.signal-history-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.signal-history-panel {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(18, 22, 33, 0.82);
+}
+
+.signal-history-panel-heading h3 {
+  margin: 2px 0 12px;
+}
+
+.signal-change-list,
+.signal-persistence-list {
+  display: grid;
+  gap: 6px;
+}
+
+.signal-history-row,
+.signal-persistence-row {
+  display: grid;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  color: var(--text);
+  background: rgba(7, 11, 18, 0.46);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.signal-history-row {
+  grid-template-columns: minmax(82px, 0.7fr) minmax(120px, 1fr) auto;
+}
+
+.signal-persistence-row {
+  grid-template-columns: minmax(82px, 0.7fr) minmax(120px, 1fr) auto;
+}
+
+.signal-history-row:hover,
+.signal-persistence-row:hover {
+  border-color: rgba(86, 194, 255, 0.35);
+}
+
+.signal-history-symbol {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.signal-history-symbol strong {
+  color: #56c2ff;
+}
+
+.signal-history-symbol small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signal-history-buckets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.history-bucket {
+  border-radius: 999px;
+  padding: 3px 6px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 0.56rem;
+}
+
+.history-bucket.acceleration,
+.history-bucket.leader {
+  color: #65d6a6;
+  background: rgba(101, 214, 166, 0.1);
+}
+
+.history-bucket.pullback {
+  color: #f7b267;
+  background: rgba(247, 178, 103, 0.1);
+}
+
+.history-bucket.breakdown {
+  color: #ff8f9c;
+  background: rgba(255, 143, 156, 0.1);
+}
+
+.history-bucket.weakness,
+.history-bucket.laggard,
+.history-bucket.breakout {
+  color: #ff8f9c;
+  background: rgba(255, 143, 156, 0.1);
+}
+
+.history-bucket.bounce {
+  color: #f7b267;
+  background: rgba(247, 178, 103, 0.1);
+}
+
+.signal-history-return,
+.signal-session-count {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
+.signal-history-return small,
+.signal-session-count small {
+  color: var(--muted);
+  font-size: 0.56rem;
+}
+
+.signal-history-return.positive {
+  color: #65d6a6;
+}
+
+.signal-history-return.negative {
+  color: #ff8f9c;
+}
+
+.signal-timeline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.signal-timeline i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.signal-timeline i.acceleration,
+.signal-timeline i.leader {
+  background: #65d6a6;
+}
+
+.signal-timeline i.pullback {
+  background: #f7b267;
+}
+
+.signal-timeline i.breakdown {
+  background: #ff8f9c;
+}
+
+.signal-timeline i.weakness,
+.signal-timeline i.laggard,
+.signal-timeline i.breakout {
+  background: #ff8f9c;
+}
+
+.signal-timeline i.bounce {
+  background: #f7b267;
+}
+
+.signal-history-empty {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
 .action-buckets {
@@ -1318,6 +1645,16 @@ h1 {
 
   .action-buckets {
     grid-template-columns: 1fr;
+  }
+
+  .signal-history-summary,
+  .signal-history-panels {
+    grid-template-columns: 1fr;
+  }
+
+  .action-board-title-row {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .ticker-search {

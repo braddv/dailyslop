@@ -41,6 +41,9 @@
         <button class="workspace-nav-btn" type="button" data-app-view="action">
           Action Board
         </button>
+        <button class="workspace-nav-btn" type="button" data-app-view="history">
+          Signal History
+        </button>
       </nav>
 
       <section class="controls">
@@ -201,50 +204,58 @@
 
       <div class="app-view action-board-view" id="actionBoardView" hidden>
       <section class="action-board-intro">
-        <p class="momentum-kicker">Stable multi-timeframe watchlist</p>
-        <h2>Action Board</h2>
+        <div class="action-board-title-row">
+          <div>
+            <p class="momentum-kicker">Stable multi-timeframe watchlist</p>
+            <h2>Action Board</h2>
+          </div>
+          <div class="action-side-toggle" aria-label="Action Board direction">
+            <button class="action-side-btn active" type="button" data-action-side="bullish">Bullish</button>
+            <button class="action-side-btn" type="button" data-action-side="bearish">Bearish</button>
+          </div>
+        </div>
         <p>
-          Confluence is independent of the selected replay. Use the shared filters above to
-          recalculate for the full index, a market-cap group, sector ETFs, or a sector drill-down.
+          Confluence is independent of the selected replay. Shared filters narrow the same
+          full-market signal set by market-cap group, sector ETFs, or sector drill-down.
         </p>
       </section>
       <section class="action-buckets" aria-label="Actionable signal changes">
         <div class="action-bucket">
           <div class="action-bucket-heading">
-            <span class="action-bucket-icon acceleration">↗</span>
+            <span class="action-bucket-icon acceleration" id="actionBucketIcon1">↗</span>
             <div>
-              <h3>New acceleration</h3>
-              <p>Entered positive short-term confluence since the last saved refresh.</p>
+              <h3 id="actionBucketTitle1">New acceleration</h3>
+              <p id="actionBucketDescription1">Entered positive short-term confluence since the last saved refresh.</p>
             </div>
           </div>
           <div class="action-bucket-list" id="newAccelerationList"></div>
         </div>
         <div class="action-bucket">
           <div class="action-bucket-heading">
-            <span class="action-bucket-icon confirmed">✓</span>
+            <span class="action-bucket-icon confirmed" id="actionBucketIcon2">✓</span>
             <div>
-              <h3>Confirmed leaders</h3>
-              <p>Held positive confluence across several unique data refreshes.</p>
+              <h3 id="actionBucketTitle2">Confirmed leaders</h3>
+              <p id="actionBucketDescription2">Held positive confluence across several unique data refreshes.</p>
             </div>
           </div>
           <div class="action-bucket-list" id="confirmedLeadersList"></div>
         </div>
         <div class="action-bucket">
           <div class="action-bucket-heading">
-            <span class="action-bucket-icon pullback">↘</span>
+            <span class="action-bucket-icon pullback" id="actionBucketIcon3">↘</span>
             <div>
-              <h3>Pullback in trend</h3>
-              <p>Long-term leadership remains strong while 1D/2D momentum weakens.</p>
+              <h3 id="actionBucketTitle3">Pullback in trend</h3>
+              <p id="actionBucketDescription3">Long-term leadership remains strong while 1D/2D momentum weakens.</p>
             </div>
           </div>
           <div class="action-bucket-list" id="pullbackTrendList"></div>
         </div>
         <div class="action-bucket">
           <div class="action-bucket-heading">
-            <span class="action-bucket-icon breakdown">!</span>
+            <span class="action-bucket-icon breakdown" id="actionBucketIcon4">!</span>
             <div>
-              <h3>Breakdown warning</h3>
-              <p>Prior positive confluence is giving way to emerging short-term weakness.</p>
+              <h3 id="actionBucketTitle4">Breakdown warning</h3>
+              <p id="actionBucketDescription4">Prior positive confluence is giving way to emerging short-term weakness.</p>
             </div>
           </div>
           <div class="action-bucket-list" id="breakdownWarningList"></div>
@@ -317,6 +328,48 @@
           Scores use full-period weakness rankings, not the selected replay’s bottom 10. Select a result to pin it.
         </p>
       </section>
+      </div>
+
+      <div class="app-view signal-history-view" id="signalHistoryView" hidden>
+        <section class="signal-history-intro">
+          <div class="action-board-title-row">
+            <div>
+              <p class="momentum-kicker">Server-stored daily monitoring</p>
+              <h2>Signal History</h2>
+            </div>
+            <div class="action-side-toggle" aria-label="Signal History direction">
+              <button class="history-side-btn active" type="button" data-history-side="bullish">Bullish</button>
+              <button class="history-side-btn" type="button" data-history-side="bearish">Bearish</button>
+            </div>
+          </div>
+          <p>
+            One shared snapshot near 3 PM Eastern each trading day. History is independent
+            of page visits and uses the shared market, size, and sector filters above.
+          </p>
+        </section>
+        <div class="signal-history-status" id="signalHistoryStatus">Loading stored snapshots…</div>
+        <div class="signal-session-picker" id="signalSessionPicker" aria-label="Signal snapshot date"></div>
+        <section class="signal-history-summary" id="signalHistorySummary"></section>
+        <section class="signal-history-panels">
+          <div class="signal-history-panel">
+            <div class="signal-history-panel-heading">
+              <div>
+                <p class="momentum-kicker">Selected snapshot</p>
+                <h3>Signal changes</h3>
+              </div>
+            </div>
+            <div class="signal-change-list" id="signalChangeList"></div>
+          </div>
+          <div class="signal-history-panel">
+            <div class="signal-history-panel-heading">
+              <div>
+                <p class="momentum-kicker">Across stored sessions</p>
+                <h3>Persistent signals</h3>
+              </div>
+            </div>
+            <div class="signal-persistence-list" id="signalPersistenceList"></div>
+          </div>
+        </section>
       </div>
 
       <footer class="footer">
