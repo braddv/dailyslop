@@ -2,7 +2,7 @@ const { readSharedCache, writeSharedCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
 
 const DAILY_CACHE_KEY = 'sector_ad_yahoo_daily_v2';
-const INTRADAY_CACHE_KEY = 'sector_ad_yahoo_intraday_v4';
+const INTRADAY_CACHE_KEY = 'sector_ad_yahoo_intraday_v5';
 const DAILY_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const INTRADAY_MARKET_TTL_MS = 10 * 60 * 1000;
 const INTRADAY_OFF_HOURS_TTL_MS = 12 * 60 * 60 * 1000;
@@ -188,16 +188,20 @@ async function fetchYahooData(symbols, range, interval) {
   return { sparkMap, failures };
 }
 
-function buildReplayPoints(series) {
+function buildReplayPoints(series, intervalSeconds, offsetSeconds = 0) {
   const timestamps = series?.timestamp || [];
   const closes = extractCloseSeries(series);
-  const points = [];
+  const pointsByTimestamp = new Map();
   for (let i = 0; i < timestamps.length; i += 1) {
     if (Number.isFinite(timestamps[i]) && Number.isFinite(closes[i])) {
-      points.push([timestamps[i], closes[i]]);
+      const timestamp = Number.isFinite(intervalSeconds)
+        ? Math.floor((timestamps[i] - offsetSeconds) / intervalSeconds) * intervalSeconds
+          + offsetSeconds
+        : timestamps[i];
+      pointsByTimestamp.set(timestamp, closes[i]);
     }
   }
-  return points;
+  return [...pointsByTimestamp.entries()].sort((a, b) => a[0] - b[0]);
 }
 
 function buildSectorSummary(stocks) {
@@ -396,19 +400,25 @@ function buildIntradayResponse() {
     stocks: universe.map((stock) => ({
       symbol: stock.symbol,
       replayDay15m: buildReplayPoints(
-        dayResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null
+        dayResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null,
+        15 * 60
       ),
       replayWeekHourly: buildReplayPoints(
-        weekResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null
+        weekResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null,
+        60 * 60,
+        30 * 60
       ),
     })),
     benchmarks: benchmarkUniverse.map((stock) => ({
       symbol: stock.symbol,
       replayDay15m: buildReplayPoints(
-        dayResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null
+        dayResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null,
+        15 * 60
       ),
       replayWeekHourly: buildReplayPoints(
-        weekResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null
+        weekResult.sparkMap.get(stock.yahooSymbol)?.response?.[0] || null,
+        60 * 60,
+        30 * 60
       ),
     })),
   }));
