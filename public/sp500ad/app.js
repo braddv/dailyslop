@@ -110,8 +110,8 @@ let selectedHistorySession = null;
 let signalHistorySide = "bullish";
 
 const REPLAY_PERIODS = {
-  "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", sessions: 1 },
-  "2d": { field: "replayDay15m", label: "2-day", cadence: "15-minute", sessions: 2 },
+  "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", bars: 26 },
+  "2d": { field: "replayDay15m", label: "2-day", cadence: "15-minute", bars: 52 },
   "1w": { field: "replayWeekHourly", label: "1-week", cadence: "hourly", sessions: 5 },
   "2w": { field: "replayWeekHourly", label: "2-week", cadence: "hourly", sessions: 10 },
   "1m": { field: "replayDaily", days: 31, label: "1-month", cadence: "daily" },
@@ -803,6 +803,7 @@ function getReplayPoints(stock, period = replayPeriod, cutoffTimestamp = null) {
       : sourcePoints;
   }
   if (!points.length) return [];
+  if (config.bars) return points.slice(-config.bars);
   if (config.sessions) {
     const sessionStarts = [0];
     for (let i = 1; i < points.length; i += 1) {

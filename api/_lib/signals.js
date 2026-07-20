@@ -1,6 +1,6 @@
 const PERIODS = {
-  "1d": { field: "replayDay15m", sessions: 1 },
-  "2d": { field: "replayDay15m", sessions: 2 },
+  "1d": { field: "replayDay15m", bars: 26 },
+  "2d": { field: "replayDay15m", bars: 52 },
   "1w": { field: "replayWeekHourly", sessions: 5 },
   "2w": { field: "replayWeekHourly", sessions: 10 },
   "1m": { field: "replayDaily", days: 31 },
@@ -71,8 +71,9 @@ function replayPoints(stock, period, cutoff) {
     ? dailyPointsAt(stock, cutoff)
     : (stock[config.field] || []).filter((point) =>
       Number.isFinite(point?.[0]) && Number.isFinite(point?.[1]) && point[0] <= cutoff
-    );
+  );
   if (!source.length) return [];
+  if (config.bars) return source.slice(-config.bars);
   if (config.sessions) {
     const sessionDates = [...new Set(source.map((point) => nyParts(point[0]).date))];
     const keep = new Set(sessionDates.slice(-config.sessions));
