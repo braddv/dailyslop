@@ -2263,13 +2263,24 @@ function pinSearchedTicker() {
 }
 
 function buildReplayTimeline() {
-  const timestamps = new Set();
+  const timestampCoverage = new Map();
+  let stocksWithReplayData = 0;
   lastStocks.forEach((stock) => {
-    getReplayPoints(stock).forEach((point) => {
-      if (Number.isFinite(point?.[0])) timestamps.add(point[0]);
+    const stockTimestamps = new Set(
+      getReplayPoints(stock)
+        .map((point) => point?.[0])
+        .filter(Number.isFinite)
+    );
+    if (stockTimestamps.size) stocksWithReplayData += 1;
+    stockTimestamps.forEach((timestamp) => {
+      timestampCoverage.set(timestamp, (timestampCoverage.get(timestamp) || 0) + 1);
     });
   });
-  replayFrames = Array.from(timestamps).sort((a, b) => a - b);
+  const minimumCoverage = Math.max(2, Math.ceil(stocksWithReplayData * 0.7));
+  replayFrames = [...timestampCoverage.entries()]
+    .filter(([, coverage]) => coverage >= minimumCoverage)
+    .map(([timestamp]) => timestamp)
+    .sort((a, b) => a - b);
   replayFrameIndex = Math.max(0, replayFrames.length - 1);
   replayScrubber.max = String(Math.max(0, replayFrames.length - 1));
   replayScrubber.value = String(replayFrameIndex);
