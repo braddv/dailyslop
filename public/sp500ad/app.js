@@ -2447,6 +2447,7 @@ function openActionDrawer(bucket, symbol) {
       <div><small>Sector breadth</small><strong>${Number.isFinite(row.sectorBreadth) ? `${Math.round(row.sectorBreadth)}%` : "--"}</strong></div>
       <div><small>Prior signal snapshots</small><strong>${row.signalSnapshots}</strong></div>
     </div>
+    ${row.stock.isSubIndustry ? renderSubIndustryConstituents(row.stock) : ""}
   `;
   actionDrawer.hidden = false;
   actionDrawerBackdrop.hidden = false;
