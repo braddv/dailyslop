@@ -21,10 +21,12 @@ const backBtn = document.getElementById("backBtn");
 const filterButtons = document.querySelectorAll(".filter-btn");
 const sectorFilterButtons = document.querySelectorAll(".sector-filter-btn");
 const controlsEl = document.querySelector(".controls");
+const sectorFilterBar = document.querySelector(".sector-filter-bar");
 const tickerSearchForm = document.getElementById("tickerSearch");
 const tickerSearchInput = document.getElementById("tickerSearchInput");
 const tickerOptions = document.getElementById("tickerOptions");
 const tickerSearchStatus = document.getElementById("tickerSearchStatus");
+const watchlistSearchButton = document.getElementById("watchlistSearchButton");
 const replayPlayBtn = document.getElementById("replayPlay");
 const replayPlayIcon = document.getElementById("replayPlayIcon");
 const replayPlayLabel = document.getElementById("replayPlayLabel");
@@ -82,6 +84,10 @@ const signalHistorySummary = document.getElementById("signalHistorySummary");
 const signalChangeList = document.getElementById("signalChangeList");
 const signalPersistenceList = document.getElementById("signalPersistenceList");
 const historySideButtons = document.querySelectorAll(".history-side-btn");
+const watchlistView = document.getElementById("watchlistView");
+const watchlistSummary = document.getElementById("watchlistSummary");
+const watchlistList = document.getElementById("watchlistList");
+const watchlistNavCount = document.getElementById("watchlistNavCount");
 const actionDrawer = document.getElementById("actionDrawer");
 const actionDrawerBackdrop = document.getElementById("actionDrawerBackdrop");
 const actionDrawerClose = document.getElementById("actionDrawerClose");
@@ -90,6 +96,7 @@ const actionDrawerTitle = document.getElementById("actionDrawerTitle");
 const actionDrawerCompany = document.getElementById("actionDrawerCompany");
 const actionDrawerBody = document.getElementById("actionDrawerBody");
 const actionDrawerPin = document.getElementById("actionDrawerPin");
+const actionDrawerWatch = document.getElementById("actionDrawerWatch");
 
 let lastStocks = [];
 let lastBenchmarks = [];
@@ -114,10 +121,15 @@ const actionDetailRows = new Map();
 let activeActionDetail = null;
 let actionBoardSide = "bullish";
 let actionHistoryData = null;
+let actionHistoryLimit = 0;
 let signalHistoryData = null;
 let selectedHistorySession = null;
 let signalHistorySide = "bullish";
 const actionPeriodRowsCache = new Map();
+const watchlistSymbols = new Set();
+const watchlistActionSignals = new Map();
+const watchlistConfluence = new Map();
+const WATCHLIST_KEY = `${APP_CONFIG.universe}-watchlist-v1`;
 
 const REPLAY_PERIODS = {
   "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", bars: 26 },
@@ -319,6 +331,53 @@ function formatPerf(value) {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+function loadWatchlist() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(WATCHLIST_KEY) || "[]");
+    if (Array.isArray(stored)) {
+      stored.filter((symbol) => typeof symbol === "string").forEach((symbol) => {
+        watchlistSymbols.add(symbol.toUpperCase());
+      });
+    }
+  } catch {
+    // A malformed browser preference should never prevent the market view loading.
+  }
+  updateWatchlistControls();
+}
+
+function saveWatchlist() {
+  try {
+    localStorage.setItem(WATCHLIST_KEY, JSON.stringify([...watchlistSymbols].sort()));
+  } catch {
+    // Watchlists are optional browser-local preferences.
+  }
+  updateWatchlistControls();
+}
+
+function updateWatchlistControls() {
+  if (watchlistNavCount) watchlistNavCount.textContent = String(watchlistSymbols.size);
+  if (watchlistSearchButton && tickerSearchInput) {
+    const searchSymbol = tickerSearchInput.value.trim().split(/\s+|—/)[0].toUpperCase();
+    const watched = watchlistSymbols.has(searchSymbol);
+    watchlistSearchButton.textContent = watched ? "★ Watching" : "☆ Watch";
+    watchlistSearchButton.classList.toggle("active", watched);
+  }
+  if (actionDrawerWatch && activeActionDetail) {
+    const watched = watchlistSymbols.has(activeActionDetail.symbol);
+    actionDrawerWatch.textContent = watched ? "★ Remove from watchlist" : "☆ Add to watchlist";
+    actionDrawerWatch.classList.toggle("active", watched);
+  }
+}
+
+function setWatchlistSymbol(symbol, watched) {
+  if (!symbol) return;
+  const normalized = symbol.toUpperCase();
+  if (watched) watchlistSymbols.add(normalized);
+  else watchlistSymbols.delete(normalized);
+  saveWatchlist();
+  if (appView === "watchlist") renderWatchlist();
+}
+
 function showTooltip(event, html) {
   tooltipEl.innerHTML = html;
   tooltipEl.classList.add("visible");
@@ -362,6 +421,10 @@ function updateSubhead() {
   if (!metricSubhead) return;
   if (appView === "action") {
     metricSubhead.textContent = "Multi-timeframe leadership and weakness across the selected universe.";
+    return;
+  }
+  if (appView === "watchlist") {
+    metricSubhead.textContent = "Personal signal and trend monitor for your watched S&P 500 stocks.";
     return;
   }
   let base = METRICS[selectedMetric]?.subhead || "";
@@ -1301,7 +1364,7 @@ function newYorkDateKey(value) {
   });
 }
 
-function serverActionSnapshots() {
+function serverActionSnapshots(sectorModeOverride = null) {
   const historyData = actionHistoryData || signalHistoryData;
   if (!historyData?.sessions?.length || !historyData?.rows?.length) return [];
   const currentAsOf = currentSignalAsOf();
@@ -1310,7 +1373,9 @@ function serverActionSnapshots() {
     .filter((asOf) => !currentDate || newYorkDateKey(asOf) < currentDate)
     .sort((a, b) => new Date(a) - new Date(b))
     .slice(-5);
-  const sectorMode = activeFilter === "sectors";
+  const sectorMode = typeof sectorModeOverride === "boolean"
+    ? sectorModeOverride
+    : activeFilter === "sectors";
   return sessions.map((asOf) => {
     const snapshot = {
       asOf,
@@ -1441,7 +1506,7 @@ function relativeStrengthContext(stock, period, sectorSignals) {
   };
 }
 
-function sectorAlignment(context, negative = false) {
+function sectorAlignment(context, negative = false, sectorBoard = activeFilter === "sectors") {
   const sectorPositive = Math.max(
     context.sectorSignals.positiveShort || 0,
     context.sectorSignals.positiveLong || 0
@@ -1450,7 +1515,7 @@ function sectorAlignment(context, negative = false) {
     context.sectorSignals.negativeShort || 0,
     context.sectorSignals.negativeLong || 0
   );
-  if (activeFilter === "sectors") {
+  if (sectorBoard) {
     return { key: "sector", label: "Sector signal", rankAdjustment: 0 };
   }
   const alignedScore = negative ? sectorNegative : sectorPositive;
@@ -1464,12 +1529,12 @@ function sectorAlignment(context, negative = false) {
   return { key: "specific", label: "Stock-specific", rankAdjustment: 0 };
 }
 
-function addRelativeStrength(rows, periods, sectorSignals, negative = false) {
+function addRelativeStrength(rows, periods, sectorSignals, negative = false, sectorBoard = activeFilter === "sectors") {
   rows.forEach((row) => {
     row.relativeStrength = periods.map((period) =>
       relativeStrengthContext(row.stock, period, sectorSignals)
     );
-    row.sectorAlignment = sectorAlignment(row.relativeStrength[0], negative);
+    row.sectorAlignment = sectorAlignment(row.relativeStrength[0], negative, sectorBoard);
     row.relativeClassification = row.sectorAlignment.label;
     row.candidateScore = row.bucketScore + row.sectorAlignment.rankAdjustment;
   });
@@ -1531,17 +1596,20 @@ function renderActionBuckets(
   positiveLong,
   negativeShort,
   negativeLong,
-  sectorSignals = new Map()
+  sectorSignals = new Map(),
+  options = {}
 ) {
-  const key = actionUniverseKey();
-  const serverSnapshots = serverActionSnapshots();
+  const renderUi = options.renderUi !== false;
+  const sectorBoard = options.forceStockBoard ? false : activeFilter === "sectors";
+  const key = options.forceStockBoard ? "all|sector|all-sectors" : actionUniverseKey();
+  const serverSnapshots = serverActionSnapshots(sectorBoard);
   const usingServerHistory = serverSnapshots.length > 0;
   let priorSnapshots = serverSnapshots;
   if (!usingServerHistory) {
     // Synthesizing historical snapshots on the client evaluates every period
     // several extra times. Avoid that heavyweight fallback for the SmallCap
     // 600; its change-based buckets should be driven by shared server history.
-    if (APP_CONFIG.universe !== "smallcaps") seedHistoricalActionHistory(key);
+    if (renderUi && APP_CONFIG.universe !== "smallcaps") seedHistoricalActionHistory(key);
     const history = readActionHistory();
     const signalAsOf = currentSignalAsOf();
     priorSnapshots = (Array.isArray(history[key]) ? history[key] : [])
@@ -1553,7 +1621,6 @@ function renderActionBuckets(
   const positiveLongBySymbol = new Map(positiveLong.map((row) => [row.symbol, row]));
   const negativeShortBySymbol = new Map(negativeShort.map((row) => [row.symbol, row]));
   const negativeLongBySymbol = new Map(negativeLong.map((row) => [row.symbol, row]));
-  const sectorBoard = activeFilter === "sectors";
   const thresholds = sectorBoard
     ? {
         acceleration: 60,
@@ -1773,9 +1840,35 @@ function renderActionBuckets(
     ["bounce", "Bounce in downtrend", bounceInDowntrend, ["1d", "1w", "1m"], "Setup"],
     ["breakdown", "Bearish reversal", breakdownWarning, ["1w", "1m"], "Reversal"],
   ];
-  bullish.forEach(([, , rows, periods]) => addRelativeStrength(rows, periods, sectorSignals));
-  bearish.forEach(([, , rows, periods]) => addRelativeStrength(rows, periods, sectorSignals, true));
+  bullish.forEach(([, , rows, periods]) =>
+    addRelativeStrength(rows, periods, sectorSignals, false, sectorBoard)
+  );
+  bearish.forEach(([, , rows, periods]) =>
+    addRelativeStrength(rows, periods, sectorSignals, true, sectorBoard)
+  );
   [...bullish, ...bearish].forEach(([, , rows]) => rankActionCandidates(rows));
+
+  watchlistActionSignals.clear();
+  [
+    ["bullish", bullish],
+    ["bearish", bearish],
+  ].forEach(([side, groups]) => {
+    groups.forEach(([keyName, label, rows]) => {
+      rows.forEach((row) => {
+        if (!watchlistActionSignals.has(row.symbol)) watchlistActionSignals.set(row.symbol, []);
+        watchlistActionSignals.get(row.symbol).push({
+          key: keyName,
+          label,
+          side,
+          status: row.status || null,
+          score: row.bucketScore,
+          sectorAlignment: row.sectorAlignment,
+        });
+      });
+    });
+  });
+  if (!renderUi) return;
+
   const activeBuckets = actionBoardSide === "bearish" ? bearish : bullish;
   const descriptions = actionBoardSide === "bearish"
     ? [
@@ -1866,6 +1959,163 @@ function distanceFromDayAverage(stock, days) {
   return average > 0 ? ((stock.currentPrice / average) - 1) * 100 : null;
 }
 
+function movingAverageValue(stock, days) {
+  const closes = (stock.replayDaily || [])
+    .map((point) => point[1])
+    .filter(Number.isFinite)
+    .slice(-days);
+  if (!closes.length) return null;
+  return closes.reduce((sum, value) => sum + value, 0) / closes.length;
+}
+
+function formatPrice(value) {
+  if (!Number.isFinite(value)) return "--";
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: value >= 100 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function renderWatchlist() {
+  if (!watchlistView || !watchlistSummary || !watchlistList) return;
+  updateWatchlistControls();
+  if (!lastStocks.length) {
+    watchlistSummary.innerHTML = "";
+    watchlistList.innerHTML = "<p class=\"watchlist-empty\">Loading market data…</p>";
+    return;
+  }
+  renderConfluenceScanner(true);
+  const stocks = [...watchlistSymbols]
+    .map((symbol) => lastStocks.find((stock) => stock.symbol === symbol))
+    .filter(Boolean)
+    .map((stock) => {
+      const signals = watchlistActionSignals.get(stock.symbol) || [];
+      const confluence = watchlistConfluence.get(stock.symbol) || {};
+      const strongestConfluence = Math.max(
+        confluence.positiveShort || 0,
+        confluence.positiveLong || 0,
+        confluence.negativeShort || 0,
+        confluence.negativeLong || 0
+      );
+      return { stock, signals, confluence, strongestConfluence };
+    })
+    .sort((a, b) =>
+      b.signals.length - a.signals.length ||
+      b.strongestConfluence - a.strongestConfluence ||
+      a.stock.symbol.localeCompare(b.stock.symbol)
+    );
+
+  const bullishCount = stocks.filter((item) =>
+    item.signals.some((signal) => signal.side === "bullish")
+  ).length;
+  const bearishCount = stocks.filter((item) =>
+    item.signals.some((signal) => signal.side === "bearish")
+  ).length;
+  const activeCount = stocks.filter((item) => item.signals.length).length;
+  watchlistSummary.innerHTML = `
+    <div><small>Watched</small><strong>${stocks.length}</strong></div>
+    <div><small>Active signals</small><strong>${activeCount}</strong></div>
+    <div><small>Bullish</small><strong class="positive">${bullishCount}</strong></div>
+    <div><small>Bearish</small><strong class="negative">${bearishCount}</strong></div>
+  `;
+
+  if (!stocks.length) {
+    watchlistList.innerHTML = `
+      <div class="watchlist-empty">
+        <strong>No watched stocks yet.</strong>
+        <span>Search for a ticker above and choose “☆ Watch,” or add one from an Action Board detail drawer.</span>
+      </div>
+    `;
+    return;
+  }
+
+  watchlistList.innerHTML = stocks.map(({ stock, signals, confluence }) => {
+    const currentPrice = Number.isFinite(stock.currentPrice)
+      ? stock.currentPrice
+      : stock.replayDaily?.at(-1)?.[1];
+    const averages = [5, 20, 50].map((days) => {
+      const average = movingAverageValue(stock, days);
+      const distance = Number.isFinite(currentPrice) && Number.isFinite(average) && average !== 0
+        ? ((currentPrice / average) - 1) * 100
+        : null;
+      return { days, average, distance };
+    });
+    const sectorBenchmark = lastBenchmarks.find((benchmark) =>
+      benchmark.symbol !== APP_CONFIG.broadSymbol && benchmark.sector === stock.sector
+    );
+    const sectorPositive = Math.max(
+      confluence.sectorSignals?.positiveShort || 0,
+      confluence.sectorSignals?.positiveLong || 0
+    );
+    const sectorNegative = Math.max(
+      confluence.sectorSignals?.negativeShort || 0,
+      confluence.sectorSignals?.negativeLong || 0
+    );
+    const sectorDirection = Math.max(sectorPositive, sectorNegative) < 50
+      ? { label: "Sector mixed", className: "mixed", score: Math.max(sectorPositive, sectorNegative) }
+      : sectorPositive >= sectorNegative
+        ? { label: "Sector bullish", className: "positive", score: sectorPositive }
+        : { label: "Sector bearish", className: "negative", score: sectorNegative };
+    const fallbackSignals = signals.length ? "" : `
+      <span class="watchlist-signal quiet">No Action Board signal</span>
+    `;
+    const signalHistory = watchlistSignalHistory(stock.symbol);
+    return `
+      <article class="watchlist-card" data-symbol="${stock.symbol}">
+        <div class="watchlist-card-heading">
+          <div>
+            <div class="watchlist-symbol-line">
+              <strong>${stock.symbol}</strong>
+              <span class="${(stock.changePercent || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.changePercent)}</span>
+            </div>
+            <small>${stock.security} · ${stock.subIndustry || stock.sector}</small>
+          </div>
+          <button class="watchlist-remove" type="button" data-watch-remove="${stock.symbol}" aria-label="Remove ${stock.symbol} from watchlist">★</button>
+        </div>
+        <div class="watchlist-price-row">
+          <div><small>Price</small><strong>${formatPrice(currentPrice)}</strong></div>
+          ${averages.map(({ days, average, distance }) => `
+            <div>
+              <small>${days}D average</small>
+              <strong>${formatPrice(average)}</strong>
+              <span class="${(distance || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance)}</span>
+            </div>
+          `).join("")}
+        </div>
+        <div class="watchlist-context">
+          <div class="watchlist-signals">
+            ${signals.map((signal) => `
+              <span class="watchlist-signal ${signal.side}">${signal.label}${signal.status ? ` · ${signal.status}` : ""}</span>
+            `).join("")}
+            ${fallbackSignals}
+          </div>
+          <div class="watchlist-confluence">
+            <span>Short bull <strong>${Math.round(confluence.positiveShort || 0)}</strong></span>
+            <span>Long bull <strong>${Math.round(confluence.positiveLong || 0)}</strong></span>
+            <span>Short bear <strong>${Math.round(confluence.negativeShort || 0)}</strong></span>
+            <span>Long bear <strong>${Math.round(confluence.negativeLong || 0)}</strong></span>
+          </div>
+          <span class="watchlist-sector ${sectorDirection.className}">
+            ${sectorBenchmark?.symbol || "Sector"} · ${sectorDirection.label} ${Math.round(sectorDirection.score)}
+          </span>
+        </div>
+        <div class="watchlist-history">
+          <span class="watchlist-history-label">
+            <small>Recent signal history</small>
+            <strong>${signalHistory.activeSessions} active ${signalHistory.activeSessions === 1 ? "session" : "sessions"}</strong>
+          </span>
+          <span class="signal-timeline watchlist-signal-timeline" aria-label="Recent stored signal history for ${stock.symbol}">
+            ${signalHistory.timeline}
+          </span>
+        </div>
+        <button class="watchlist-pin" type="button" data-watch-pin="${stock.symbol}">Pin on Market Replay</button>
+      </article>
+    `;
+  }).join("");
+}
+
 function closeActionDrawer() {
   if (!actionDrawer) return;
   actionDrawer.hidden = true;
@@ -1878,6 +2128,7 @@ function openActionDrawer(bucket, symbol) {
   const row = actionDetailRows.get(`${bucket}:${symbol}`);
   if (!row || !actionDrawer) return;
   activeActionDetail = row;
+  updateWatchlistControls();
   const distance5d = distanceFromDayAverage(row.stock, 5);
   const distance20d = distanceFromDayAverage(row.stock, 20);
   actionDrawerBucket.textContent = row.bucketLabel;
@@ -1914,6 +2165,30 @@ const HISTORY_BUCKET_GROUPS = {
   bullish: ["acceleration", "leader", "pullback", "breakout"],
   bearish: ["weakness", "laggard", "bounce", "breakdown"],
 };
+
+function watchlistSignalHistory(symbol) {
+  const sessions = (actionHistoryData?.sessions || []).slice().reverse();
+  const rows = (actionHistoryData?.rows || []).filter((row) =>
+    !row.is_sector && row.symbol === symbol
+  );
+  const rowsBySession = new Map(rows.map((row) => [
+    new Date(row.snapshot_at).toISOString(),
+    row,
+  ]));
+  let activeSessions = 0;
+  const timeline = sessions.map((session) => {
+    const buckets = (rowsBySession.get(session)?.buckets || [])
+      .filter((bucket) => HISTORY_BUCKETS[bucket]);
+    if (buckets.length) activeSessions += 1;
+    const primaryBucket = buckets[0];
+    const labels = buckets.map((bucket) => HISTORY_BUCKETS[bucket].label).join(" · ");
+    return `<i class="${primaryBucket || "empty"}" title="${historyDateLabel(session)}${labels ? ` · ${labels}` : " · No signal"}"></i>`;
+  }).join("");
+  return {
+    activeSessions,
+    timeline: timeline || "<span class=\"watchlist-history-empty\">No stored snapshots yet</span>",
+  };
+}
 
 function historyDateLabel(value, includeTime = false) {
   const date = new Date(value);
@@ -2074,54 +2349,65 @@ function renderSignalHistory() {
 }
 
 async function loadSignalHistory(scope = appView === "action" ? "action" : "history") {
-  const actionOnly = scope === "action";
-  if (!actionOnly && !signalHistoryStatus) return;
-  if (actionOnly) {
+  const actionScope = scope === "action" || scope === "watchlist";
+  const requestedLimit = scope === "watchlist" ? 20 : 6;
+  if (!actionScope && !signalHistoryStatus) return;
+  if (actionScope) {
     if (actionHistoryNote) actionHistoryNote.textContent = "Loading shared server baseline…";
   } else {
     signalHistoryStatus.textContent = "Loading stored snapshots…";
   }
   try {
     const separator = APP_CONFIG.historyEndpoint.includes("?") ? "&" : "?";
-    const response = await fetch(actionOnly
-      ? `${APP_CONFIG.historyEndpoint}${separator}limit=6&compact=true`
+    const response = await fetch(actionScope
+      ? `${APP_CONFIG.historyEndpoint}${separator}limit=${requestedLimit}&compact=true`
       : `${APP_CONFIG.historyEndpoint}${separator}limit=20`);
     const data = await readApiJson(response);
     if (!response.ok) throw new Error(data.error || `History unavailable (${response.status})`);
-    if (actionOnly) actionHistoryData = data;
+    if (actionScope) {
+      actionHistoryData = data;
+      actionHistoryLimit = requestedLimit;
+    }
     else signalHistoryData = data;
     if (appView === "action") renderConfluenceScanner();
-    else if (appView === "history" && !actionOnly) renderSignalHistory();
+    else if (appView === "watchlist") renderWatchlist();
+    else if (appView === "history" && !actionScope) renderSignalHistory();
   } catch (error) {
-    if (actionOnly) {
+    if (actionScope) {
       actionHistoryData = { sessions: [], rows: [] };
+      actionHistoryLimit = 0;
       if (actionHistoryNote) actionHistoryNote.textContent = error.message;
     } else {
       signalHistoryData = { sessions: [], rows: [] };
       signalHistoryStatus.textContent = error.message;
     }
     if (appView === "action") renderConfluenceScanner();
-    else if (appView === "history" && !actionOnly) renderSignalHistory();
+    else if (appView === "watchlist") renderWatchlist();
+    else if (appView === "history" && !actionScope) renderSignalHistory();
   }
 }
 
-function renderConfluenceScanner() {
+function renderConfluenceScanner(watchlistOnly = false) {
   if (!confluenceScanner || !negativeConfluenceScanner) return;
-  const visibleUniverse = getBaseScanUniverse();
+  const visibleUniverse = watchlistOnly ? lastStocks : getBaseScanUniverse();
   const available = visibleUniverse.length >= 2;
   const actionBoardBullish = appView === "action" && actionBoardSide === "bullish";
   const actionBoardBearish = appView === "action" && actionBoardSide === "bearish";
-  confluenceScanner.hidden = !available || actionBoardBearish;
-  negativeConfluenceScanner.hidden = !available || actionBoardBullish;
+  if (!watchlistOnly) {
+    confluenceScanner.hidden = !available || actionBoardBearish;
+    negativeConfluenceScanner.hidden = !available || actionBoardBullish;
+  }
   if (!available) return;
   const sectorUniverse = lastBenchmarks.filter((benchmark) => benchmark.symbol !== APP_CONFIG.broadSymbol);
-  const scoreUniverse = appView === "action"
+  const scoreUniverse = watchlistOnly
+    ? lastStocks
+    : appView === "action"
     ? activeFilter === "sectors"
       ? sectorUniverse
       : lastStocks
     : visibleUniverse;
-  const periodRows = appView === "action"
-    ? getActionPeriodRows(activeFilter === "sectors" ? "sectors" : "stocks", scoreUniverse)
+  const periodRows = appView === "action" || watchlistOnly
+    ? getActionPeriodRows(watchlistOnly || activeFilter !== "sectors" ? "stocks" : "sectors", scoreUniverse)
     : new Map(
       Object.keys(REPLAY_PERIODS).map((period) => [
         period,
@@ -2149,7 +2435,7 @@ function renderConfluenceScanner() {
   const positiveLong = visibleRows(allPositiveLong);
   const negativeShort = visibleRows(allNegativeShort);
   const negativeLong = visibleRows(allNegativeLong);
-  const sectorPeriodRows = appView === "action"
+  const sectorPeriodRows = appView === "action" || watchlistOnly
     ? getActionPeriodRows("sectors", sectorUniverse)
     : new Map(
       Object.keys(REPLAY_PERIODS).map((period) => [
@@ -2197,6 +2483,27 @@ function renderConfluenceScanner() {
       negativeLong: sectorNegativeLong.find((row) => row.symbol === benchmark.symbol)?.score || 0,
     },
   ]));
+  if (watchlistOnly) {
+    watchlistConfluence.clear();
+    allPositiveShort.forEach((row) => {
+      watchlistConfluence.set(row.symbol, {
+        positiveShort: row.score,
+        positiveLong: allPositiveLong.find((candidate) => candidate.symbol === row.symbol)?.score || 0,
+        negativeShort: allNegativeShort.find((candidate) => candidate.symbol === row.symbol)?.score || 0,
+        negativeLong: allNegativeLong.find((candidate) => candidate.symbol === row.symbol)?.score || 0,
+        sectorSignals: sectorSignals.get(row.stock.sector) || {},
+      });
+    });
+    renderActionBuckets(
+      allPositiveShort,
+      allPositiveLong,
+      allNegativeShort,
+      allNegativeLong,
+      sectorSignals,
+      { renderUi: false, forceStockBoard: true }
+    );
+    return;
+  }
   renderConfluenceRows(shortConfluenceList, positiveShort);
   renderConfluenceRows(longConfluenceList, positiveLong);
   renderConfluenceRows(shortNegativeConfluenceList, negativeShort, true);
@@ -2205,13 +2512,17 @@ function renderConfluenceScanner() {
 }
 
 function setAppView(view) {
-  appView = ["action", "history"].includes(view) ? view : "replay";
+  appView = ["action", "history", "watchlist"].includes(view) ? view : "replay";
   const showActionBoard = appView === "action";
   const showHistory = appView === "history";
-  marketReplayView.hidden = showActionBoard || showHistory;
+  const showWatchlist = appView === "watchlist";
+  marketReplayView.hidden = showActionBoard || showHistory || showWatchlist;
   actionBoardView.hidden = !showActionBoard;
   signalHistoryView.hidden = !showHistory;
-  controlsEl.classList.toggle("action-board-active", showActionBoard || showHistory);
+  if (watchlistView) watchlistView.hidden = !showWatchlist;
+  controlsEl.classList.toggle("action-board-active", showActionBoard || showHistory || showWatchlist);
+  controlsEl.classList.toggle("watchlist-active", showWatchlist);
+  if (sectorFilterBar) sectorFilterBar.hidden = showWatchlist;
   workspaceNavButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.appView === appView);
   });
@@ -2229,6 +2540,17 @@ function setAppView(view) {
     updateSubhead();
     if (signalHistoryData) renderSignalHistory();
     else loadSignalHistory("history");
+  } else if (showWatchlist) {
+    stopReplay();
+    updateSubhead();
+    if (actionHistoryData && actionHistoryLimit >= 20) renderWatchlist();
+    else {
+      if (watchlistSummary) watchlistSummary.innerHTML = "";
+      if (watchlistList) {
+        watchlistList.innerHTML = "<p class=\"watchlist-empty\">Loading current signals…</p>";
+      }
+      loadSignalHistory("watchlist");
+    }
   } else {
     if (replayActive) updateReplaySubhead();
     else updateSubhead();
@@ -2243,6 +2565,10 @@ function renderCurrentChart() {
   }
   if (appView === "history") {
     renderSignalHistory();
+    return;
+  }
+  if (appView === "watchlist") {
+    renderWatchlist();
     return;
   }
   buildChart(replayActive ? replayStocksAt(replayFrameIndex) : lastStocks);
@@ -2262,11 +2588,9 @@ function populateTickerSearch() {
     });
 }
 
-function pinSearchedTicker() {
-  const query = tickerSearchInput.value.trim();
+function resolveTickerSearch(query) {
   if (!query) {
-    tickerSearchStatus.textContent = "Enter a ticker symbol.";
-    return;
+    return { match: null, message: "Enter a ticker symbol." };
   }
   const universe = [...lastStocks, ...lastBenchmarks];
   const tickerQuery = query.split(/\s+|—/)[0].toUpperCase();
@@ -2278,9 +2602,18 @@ function pinSearchedTicker() {
   );
   const match = exactMatch || (tickerMatches.length === 1 ? tickerMatches[0] : null);
   if (!match) {
-    tickerSearchStatus.textContent = tickerMatches.length > 1
+    return { match: null, message: tickerMatches.length > 1
       ? `${tickerMatches.length} tickers match “${query}”. Choose one from the list.`
-      : `No ${APP_CONFIG.broadLabel} ticker found for “${query}”.`;
+      : `No ${APP_CONFIG.broadLabel} ticker found for “${query}”.` };
+  }
+  return { match, message: "" };
+}
+
+function pinSearchedTicker() {
+  const query = tickerSearchInput.value.trim();
+  const { match, message } = resolveTickerSearch(query);
+  if (!match) {
+    tickerSearchStatus.textContent = message;
     return;
   }
 
@@ -2313,8 +2646,28 @@ function pinSearchedTicker() {
     calculateReplayRange();
     updateReplaySubhead();
   }
-  if (appView === "action") setAppView("replay");
+  if (appView !== "replay") setAppView("replay");
   else renderCurrentChart();
+}
+
+function watchSearchedTicker() {
+  const query = tickerSearchInput.value.trim();
+  const { match, message } = resolveTickerSearch(query);
+  if (!match) {
+    tickerSearchStatus.textContent = message;
+    return;
+  }
+  const isStock = lastStocks.some((stock) => stock.symbol === match.symbol);
+  if (!isStock) {
+    tickerSearchStatus.textContent = "Watchlists currently support S&P 500 stocks, not benchmark ETFs.";
+    return;
+  }
+  const watched = watchlistSymbols.has(match.symbol);
+  setWatchlistSymbol(match.symbol, !watched);
+  tickerSearchInput.value = match.symbol;
+  tickerSearchStatus.textContent = watched
+    ? `Removed ${match.symbol} from your watchlist.`
+    : `Added ${match.symbol} to your watchlist.`;
 }
 
 function buildReplayTimeline() {
@@ -2571,8 +2924,9 @@ async function loadData(forceRefresh = false) {
     lastBenchmarks = data.benchmarks || [];
     actionPeriodRowsCache.clear();
     populateTickerSearch();
-    buildChart(lastStocks);
     buildReplayTimeline();
+    if (appView === "watchlist") renderWatchlist();
+    else buildChart(lastStocks);
 
     if (data.failures && data.failures.length) {
       const sample = data.failures.slice(0, 2).join(' | ');
@@ -2717,6 +3071,9 @@ tickerSearchForm.addEventListener("submit", (event) => {
   pinSearchedTicker();
 });
 
+watchlistSearchButton?.addEventListener("click", watchSearchedTicker);
+tickerSearchInput?.addEventListener("input", updateWatchlistControls);
+
 momentumModeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     momentumMode = button.dataset.momentumMode || "persistent";
@@ -2823,6 +3180,32 @@ actionDrawerPin?.addEventListener("click", () => {
   setAppView("replay");
 });
 
+actionDrawerWatch?.addEventListener("click", () => {
+  if (!activeActionDetail) return;
+  const watched = watchlistSymbols.has(activeActionDetail.symbol);
+  setWatchlistSymbol(activeActionDetail.symbol, !watched);
+  tickerSearchStatus.textContent = watched
+    ? `Removed ${activeActionDetail.symbol} from your watchlist.`
+    : `Added ${activeActionDetail.symbol} to your watchlist.`;
+  updateWatchlistControls();
+});
+
+watchlistList?.addEventListener("click", (event) => {
+  const remove = event.target.closest("[data-watch-remove]");
+  if (remove) {
+    setWatchlistSymbol(remove.dataset.watchRemove, false);
+    tickerSearchStatus.textContent = `Removed ${remove.dataset.watchRemove} from your watchlist.`;
+    return;
+  }
+  const pin = event.target.closest("[data-watch-pin]");
+  if (!pin) return;
+  pinnedSymbols.add(pin.dataset.watchPin);
+  tickerSearchInput.value = pin.dataset.watchPin;
+  tickerSearchStatus.textContent = `Pinned ${pin.dataset.watchPin} from your watchlist.`;
+  setAppView("replay");
+});
+
+loadWatchlist();
 updateSubhead();
 setMetric("changePercent");
 loadData();
