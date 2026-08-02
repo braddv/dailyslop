@@ -15,6 +15,14 @@
       "destination": "/public/sp500ad/:path*"
     },
     {
+      "source": "/smallcaps",
+      "destination": "/public/smallcaps/index.html"
+    },
+    {
+      "source": "/smallcaps/:path*",
+      "destination": "/public/smallcaps/:path*"
+    },
+    {
       "source": "/slop",
       "destination": "/public/slop.html"
     },
@@ -63,7 +71,7 @@
   },
   "crons": [
     {
-      "path": "/api/signal-history?mode=capture",
+      "path": "/api/capture-signals",
       "schedule": "0 21 * * 1-5"
     }
   ]

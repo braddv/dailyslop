@@ -1,0 +1,4834 @@
+{
+  "asOf": null,
+  "source": {
+    "name": "S&P SmallCap 600 constituent fallback",
+    "url": "https://en.wikipedia.org/wiki/List_of_S%26P_600_companies",
+    "note": "Regenerate only when the official SPSM holdings export is unavailable."
+  },
+  "stocks": [
+    {
+      "symbol": "AAMI",
+      "security": "Acadian Asset Management Inc.",
+      "sector": "Financials",
+      "subIndustry": "Asset Management & Custody Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AAP",
+      "security": "Advance Auto Parts, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AAT",
+      "security": "American Assets Trust",
+      "sector": "Real Estate",
+      "subIndustry": "Diversified REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ABCB",
+      "security": "Ameris Bancorp",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ABG",
+      "security": "Asbury Automotive Group",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ABM",
+      "security": "ABM Industries, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Environmental & Facilities Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ABR",
+      "security": "Arbor Realty Trust",
+      "sector": "Financials",
+      "subIndustry": "Mortgage REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ACA",
+      "security": "Arcosa, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Construction & Engineering",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ACAD",
+      "security": "Acadia Pharmaceuticals",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ACHC",
+      "security": "Acadia Healthcare",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Facilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ACIW",
+      "security": "ACI Worldwide",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ACLS",
+      "security": "Axcelis Technologies, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ACMR",
+      "security": "ACM Research, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ACT",
+      "security": "Enact Holdings, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Commercial & Residential Mortgage Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADAM",
+      "security": "Adamas Trust, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Mortgage REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADEA",
+      "security": "Adeia, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "IT Consulting & Other Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADMA",
+      "security": "ADMA Biologics, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADNT",
+      "security": "Adient",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADT",
+      "security": "ADT Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialized Consumer Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADUS",
+      "security": "Addus HomeCare Corp.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AEO",
+      "security": "American Eagle Outfitters",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AESI",
+      "security": "Atlas Energy Solutions, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AGNT",
+      "security": "eXp World Holdings, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Real Estate Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AGO",
+      "security": "Assured Guaranty Ltd.",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AGX",
+      "security": "Argan, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Construction & Engineering",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AGYS",
+      "security": "Agilysys, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AHCO",
+      "security": "AdaptHealth Corp.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AIN",
+      "security": "Albany International Corp.",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AIR",
+      "security": "AAR CORP.",
+      "sector": "Industrials",
+      "subIndustry": "Aerospace & Defense",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AKR",
+      "security": "Acadia Realty Trust",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ALG",
+      "security": "Alamo Group",
+      "sector": "Industrials",
+      "subIndustry": "Construction Machinery & Heavy Transportation Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ALGT",
+      "security": "Allegiant Travel Company",
+      "sector": "Industrials",
+      "subIndustry": "Passenger Airlines",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ALHC",
+      "security": "Alignment Healthcare, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ALKS",
+      "security": "Alkermes plc",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ALRM",
+      "security": "Alarm.Com, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMN",
+      "security": "Amn Healthcare Services, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMPH",
+      "security": "Amphstar Pharmaceuticals, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMR",
+      "security": "Alpha Metallurgical Resources, Inc.",
+      "sector": "Materials",
+      "subIndustry": "Steel",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMRX",
+      "security": "Amneal Pharmaceuticals",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMSF",
+      "security": "Amerisafe, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMTM",
+      "security": "Amentum",
+      "sector": "Industrials",
+      "subIndustry": "Diversified Support Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ANDE",
+      "security": "The Andersons, Inc.",
+      "sector": "Consumer Staples",
+      "subIndustry": "Food Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ANIP",
+      "security": "ANI Pharmaceuticals, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AORT",
+      "security": "Artivion",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AOSL",
+      "security": "Alpha and Omega Semiconductor, Ltd.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "APAM",
+      "security": "Artisan Partners Asset Management, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Asset Management & Custody Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "APLE",
+      "security": "Apple Hospitality REIT, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Hotel & Resort REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "APOG",
+      "security": "Apogee Enterprises, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ARCB",
+      "security": "ArcBest Corp.",
+      "sector": "Industrials",
+      "subIndustry": "Cargo Ground Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ARLO",
+      "security": "Arlo Technologies",
+      "sector": "Information Technology",
+      "subIndustry": "Communications Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AROC",
+      "security": "Archrock, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ARR",
+      "security": "Armour Residential REIT",
+      "sector": "Real Estate",
+      "subIndustry": "Mortgage REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ASO",
+      "security": "Academy Sports + Outdoors",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialty Stores",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ASTE",
+      "security": "Astec Industries, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Construction Machinery & Heavy Transportation Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ASTH",
+      "security": "Astrana Health, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Facilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ATEN",
+      "security": "A10 Networks, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Systems Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ATMU",
+      "security": "Atmus Filtration Technologies Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AUB",
+      "security": "Atlantic Union Bankshares, Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AVA",
+      "security": "Avista Corporation",
+      "sector": "Utilities",
+      "subIndustry": "Multi-Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AVNS",
+      "security": "Avanos Medical, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AWI",
+      "security": "Armstrong World Industries, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AWR",
+      "security": "American States Water Company",
+      "sector": "Utilities",
+      "subIndustry": "Water Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AX",
+      "security": "Axos Financial, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AZTA",
+      "security": "Azenta, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Life Sciences Tools & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AZZ",
+      "security": "AZZ, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Heavy Electrical Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BANC",
+      "security": "Banc Of California, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BANF",
+      "security": "Bancfirst Corp",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BANR",
+      "security": "Banner Corporation",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BBT",
+      "security": "Beacon Financial Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BCC",
+      "security": "Boise Cascade",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BCPC",
+      "security": "Balchem Corporation",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BFAM",
+      "security": "Bright Horizons Family Solutions Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialized Consumer Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BFH",
+      "security": "Bread Financial Holdings, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Consumer Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BFS",
+      "security": "Saul Centers, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BGC",
+      "security": "BGC Group, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Investment Banking & Brokerage",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BHE",
+      "security": "Benchmark Electronics, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Manufacturing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BJRI",
+      "security": "BJ's Restaurants, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Restaurants",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BKE",
+      "security": "The Buckle, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BKU",
+      "security": "BankUnited, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BL",
+      "security": "BlackLine Systems, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BLFS",
+      "security": "BioLife Solutions, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BLKB",
+      "security": "Blackbaud",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BMI",
+      "security": "Badger Meter, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BNL",
+      "security": "Broadstone Net Lease, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Industrial REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BOH",
+      "security": "Bank of Hawaii",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BOOT",
+      "security": "Boot Barn Holdings, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BOX",
+      "security": "Box, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BRC",
+      "security": "Brady Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Commercial Printing",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BTSG",
+      "security": "BrightSpring Health Services, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BTU",
+      "security": "Peabody Energy, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Coal & Consumable Fuels",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BXMT",
+      "security": "Blackstone Mortgage Trust, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Mortgage REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CACC",
+      "security": "Credit Acceptance",
+      "sector": "Financials",
+      "subIndustry": "Specialized Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CAG",
+      "security": "Conagra Brands",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CAKE",
+      "security": "The Cheesecake Factory, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Restaurants",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CALM",
+      "security": "Cal-Maine Foods, Inc.",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CALX",
+      "security": "Calix",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CALY",
+      "security": "Callaway Golf Company",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Leisure Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CARG",
+      "security": "CarGurus",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CASH",
+      "security": "Pathward Financial, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CATY",
+      "security": "Cathay General Bancorp",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CBRL",
+      "security": "Cracker Barrel",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Restaurants",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CBU",
+      "security": "Community Bank System, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CC",
+      "security": "Chemours",
+      "sector": "Materials",
+      "subIndustry": "Diversified Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CCOI",
+      "security": "Cogent Communications Holdings, Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Alternative Carriers",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CCS",
+      "security": "Century Communities, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CE",
+      "security": "Celanese",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CENT",
+      "security": "Central Garden & Pet Company",
+      "sector": "Consumer Staples",
+      "subIndustry": "Household Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CENTA",
+      "security": "Central Garden & Pet Company (Class A)",
+      "sector": "Consumer Staples",
+      "subIndustry": "Household Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CENX",
+      "security": "Century Aluminum Company",
+      "sector": "Materials",
+      "subIndustry": "Aluminum",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CERT",
+      "security": "Certara, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Technology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CFFN",
+      "security": "Capitol Federal Savings Bank",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CHCO",
+      "security": "City Holding Company",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CHEF",
+      "security": "Chefs' Warehouse, Inc.",
+      "sector": "Consumer Staples",
+      "subIndustry": "Food Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CLSK",
+      "security": "CleanSpark, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Internet Services & Infrastructure",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CNK",
+      "security": "Cinemark Holdings, Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Movies & Entertainment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CNMD",
+      "security": "CONMED Corporation",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CNR",
+      "security": "Core Natural Resources, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Coal & Consumable Fuels",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CNS",
+      "security": "Cohen & Steers, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Asset Management & Custody Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CNXC",
+      "security": "Concentrix",
+      "sector": "Industrials",
+      "subIndustry": "Data Processing & Outsourced Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CNXN",
+      "security": "PC Connection, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Technology Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "COCO",
+      "security": "The Vita Coco Company",
+      "sector": "Consumer Staples",
+      "subIndustry": "Soft Drinks & Non-alcoholic Beverages",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "COHU",
+      "security": "Cohu, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "COLL",
+      "security": "Collegium Pharmaceutical, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CON",
+      "security": "Concentra Group Holdings Parent, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CORT",
+      "security": "Corcept Therapeutics Incorporated",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "COTY",
+      "security": "Coty",
+      "sector": "Consumer Staples",
+      "subIndustry": "Personal Care Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CPB",
+      "security": "The Campbell's Company",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CPF",
+      "security": "Central Pacific Financial Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CPK",
+      "security": "Chesapeake Utilities Corp.",
+      "sector": "Utilities",
+      "subIndustry": "Gas Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CPRX",
+      "security": "Catalyst Pharmaceuticals Partners, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CRC",
+      "security": "California Resources Corporation",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CRGY",
+      "security": "Crescent Energy Company",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CRI",
+      "security": "Carter's, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel, Accessories & Luxury Goods",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CRK",
+      "security": "Comstock Resources, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CRSR",
+      "security": "Corsair Gaming",
+      "sector": "Information Technology",
+      "subIndustry": "Technology Hardware, Storage & Peripherals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CRVL",
+      "security": "CorVel Corporation",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CSR",
+      "security": "Centerspace Trust",
+      "sector": "Real Estate",
+      "subIndustry": "Multi-Family Residential REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CSW",
+      "security": "CSW Industrials, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Conglomerates",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CTS",
+      "security": "CTS Corporation",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Manufacturing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CUBI",
+      "security": "Customers Bancorp, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CURB",
+      "security": "Curbline Properties Corp.",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CVBF",
+      "security": "CVB Financial Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CVCO",
+      "security": "Cavco Industries, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CVI",
+      "security": "CVR Energy, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Refining & Marketing",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CVSA",
+      "security": "Covista Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Education Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CWEN",
+      "security": "Clearway Energy, Inc. (Class C)",
+      "sector": "Utilities",
+      "subIndustry": "Renewable Electricity",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CWEN-A",
+      "security": "Clearway Energy, Inc. (Class A)",
+      "sector": "Utilities",
+      "subIndustry": "Renewable Electricity",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CWK",
+      "security": "Cushman & Wakefield plc",
+      "sector": "Real Estate",
+      "subIndustry": "Real Estate Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CWST",
+      "security": "Casella Waste Systems, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Environmental & Facilities Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CWT",
+      "security": "California Water Service Group",
+      "sector": "Utilities",
+      "subIndustry": "Water Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CXM",
+      "security": "Sprinklr, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CXW",
+      "security": "CoreCivic",
+      "sector": "Industrials",
+      "subIndustry": "Diversified Support Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CZR",
+      "security": "Caesars Entertainment",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Casinos & Gaming",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DAN",
+      "security": "Dana Incorporated",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DAVE",
+      "security": "Dave, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Consumer Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DBD",
+      "security": "Diebold Nixdorf",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DCH",
+      "security": "Dauch Corporation",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DCOM",
+      "security": "Dime Community Bancshares, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DEA",
+      "security": "Easterly Government Properties, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Office REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DEI",
+      "security": "Douglas Emmett",
+      "sector": "Real Estate",
+      "subIndustry": "Office REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DFH",
+      "security": "Dream Finders Homes, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DFIN",
+      "security": "Donnelley Financial Solutions, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Financial Exchanges & Data",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DGII",
+      "security": "Digi International Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Communications Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DIOD",
+      "security": "Diodes Incorporated",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DLX",
+      "security": "Deluxe Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Commercial Printing",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DMC",
+      "security": "Del Monte Corporation",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DNOW",
+      "security": "NOW Inc",
+      "sector": "Industrials",
+      "subIndustry": "Trading Companies & Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DORM",
+      "security": "Dorman Products, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DRH",
+      "security": "DiamondRock Hospitality Company",
+      "sector": "Real Estate",
+      "subIndustry": "Hotel & Resort REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DV",
+      "security": "DoubleVerify Holdings, Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Advertising",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DXC",
+      "security": "DXC Technology",
+      "sector": "Information Technology",
+      "subIndustry": "IT Consulting & Other Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DXPE",
+      "security": "DXP Enterprises, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Trading Companies & Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EAT",
+      "security": "Brinker International, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Restaurants",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EBC",
+      "security": "Eastern Bankshares, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ECG",
+      "security": "Everus Construction Group, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Construction & Engineering",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ECPG",
+      "security": "Encore Capital Group, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Consumer Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EFC",
+      "security": "Ellington Financial, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Specialized Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EFOR",
+      "security": "Everforth Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "IT Consulting & Other Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EGBN",
+      "security": "Eagle Bancorp Inc",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EIG",
+      "security": "Employers Holdings, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EMN",
+      "security": "Eastman Chemical Company",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ENOV",
+      "security": "Enovis",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ENPH",
+      "security": "Enphase Energy",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ENR",
+      "security": "Energizer",
+      "sector": "Consumer Staples",
+      "subIndustry": "Household Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ENVA",
+      "security": "Enova International, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Consumer Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EPAC",
+      "security": "Enerpac Tool Group",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EPAM",
+      "security": "EPAM Systems",
+      "sector": "Information Technology",
+      "subIndustry": "IT Consulting & Other Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EPC",
+      "security": "Edgewell Personal Care",
+      "sector": "Consumer Staples",
+      "subIndustry": "Household Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EPRT",
+      "security": "Essential Properties Realty Trust, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Diversified REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ESE",
+      "security": "ESCO Technologies Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ESI",
+      "security": "Element Solutions",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ETSY",
+      "security": "Etsy",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Broadline Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EVTC",
+      "security": "EVERTEC, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Transaction & Payment Processing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EXTR",
+      "security": "Extreme Networks, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Communications Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EYE",
+      "security": "National Vision Holdings",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialty Stores",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EZPW",
+      "security": "EZCORP, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Consumer Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FA",
+      "security": "First Advantage Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FBK",
+      "security": "FB Financial Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FBNC",
+      "security": "First Bancorp (Southern Pines NC)",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FBP",
+      "security": "First BanCorp (Puerto Rico)",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FBRT",
+      "security": "Franklin BSP Realty Trust, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Mortgage REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FCF",
+      "security": "First Commonwealth Financial, Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FCPT",
+      "security": "Four Corners Property Trust, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Other Specialized REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FELE",
+      "security": "Franklin Electric",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FFBC",
+      "security": "First Financial Bancorp",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FG",
+      "security": "F&G Annuities & Life, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Life & Health Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FHB",
+      "security": "First Hawaiian, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FIBK",
+      "security": "First Interstate BancSystem, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FIZZ",
+      "security": "National Beverage Corp.",
+      "sector": "Consumer Staples",
+      "subIndustry": "Soft Drinks & Non-alcoholic Beverages",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FLO",
+      "security": "Flowers Foods",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FMC",
+      "security": "FMC Corporation",
+      "sector": "Materials",
+      "subIndustry": "Fertilizers & Agricultural Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FORM",
+      "security": "FormFactor, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FOXF",
+      "security": "Fox Factory",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FRPT",
+      "security": "Freshpet",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FSS",
+      "security": "Federal Signal Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Construction Machinery & Heavy Transportation Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FTDR",
+      "security": "Frontdoor, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialized Consumer Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FTRE",
+      "security": "Fortrea",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FUL",
+      "security": "H.B. Fuller Company",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FULT",
+      "security": "Fulton Financial Corporation",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FUN",
+      "security": "Six Flags",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Leisure Facilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GBX",
+      "security": "The Greenbrier Companies, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Construction Machinery & Heavy Transportation Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GEO",
+      "security": "GEO Group, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Environmental & Facilities Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GFF",
+      "security": "Griffon Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GIII",
+      "security": "G-III Apparel Group, Ltd.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel, Accessories & Luxury Goods",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GKOS",
+      "security": "Glaukos Corp.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GNL",
+      "security": "Global Net Lease, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Diversified REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GNW",
+      "security": "Genworth Financial, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Multi-line Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GO",
+      "security": "Grocery Outlet",
+      "sector": "Consumer Staples",
+      "subIndustry": "Food Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GOLF",
+      "security": "Acushnet Company",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Leisure Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GPI",
+      "security": "Group 1 Automotive, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GPOR",
+      "security": "Gulfport Energy Corporation",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GRBK",
+      "security": "Green Brick Partners, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GSHD",
+      "security": "Goosehead Insurance, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Insurance Brokers",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GT",
+      "security": "Goodyear Tire and Rubber Company",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Tires & Rubber",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GTES",
+      "security": "Gates Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GTM",
+      "security": "ZoomInfo",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GTY",
+      "security": "Getty Realty Corp.",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GVA",
+      "security": "Granite Construction, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Construction & Engineering",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HAFC",
+      "security": "Hanmi Financial Corporation",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HASI",
+      "security": "Hannon Armstrong Sustainable Infrastructure Capital, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Specialized Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HAYW",
+      "security": "Hayward Holdings, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Electrical Components & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HCC",
+      "security": "Warrior Met Coal, Inc.",
+      "sector": "Materials",
+      "subIndustry": "Steel",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HCI",
+      "security": "HCI Group, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HCSG",
+      "security": "Healthcare Services Group, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Environmental & Facilities Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HE",
+      "security": "Hawaiian Electric Industries, Inc.",
+      "sector": "Utilities",
+      "subIndustry": "Electric Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HFWA",
+      "security": "Heritage Financial Corporation",
+      "sector": "Health Care",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HIW",
+      "security": "Highwoods Properties",
+      "sector": "Real Estate",
+      "subIndustry": "Office REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HLIT",
+      "security": "Harmonic Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Communications Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HLX",
+      "security": "Helix Energy Solutions Group, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HMN",
+      "security": "Horace Mann Educators Corporation",
+      "sector": "Financials",
+      "subIndustry": "Multi-line Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HNI",
+      "security": "HNI Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Office Services & Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HOPE",
+      "security": "Hope Bancorp, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HP",
+      "security": "Helmerich & Payne, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Drilling",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HRMY",
+      "security": "Harmony Biosciences Holdings, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HSTM",
+      "security": "HealthStream, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Technology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HTH",
+      "security": "Hilltop Holdings Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HTLD",
+      "security": "Heartland Express, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Cargo Ground Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HTO",
+      "security": "H2O America",
+      "sector": "Utilities",
+      "subIndustry": "Water Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HTZ",
+      "security": "Hertz",
+      "sector": "Industrials",
+      "subIndustry": "Passenger Ground Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HUBG",
+      "security": "Hub Group, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Air Freight & Logistics",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HWKN",
+      "security": "Hawkins, Inc.",
+      "sector": "Materials",
+      "subIndustry": "Commodity Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HZO",
+      "security": "MarineMax, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialty Stores",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "IART",
+      "security": "Integra Lifesciences Holdings",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "IBP",
+      "security": "Installed Building Products, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ICHR",
+      "security": "Ichor Holdings, Ltd.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ICUI",
+      "security": "ICU Medical",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "IIPR",
+      "security": "Innovative Industrial Properties, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Industrial REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "INDB",
+      "security": "Independent Bank Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "INDV",
+      "security": "Indivior",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "INSP",
+      "security": "Inspire Medical Systems, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "INSW",
+      "security": "International Seaways, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Storage & Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "INVA",
+      "security": "Innoviva, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "INVX",
+      "security": "Innovex International, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "IOSP",
+      "security": "Innospec, Inc.",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "IPAR",
+      "security": "Inter Parfums, Inc.",
+      "sector": "Consumer Staples",
+      "subIndustry": "Household Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "IRDM",
+      "security": "Iridium Communications",
+      "sector": "Communication Services",
+      "subIndustry": "Alternative Carriers",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ITGR",
+      "security": "Integer Holdings Corporation",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ITRI",
+      "security": "Itron, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "IVT",
+      "security": "InvenTrust Properties",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "JBGS",
+      "security": "JBG Smith",
+      "sector": "Real Estate",
+      "subIndustry": "Office REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "JBLU",
+      "security": "JetBlue",
+      "sector": "Industrials",
+      "subIndustry": "Passenger Airlines",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "JBSS",
+      "security": "John B. Sanfilippo & Son, Inc.",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "JBTM",
+      "security": "JBT Marel Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "JJSF",
+      "security": "J&J Snack Foods Corp.",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "JOE",
+      "security": "St. Joe Company",
+      "sector": "Real Estate",
+      "subIndustry": "Real Estate Development",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "JXN",
+      "security": "Jackson Financial, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Life & Health Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KAI",
+      "security": "Kadant Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KALU",
+      "security": "Kaiser Aluminum Corporation",
+      "sector": "Materials",
+      "subIndustry": "Aluminum",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OPLN",
+      "security": "OPENLANE, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Diversified Support Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KFY",
+      "security": "Korn/Ferry International",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KGS",
+      "security": "Kodiak Gas Services, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KLIC",
+      "security": "Kulicke and Soffa Industries, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KMPR",
+      "security": "Kemper Corporation",
+      "sector": "Financials",
+      "subIndustry": "Multi-line Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KMT",
+      "security": "Kennametal",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KMX",
+      "security": "CarMax, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KN",
+      "security": "Knowles Corporation",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KNTK",
+      "security": "Kinetik Holdings, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Storage & Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KOP",
+      "security": "Koppers Holdings, Inc.",
+      "sector": "Materials",
+      "subIndustry": "Commodity Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KRYS",
+      "security": "Krystal Biotech, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KSS",
+      "security": "Kohl's Corp.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Broadline Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KTB",
+      "security": "Kontoor Brands",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel, Accessories & Luxury Goods",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KWR",
+      "security": "Quaker Chemical Corporation",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LAUR",
+      "security": "Laureate Education, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Education Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LAZ",
+      "security": "Lazard",
+      "sector": "Financials",
+      "subIndustry": "Diversified Capital Markets",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LBRT",
+      "security": "Liberty Energy, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LCII",
+      "security": "LCI Industries",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LEG",
+      "security": "Leggett & Platt",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Home Furnishings",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LFST",
+      "security": "Lifestance Health",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LGIH",
+      "security": "LGI Homes",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LIF",
+      "security": "Life360",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LGND",
+      "security": "Ligand Pharmaceuticals, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LKFN",
+      "security": "Lakeland Financial",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LKQ",
+      "security": "LKQ Corporation",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LMAT",
+      "security": "LeMaitre Vascular",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LNC",
+      "security": "Lincoln Financial",
+      "sector": "Financials",
+      "subIndustry": "Multi-line Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LNN",
+      "security": "Lindsay Corporation",
+      "sector": "Materials",
+      "subIndustry": "Agricultural & Farm Machinery",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LPG",
+      "security": "Dorian LPG Ltd.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Storage & Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LQDA",
+      "security": "Liquidia Corporation",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LQDT",
+      "security": "Liquidity Services, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Diversified Support Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LRN",
+      "security": "Stride, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Education Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LTC",
+      "security": "LTC Properties, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Health Care REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LTH",
+      "security": "Life Time Group Holdings, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Leisure Facilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LUMN",
+      "security": "Lumen Technologies",
+      "sector": "Communication Services",
+      "subIndustry": "Alternative Carriers",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LW",
+      "security": "Lamb Weston",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LXP",
+      "security": "Lexington Realty Trust",
+      "sector": "Real Estate",
+      "subIndustry": "Diversified REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LYFT",
+      "security": "Lyft, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Passenger Ground Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LZ",
+      "security": "LegalZoom.com, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Research & Consulting Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LZB",
+      "security": "La-Z-Boy, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Home Furnishings",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MAC",
+      "security": "Macerich",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MAN",
+      "security": "ManpowerGroup",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MARA",
+      "security": "MARA Holdings, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Internet Services & Infrastructure",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MATW",
+      "security": "Matthews International Corporation",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialized Consumer Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MATX",
+      "security": "Matson, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Marine Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MBC",
+      "security": "MasterBrand, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MBGL",
+      "security": "Mobility Global, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Data Processing & Outsourced Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MBIN",
+      "security": "Merchants Bancorp",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MC",
+      "security": "Moelis & Company",
+      "sector": "Financials",
+      "subIndustry": "Investment Banking & Brokerage",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MCRI",
+      "security": "Monarch Casino & Resort, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Casinos & Gaming",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MCY",
+      "security": "Mercury General",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MD",
+      "security": "Pediatrix Medical Group",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MDU",
+      "security": "MDU Resources Group, Inc.",
+      "sector": "Utilities",
+      "subIndustry": "Multi-Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MFP",
+      "security": "Midera Food Processing, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MGEE",
+      "security": "MGE Energy, Inc.",
+      "sector": "Utilities",
+      "subIndustry": "Electric Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MGY",
+      "security": "Magnolia Oil & Gas, Corp.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MHK",
+      "security": "Mohawk Industries",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Home Furnishings",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MHO",
+      "security": "M/I Homes, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MIR",
+      "security": "Mirion Technologies, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MKTX",
+      "security": "MarketAxess",
+      "sector": "Financials",
+      "subIndustry": "Financial Exchanges & Data",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MLKN",
+      "security": "MillerKnoll, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Office Services & Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MMI",
+      "security": "Marcus & Millichap, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Real Estate Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MMSI",
+      "security": "Merit Medical Systems, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MOH",
+      "security": "Molina Healthcare",
+      "sector": "Health Care",
+      "subIndustry": "Managed Health Care",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MPT",
+      "security": "Medical Properties Trust",
+      "sector": "Real Estate",
+      "subIndustry": "Health Care REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MRCY",
+      "security": "Mercury Systems",
+      "sector": "Industrials",
+      "subIndustry": "Electrical Components & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MRP",
+      "security": "Millrose Properties, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Single-Family Residential REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MRTN",
+      "security": "Marten Transport, Ltd.",
+      "sector": "Industrials",
+      "subIndustry": "Cargo Ground Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MSEX",
+      "security": "Middlesex Water Company",
+      "sector": "Utilities",
+      "subIndustry": "Water Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MSGS",
+      "security": "Madison Square Garden Sports Corp.",
+      "sector": "Communication Services",
+      "subIndustry": "Movies & Entertainment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MTCH",
+      "security": "Match Group",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MTH",
+      "security": "Meritage Homes Corporation",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MTRN",
+      "security": "Materion Corp.",
+      "sector": "Materials",
+      "subIndustry": "Diversified Metals & Mining",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MTUS",
+      "security": "Metallus Inc",
+      "sector": "Materials",
+      "subIndustry": "Steel",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MTX",
+      "security": "Minerals Technologies",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MWA",
+      "security": "Mueller Water Products",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MXL",
+      "security": "MaxLinear, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MYRG",
+      "security": "MYR Group, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Construction & Engineering",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NABL",
+      "security": "N-able, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Systems Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NATL",
+      "security": "NCR Atleos",
+      "sector": "Financials",
+      "subIndustry": "Transaction & Payment Processing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NAVI",
+      "security": "Navient",
+      "sector": "Financials",
+      "subIndustry": "Consumer Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NBHC",
+      "security": "National Bank Holdings Corporation",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NBTB",
+      "security": "NBT Bancorp, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NE",
+      "security": "Noble Corporation",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Drilling",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NEO",
+      "security": "NeoGenomics Laboratories, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NEOG",
+      "security": "Neogen",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NGVT",
+      "security": "Ingevity, Corp.",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NHC",
+      "security": "National Healthcare, Corp.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Facilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NHI",
+      "security": "National Health Investors, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Health Care REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NIC",
+      "security": "Nicolet Bankshares",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NMIH",
+      "security": "NMI Holdings, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Commercial & Residential Mortgage Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NOG",
+      "security": "Northern Oil and Gas, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NPK",
+      "security": "National Presto Industries, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Aerospace & Defense",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NPO",
+      "security": "EnPro Industries, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NSIT",
+      "security": "Insight Enterprises, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Technology Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NSP",
+      "security": "Insperity",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NSSC",
+      "security": "Napco Security Technologies",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NTCT",
+      "security": "NETSCOUT Systems, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Communications Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NTST",
+      "security": "NETSTREIT Corp.",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NWBI",
+      "security": "Northwest Bancshares, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NWL",
+      "security": "Newell Brands",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Housewares & Specialties",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NWN",
+      "security": "NW Natural",
+      "sector": "Utilities",
+      "subIndustry": "Gas Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NX",
+      "security": "Quanex Building Products Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NXRT",
+      "security": "NexPoint Residential Trust, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Multi-Family Residential REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OFG",
+      "security": "OFG Bancorp",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OGN",
+      "security": "Organon & Co.",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OI",
+      "security": "O-I Glass, Inc.",
+      "sector": "Materials",
+      "subIndustry": "Metal, Glass & Plastic Containers",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OII",
+      "security": "Oceaneering International, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OMCL",
+      "security": "Omnicell",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Technology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OSIS",
+      "security": "OSI Systems, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OSW",
+      "security": "OneSpaWorld Holdings Limited",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Leisure Facilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OTTR",
+      "security": "Otter Tail Corporation",
+      "sector": "Utilities",
+      "subIndustry": "Electric Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "OUT",
+      "security": "Outfront Media",
+      "sector": "Real Estate",
+      "subIndustry": "Other Specialized REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PAHC",
+      "security": "Phibro Animal Health",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PARR",
+      "security": "Par Pacific Holdings, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Refining & Marketing",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PAYC",
+      "security": "Paycom",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PAYO",
+      "security": "Payoneer Global Inc.",
+      "sector": "Financials",
+      "subIndustry": "Transaction & Payment Processing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PATK",
+      "security": "Patrick Industries, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PBH",
+      "security": "Prestige Consumer Healthcare",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PBI",
+      "security": "Pitney Bowes, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Office Services & Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PCRX",
+      "security": "Pacira BioSciences, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PDFS",
+      "security": "PDF Solutions, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PEB",
+      "security": "Pebblebrook Hotel Trust",
+      "sector": "Real Estate",
+      "subIndustry": "Hotel & Resort REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PECO",
+      "security": "Phillips Edison & Company",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PENG",
+      "security": "Penguin Solutions, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PENN",
+      "security": "Penn Entertainment",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Casinos & Gaming",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PFBC",
+      "security": "Preferred Bank",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PFS",
+      "security": "Provident Financial Services, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PGNY",
+      "security": "Progyny, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PHIN",
+      "security": "PHINIA, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PI",
+      "security": "Impinj, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PIPR",
+      "security": "Piper Sandler Companies",
+      "sector": "Financials",
+      "subIndustry": "Investment Banking & Brokerage",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PJT",
+      "security": "PJT Partners, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Investment Banking & Brokerage",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PLAB",
+      "security": "Photronics, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PLMR",
+      "security": "Palomar Holdings, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PLUS",
+      "security": "ePlus, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Technology Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PLXS",
+      "security": "Plexus Corp.",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Manufacturing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PMT",
+      "security": "PennyMac Mortgage Investment Trust",
+      "sector": "Real Estate",
+      "subIndustry": "Mortgage REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "POOL",
+      "security": "Pool Corporation",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "POWI",
+      "security": "Power Integrations",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "POWL",
+      "security": "Powell Industries, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Electrical Components & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PPLI",
+      "security": "People Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRDO",
+      "security": "Perdoceo Education Corp.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Education Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRG",
+      "security": "PROG Holdings, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Consumer Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRGO",
+      "security": "Perrigo",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRGS",
+      "security": "Progress Software Corporation",
+      "sector": "Information Technology",
+      "subIndustry": "Systems Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRIM",
+      "security": "Primoris Services Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Construction & Engineering",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRK",
+      "security": "Park National Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRKS",
+      "security": "United Parks & Resorts",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Leisure Facilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRLB",
+      "security": "Protolabs",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRSU",
+      "security": "Pursuit Attractions & Hospitality, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Hotels, Resorts & Cruise Lines",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PRVA",
+      "security": "Privia Health Group, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PSMT",
+      "security": "PriceSmart",
+      "sector": "Consumer Staples",
+      "subIndustry": "Consumer Staples Merchandise Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PTCT",
+      "security": "PTC Therapeutics, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PTEN",
+      "security": "Patterson-UTI Energy, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Drilling",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PTGX",
+      "security": "Protagonist Therapeutics, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PTON",
+      "security": "Peloton Interactive, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Leisure Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PZZA",
+      "security": "Papa John's Pizza",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Restaurants",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "QDEL",
+      "security": "QuidelOrtho",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "QNST",
+      "security": "QuinStreet, Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "QRVO",
+      "security": "Qorvo",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "QTWO",
+      "security": "Q2 Holdings, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RAMP",
+      "security": "LiveRamp Holdings, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RAL",
+      "security": "Ralliant Corp",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RCUS",
+      "security": "Arcus Biosciences, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RDN",
+      "security": "Radian Group, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RDNT",
+      "security": "RadNet, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RELY",
+      "security": "Remitly",
+      "sector": "Financials",
+      "subIndustry": "Transaction & Payment Processing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RES",
+      "security": "RPC, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "REYN",
+      "security": "Reynolds Consumer Products",
+      "sector": "Consumer Staples",
+      "subIndustry": "Household Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "REX",
+      "security": "REX American Resources Corporation",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Refining & Marketing",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "REZI",
+      "security": "Resideo Technologies, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Trading Companies & Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RHI",
+      "security": "Robert Half",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RHP",
+      "security": "Ryman Hospitality Properties",
+      "sector": "Real Estate",
+      "subIndustry": "Hotel & Resort REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RITM",
+      "security": "Rithm Capital",
+      "sector": "Financials",
+      "subIndustry": "Mortgage REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RNG",
+      "security": "RingCentral, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RNST",
+      "security": "Renasant Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ROCK",
+      "security": "Gibraltar Industries, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ROG",
+      "security": "Rogers Corporation",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RRR",
+      "security": "Red Rock Resorts, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Casinos & Gaming",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RSI",
+      "security": "Rush Street Interactive, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Casinos & Gaming",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RUN",
+      "security": "Sunrun",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RUSHA",
+      "security": "Rush Enterprises",
+      "sector": "Industrials",
+      "subIndustry": "Construction Machinery & Heavy Transportation Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RXO",
+      "security": "RXO, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Cargo Ground Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SAFE",
+      "security": "Safehold, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Other Specialized REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SABR",
+      "security": "Sabre",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Hotels, Resorts & Cruise Lines",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SAFT",
+      "security": "Safety Insurance Group, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SAH",
+      "security": "Sonic Automotive, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SBCF",
+      "security": "Seacoast Banking Corporation of Florida",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SBH",
+      "security": "Sally Beauty Holdings, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialty Stores",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SBSI",
+      "security": "Southside Bancshares, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SCHL",
+      "security": "Scholastic Corporation",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Publishing",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SCL",
+      "security": "Stepan Company",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SCSC",
+      "security": "ScanSource, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Technology Distributors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SDGR",
+      "security": "Schr\u00f6dinger, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SEDG",
+      "security": "SolarEdge",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SEZL",
+      "security": "Sezzle",
+      "sector": "Financials",
+      "subIndustry": "Transaction & Payment Processing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SFBS",
+      "security": "ServisFirst Bancshares, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SFNC",
+      "security": "Simmons First National Corporation",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SHAK",
+      "security": "Shake Shack, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Restaurants",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SHEN",
+      "security": "Shenandoah Telecommunications Co",
+      "sector": "Communication Services",
+      "subIndustry": "Wireless Telecommunication Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SHO",
+      "security": "Sunstone Hotel Investors, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Hotel & Resort REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SHOO",
+      "security": "Steven Madden, Ltd.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Footwear",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SIG",
+      "security": "Signet Jewelers",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialty Stores",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SKT",
+      "security": "Tanger Factory Outlet Centers, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SKY",
+      "security": "Champion Homes, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Homebuilding",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SKYW",
+      "security": "SkyWest, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Passenger Airlines",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SLG",
+      "security": "SL Green Realty",
+      "sector": "Real Estate",
+      "subIndustry": "Office REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SLVM",
+      "security": "Sylvamo Corp.",
+      "sector": "Materials",
+      "subIndustry": "Paper Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SM",
+      "security": "SM Energy Company",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SMP",
+      "security": "Standard Motor Products, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SMPL",
+      "security": "Simply Good Foods Company",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SNDR",
+      "security": "Schneider National",
+      "sector": "Industrials",
+      "subIndustry": "Cargo Ground Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SNEX",
+      "security": "StoneX Group Inc.",
+      "sector": "Financials",
+      "subIndustry": "Investment Banking & Brokerage",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SONO",
+      "security": "Sonos, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Consumer Electronics",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SPHR",
+      "security": "Sphere Entertainment",
+      "sector": "Communication Services",
+      "subIndustry": "Movies & Entertainment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SPNT",
+      "security": "SiriusPoint Ltd.",
+      "sector": "Financials",
+      "subIndustry": "Reinsurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SPSC",
+      "security": "SPS Commerce, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SRPT",
+      "security": "Sarepta Therapeutics",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "STAA",
+      "security": "STAAR Surgical Company",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "STBA",
+      "security": "S&T Bancorp, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "STC",
+      "security": "Stewart Information Services Corporation",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "STEP",
+      "security": "StepStone Group",
+      "sector": "Financials",
+      "subIndustry": "Asset Management & Custody Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "STRA",
+      "security": "Strategic Education, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Education Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SUPN",
+      "security": "Supernus Pharmaceuticals, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Pharmaceuticals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SXI",
+      "security": "Standex International Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SXT",
+      "security": "Sensient Technologies",
+      "sector": "Materials",
+      "subIndustry": "Specialty Chemicals",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TALO",
+      "security": "Talos Energy, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TBBK",
+      "security": "The Bancorp, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TDC",
+      "security": "Teradata",
+      "sector": "Information Technology",
+      "subIndustry": "IT Consulting & Other Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TDS",
+      "security": "Telephone and Data Systems, Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Integrated Telecommunication Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TDW",
+      "security": "Tidewater, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TFIN",
+      "security": "Triumph Bancorp, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TFX",
+      "security": "Teleflex",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TGTX",
+      "security": "TG Therapeutics, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "THRM",
+      "security": "Gentherm Incorporated",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TILE",
+      "security": "Interface, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Office Services & Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TMDX",
+      "security": "TransMedics Group, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TMP",
+      "security": "Tompkins Financial Corporation",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TNC",
+      "security": "Tennant Company",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TNDM",
+      "security": "Tandem Diabetes Care",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TR",
+      "security": "Tootsie Roll Industries, Inc.",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TRIP",
+      "security": "TripAdvisor",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TRMK",
+      "security": "Trustmark Corp.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TRN",
+      "security": "Trinity Industries, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Construction Machinery & Heavy Transportation Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TRNO",
+      "security": "Terreno Realty Corporation",
+      "sector": "Real Estate",
+      "subIndustry": "Industrial REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TRST",
+      "security": "TrustCo Bank Corp NY",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TRUP",
+      "security": "Trupanion",
+      "sector": "Financials",
+      "subIndustry": "Life & Health Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TWO",
+      "security": "Two Harbors Investment Corp.",
+      "sector": "Financials",
+      "subIndustry": "Mortgage REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UA",
+      "security": "Under Armour (Class C)",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel, Accessories & Luxury Goods",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UAA",
+      "security": "Under Armour (Class A)",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel, Accessories & Luxury Goods",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UCB",
+      "security": "United Community Banks, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UCTT",
+      "security": "Ultra Clean Holdings, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UE",
+      "security": "Urban Edge Properties",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UFCS",
+      "security": "United Fire Group, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Property & Casualty Insurance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UFPT",
+      "security": "UFP Technologies, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UNF",
+      "security": "UniFirst Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Diversified Support Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UNFI",
+      "security": "United Natural Foods Inc",
+      "sector": "Consumer Staples",
+      "subIndustry": "Food Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UNIT",
+      "security": "Uniti Group",
+      "sector": "Communication Services",
+      "subIndustry": "Alternative Carriers",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UPBD",
+      "security": "Upbound Group, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Computer & Electronics Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UPWK",
+      "security": "Upwork, Inc.",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "URBN",
+      "security": "Urban Outfitters, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "USLM",
+      "security": "United States Lime & Minerals, Inc.",
+      "sector": "Materials",
+      "subIndustry": "Construction Materials",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "USPH",
+      "security": "U.S. Physical Therapy, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Facilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UTI",
+      "security": "Universal Technical Institute",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Education Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UTL",
+      "security": "Unitil Corporation",
+      "sector": "Utilities",
+      "subIndustry": "Electric Utilities",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "UVV",
+      "security": "Universal Corporation",
+      "sector": "Consumer Staples",
+      "subIndustry": "Tobacco",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VAC",
+      "security": "Marriott Vacations Worldwide",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Hotels, Resorts & Cruise Lines",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VCEL",
+      "security": "Vericel",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VCTR",
+      "security": "Victory Capital Holdings, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Asset Management & Custody Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VCYT",
+      "security": "Veracyte, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VECO",
+      "security": "Veeco Instruments Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VGNT",
+      "security": "Versigent PLC",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Other Specialty Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VIR",
+      "security": "Vir Biotechnology, Inc.",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VIRT",
+      "security": "Virtu Financial, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Financial Exchanges & Data",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VRRM",
+      "security": "Verra Mobility Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Data Processing & Outsourced Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VRTS",
+      "security": "Virtus Investment Partners, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Asset Management & Custody Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VSAT",
+      "security": "Viasat, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Communications Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VSEC",
+      "security": "VSE Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Aerospace & Defense",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VSH",
+      "security": "Vishay Intertechnology",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VSNT",
+      "security": "Versant Media Group, Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Cable & Satellite",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VSTS",
+      "security": "Vestis",
+      "sector": "Industrials",
+      "subIndustry": "Diversified Support Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VSXY",
+      "security": "Victoria's Secret",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VTOL",
+      "security": "Bristow Group Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VYX",
+      "security": "NCR Voyix",
+      "sector": "Information Technology",
+      "subIndustry": "IT Consulting & Other Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WABC",
+      "security": "Westamerica Bank",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WAFD",
+      "security": "WaFd, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WAY",
+      "security": "Waystar Holding Corp",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Technology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WD",
+      "security": "Walker & Dunlop, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Commercial & Residential Mortgage Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WDFC",
+      "security": "WD-40 Company",
+      "sector": "Consumer Staples",
+      "subIndustry": "Household Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WEN",
+      "security": "The Wendy's Company",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Restaurants",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WERN",
+      "security": "Werner Enterprises",
+      "sector": "Industrials",
+      "subIndustry": "Cargo Ground Transportation",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WGO",
+      "security": "Winnebago Industries, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automobile Manufacturers",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WHD",
+      "security": "Cactus, Inc.",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WINA",
+      "security": "Winmark",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Other Specialty Retail",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WKC",
+      "security": "World Kinect Corporation",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Refining & Marketing",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WLY",
+      "security": "John Wiley & Sons",
+      "sector": "Communication Services",
+      "subIndustry": "Publishing",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WOR",
+      "security": "Worthington Enterprises",
+      "sector": "Industrials",
+      "subIndustry": "Building Products",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WRBY",
+      "security": "Warby Parker",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel, Accessories & Luxury Goods",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WRLD",
+      "security": "World Acceptance Corporation",
+      "sector": "Financials",
+      "subIndustry": "Consumer Finance",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WS",
+      "security": "Worthington Steel",
+      "sector": "Materials",
+      "subIndustry": "Steel",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WSBC",
+      "security": "WesBanco",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WSC",
+      "security": "WillScot Holdings Corp.",
+      "sector": "Industrials",
+      "subIndustry": "Office Services & Supplies",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WSFS",
+      "security": "WSFS Financial Corporation",
+      "sector": "Financials",
+      "subIndustry": "Regional Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WSR",
+      "security": "Whitestone REIT",
+      "sector": "Real Estate",
+      "subIndustry": "Retail REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WT",
+      "security": "WisdomTree Investments, Inc.",
+      "sector": "Financials",
+      "subIndustry": "Asset Management & Custody Banks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WU",
+      "security": "Western Union",
+      "sector": "Financials",
+      "subIndustry": "Transaction & Payment Processing Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WWW",
+      "security": "Wolverine World Wide, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Footwear",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "XHR",
+      "security": "Xenia Hotels & Resorts, Inc.",
+      "sector": "Real Estate",
+      "subIndustry": "Hotel & Resort REITs",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "XNCR",
+      "security": "Xencor Inc",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "XPEL",
+      "security": "XPEL, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Parts & Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "YELP",
+      "security": "Yelp, Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "YOU",
+      "security": "Clear Secure, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ZD",
+      "security": "Ziff Davis",
+      "sector": "Communication Services",
+      "subIndustry": "Advertising",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ZWS",
+      "security": "Zurn Elkay Water Solutions Corp.",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Machinery & Supplies & Components",
+      "marketCap": null,
+      "portfolioWeight": null
+    }
+  ]
+}
