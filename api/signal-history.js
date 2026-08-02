@@ -3,7 +3,7 @@ import { buildSignalSnapshot, historicalCutoffs } from "./_lib/signals.js";
 
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 const OUTCOME_RESULT_LIMIT = 5000;
-const OUTCOME_MATERIALIZATION_VERSION = 2;
+const OUTCOME_MATERIALIZATION_VERSION = 3;
 let schemaPromise = null;
 
 async function ensureSchema() {
@@ -69,6 +69,9 @@ async function ensureSchema() {
       outcome_5_at TIMESTAMPTZ,
       outcome_5_price DOUBLE PRECISION,
       five_session_return DOUBLE PRECISION,
+      outcome_10_at TIMESTAMPTZ,
+      outcome_10_price DOUBLE PRECISION,
+      ten_session_return DOUBLE PRECISION,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       PRIMARY KEY (snapshot_at, symbol, signal_type)
@@ -77,6 +80,12 @@ async function ensureSchema() {
   await sql`
     CREATE INDEX IF NOT EXISTS signal_outcomes_type_time_idx
     ON signal_outcomes (signal_type, snapshot_at DESC)
+  `;
+  await sql`
+    ALTER TABLE signal_outcomes
+    ADD COLUMN IF NOT EXISTS outcome_10_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS outcome_10_price DOUBLE PRECISION,
+    ADD COLUMN IF NOT EXISTS ten_session_return DOUBLE PRECISION
   `;
   await sql`
     CREATE TABLE IF NOT EXISTS signal_outcome_state (
@@ -132,7 +141,8 @@ async function refreshSignalOutcomes(force = false) {
       snapshot_at, symbol, signal_type, security, sector, sub_industry, is_sector,
       entry_price, outcome_1_at, outcome_1_price, one_session_return,
       outcome_3_at, outcome_3_price, three_session_return,
-      outcome_5_at, outcome_5_price, five_session_return, updated_at
+      outcome_5_at, outcome_5_price, five_session_return,
+      outcome_10_at, outcome_10_price, ten_session_return, updated_at
     )
     WITH ordered AS (
       SELECT
@@ -171,7 +181,15 @@ async function refreshSignalOutcomes(force = false) {
         LEAD(s.current_price, 5) OVER (
           PARTITION BY s.symbol
           ORDER BY s.snapshot_at
-        ) AS outcome_5_price
+        ) AS outcome_5_price,
+        LEAD(s.snapshot_at, 10) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS outcome_10_at,
+        LEAD(s.current_price, 10) OVER (
+          PARTITION BY s.symbol
+          ORDER BY s.snapshot_at
+        ) AS outcome_10_price
       FROM signal_snapshots s
     ),
     events AS (
@@ -225,6 +243,13 @@ async function refreshSignalOutcomes(force = false) {
         THEN ((e.outcome_5_price / e.current_price) - 1) * 100
         ELSE NULL
       END,
+      e.outcome_10_at,
+      e.outcome_10_price,
+      CASE
+        WHEN e.current_price > 0 AND e.outcome_10_price IS NOT NULL
+        THEN ((e.outcome_10_price / e.current_price) - 1) * 100
+        ELSE NULL
+      END,
       NOW()
     FROM events e
     ON CONFLICT (snapshot_at, symbol, signal_type)
@@ -243,6 +268,9 @@ async function refreshSignalOutcomes(force = false) {
       outcome_5_at = EXCLUDED.outcome_5_at,
       outcome_5_price = EXCLUDED.outcome_5_price,
       five_session_return = EXCLUDED.five_session_return,
+      outcome_10_at = EXCLUDED.outcome_10_at,
+      outcome_10_price = EXCLUDED.outcome_10_price,
+      ten_session_return = EXCLUDED.ten_session_return,
       updated_at = NOW()
   `;
   await sql`
@@ -484,7 +512,8 @@ async function history(req) {
       snapshot_at, symbol, security, sector, sub_industry, is_sector, entry_price,
       outcome_1_at, outcome_1_price, one_session_return,
       outcome_3_at, outcome_3_price, three_session_return,
-      outcome_5_at, outcome_5_price, five_session_return, signal_type
+      outcome_5_at, outcome_5_price, five_session_return,
+      outcome_10_at, outcome_10_price, ten_session_return, signal_type
     FROM signal_outcomes
     ORDER BY snapshot_at DESC, symbol ASC
     LIMIT ${OUTCOME_RESULT_LIMIT}
