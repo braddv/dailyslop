@@ -101,10 +101,12 @@ const actionDrawerWatch = document.getElementById("actionDrawerWatch");
 
 let lastStocks = [];
 let lastBenchmarks = [];
+let lastSubIndustries = [];
 let lastAsOf = null;
 let selectedMetric = "changePercent";
 let viewMode = "sector"; // sector | subindustry
 let selectedSector = null;
+let selectedSubIndustry = null;
 const pinnedSymbols = new Set();
 let activeFilter = "all";
 let replayFrames = [];
@@ -191,6 +193,13 @@ function syncSectorFilterButtons() {
       viewMode === "subindustry" && button.dataset.sector === selectedSector
     );
   });
+}
+
+function syncBackButton() {
+  if (!backBtn) return;
+  const drilled = viewMode === "subindustry" && Boolean(selectedSector);
+  backBtn.classList.toggle("visible", drilled);
+  backBtn.textContent = selectedSubIndustry ? "Back to subsectors" : "Back to sectors";
 }
 
 const SECTOR_COLORS = {
@@ -435,9 +444,13 @@ function updateSubhead() {
     base = `${base} (Dow Jones)`;
   } else if (activeFilter === "sectors") {
     base = `${base} (Sector ETFs and ${APP_CONFIG.broadSymbol})`;
+  } else if (activeFilter === "subsectors") {
+    base = `${base} (Market-cap-weighted GICS sub-industries)`;
   }
   if (viewMode === "subindustry" && selectedSector) {
-    base = `${base} (${selectedSector} sub-industries)`;
+    base = selectedSubIndustry
+      ? `${base} (${selectedSubIndustry} constituents)`
+      : `${base} (${selectedSector} sub-industries)`;
   }
   metricSubhead.textContent = base;
 }
@@ -474,6 +487,117 @@ function applyFilter(stocks) {
   return cleaned;
 }
 
+function subIndustrySymbol(sector, subIndustry) {
+  const value = `${sector}|${subIndustry}`;
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `SUB-${(hash >>> 0).toString(36).toUpperCase()}`;
+}
+
+function weightedStockValue(stocks, field) {
+  let weightedTotal = 0;
+  let totalWeight = 0;
+  stocks.forEach((stock) => {
+    const value = Number(stock[field]);
+    const weight = Number(stock.marketCap);
+    if (!Number.isFinite(value) || !Number.isFinite(weight) || weight <= 0) return;
+    weightedTotal += value * weight;
+    totalWeight += weight;
+  });
+  return totalWeight > 0 ? weightedTotal / totalWeight : null;
+}
+
+function aggregateReplaySeries(stocks, field) {
+  const eligible = stocks
+    .map((stock) => ({
+      stock,
+      points: (stock[field] || []).filter((point) =>
+        Number.isFinite(point?.[0]) && Number.isFinite(point?.[1]) && point[1] > 0
+      ),
+      weight: Number(stock.marketCap),
+    }))
+    .filter((item) => item.points.length && Number.isFinite(item.weight) && item.weight > 0);
+  if (!eligible.length) return [];
+  const startTimestamp = Math.max(...eligible.map((item) => item.points[0][0]));
+  eligible.forEach((item) => {
+    item.index = -1;
+    item.price = null;
+    item.base = null;
+    item.points.forEach((point) => {
+      if (point[0] <= startTimestamp) item.base = point[1];
+    });
+  });
+  const usable = eligible.filter((item) => Number.isFinite(item.base) && item.base > 0);
+  const timestamps = [...new Set(
+    usable.flatMap((item) => item.points.map((point) => point[0]))
+  )].filter((timestamp) => timestamp >= startTimestamp).sort((a, b) => a - b);
+  return timestamps.map((timestamp) => {
+    let weightedLevel = 0;
+    let availableWeight = 0;
+    usable.forEach((item) => {
+      while (item.index + 1 < item.points.length && item.points[item.index + 1][0] <= timestamp) {
+        item.index += 1;
+        item.price = item.points[item.index][1];
+      }
+      if (!Number.isFinite(item.price)) return;
+      weightedLevel += (item.price / item.base) * item.weight;
+      availableWeight += item.weight;
+    });
+    return availableWeight > 0 ? [timestamp, (weightedLevel / availableWeight) * 100] : null;
+  }).filter(Boolean);
+}
+
+function buildSubIndustryStocks(stocks) {
+  const groups = new Map();
+  stocks.forEach((stock) => {
+    if (!stock.subIndustry || !stock.sector || stock.symbol === "GOOGL") return;
+    const key = `${stock.sector}\u0000${stock.subIndustry}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(stock);
+  });
+  const totalMarketCap = stocks.reduce((sum, stock) =>
+    sum + (Number.isFinite(stock.marketCap) && stock.marketCap > 0 ? stock.marketCap : 0), 0);
+  return [...groups.values()].map((members) => {
+    const { sector, subIndustry } = members[0];
+    const marketCap = members.reduce((sum, stock) =>
+      sum + (Number.isFinite(stock.marketCap) && stock.marketCap > 0 ? stock.marketCap : 0), 0);
+    const replayDaily = aggregateReplaySeries(members, "replayDaily");
+    return {
+      symbol: subIndustrySymbol(sector, subIndustry),
+      security: subIndustry,
+      sector,
+      subIndustry,
+      isSubIndustry: true,
+      constituentCount: members.length,
+      constituentSymbols: members.map((stock) => stock.symbol),
+      marketCap,
+      sp500Weight: totalMarketCap > 0 ? marketCap / totalMarketCap * 100 : null,
+      currentPrice: replayDaily.at(-1)?.[1] || null,
+      changePercent: weightedStockValue(members, "changePercent"),
+      perf1w: weightedStockValue(members, "perf1w"),
+      perf1m: weightedStockValue(members, "perf1m"),
+      perf3m: weightedStockValue(members, "perf3m"),
+      pctFrom12wHigh: weightedStockValue(members, "pctFrom12wHigh"),
+      pctFrom52wHigh: weightedStockValue(members, "pctFrom52wHigh"),
+      replayDay15m: aggregateReplaySeries(members, "replayDay15m"),
+      replayWeekHourly: aggregateReplaySeries(members, "replayWeekHourly"),
+      replayDaily,
+    };
+  }).sort((a, b) => a.sector.localeCompare(b.sector) || a.subIndustry.localeCompare(b.subIndustry));
+}
+
+function displayStockLabel(stock) {
+  return stock?.isSubIndustry ? stock.subIndustry : stock?.symbol;
+}
+
+function constituentCountLabel(stock) {
+  const count = Number(stock?.constituentCount) || 0;
+  return `${count} ${count === 1 ? "stock" : "stocks"}`;
+}
+
 function buildSectorViewStocks() {
   const sectorCaps = new Map();
   let totalCap = 0;
@@ -500,7 +624,7 @@ function buildSectorViewStocks() {
 }
 
 function getGroups(stocks) {
-  if (activeFilter === "sectors") {
+  if (activeFilter === "sectors" || activeFilter === "subsectors") {
     return {
       groups: [
         { key: APP_CONFIG.broadSector, label: APP_CONFIG.broadSymbol },
@@ -525,7 +649,8 @@ function getGroups(stocks) {
     (stock) =>
       !stock.isBenchmark &&
       stock.sector === selectedSector &&
-      stock.subIndustry
+      stock.subIndustry &&
+      (!selectedSubIndustry || stock.subIndustry === selectedSubIndustry)
   );
   const subIndustries = Array.from(new Set(filtered.map((s) => s.subIndustry))).sort();
   const sectorEtf = SECTORS.find((sector) => sector.gics === selectedSector)?.label || "ETF";
@@ -550,7 +675,14 @@ function buildChart(stocks) {
 
   let working = activeFilter === "sectors"
     ? buildSectorViewStocks()
-    : applyFilter(stocks);
+    : activeFilter === "subsectors"
+      ? lastSubIndustries.map((stock) => ({
+          ...stock,
+          __replayValue: replayActive
+            ? getReplayValue(stock, replayFrames[replayFrameIndex])
+            : undefined,
+        }))
+      : applyFilter(stocks);
   if (activeFilter !== "sectors") {
     const benchmarks = buildSectorViewStocks();
     const benchmark = viewMode === "sector"
@@ -559,7 +691,10 @@ function buildChart(stocks) {
     if (benchmark) working = [...working, benchmark];
   }
   if (viewMode === "subindustry" && selectedSector) {
-    working = working.filter((stock) => stock.sector === selectedSector);
+    working = working.filter((stock) =>
+      stock.sector === selectedSector &&
+      (!selectedSubIndustry || stock.isBenchmark || stock.subIndustry === selectedSubIndustry)
+    );
   }
 
   const valueField = replayActive ? "__replayValue" : selectedMetric;
@@ -647,7 +782,7 @@ function buildChart(stocks) {
     if (interactive) {
       label.addEventListener("click", () => {
         if (group.key === APP_CONFIG.broadSector) return;
-        if (activeFilter === "sectors") {
+        if (activeFilter === "sectors" || activeFilter === "subsectors") {
           activeFilter = "all";
           filterButtons.forEach((button) => {
             button.classList.toggle("active", button.dataset.filter === "all");
@@ -655,8 +790,9 @@ function buildChart(stocks) {
         }
         viewMode = "subindustry";
         selectedSector = group.key;
+        selectedSubIndustry = null;
         syncSectorFilterButtons();
-        if (backBtn) backBtn.classList.add("visible");
+        syncBackButton();
         updateSubhead();
         if (replayActive) {
           calculateReplayRange();
@@ -726,8 +862,10 @@ function buildChart(stocks) {
       : useMarketCap
       ? activeFilter === "sectors"
         ? radiusScale(stock.marketCap, minCap, maxCap, 1, 8, 22)
+        : activeFilter === "subsectors"
+          ? radiusScale(stock.marketCap, minCap, maxCap, 0.85, 5, 18)
         : radiusScale(stock.marketCap, minCap, maxCap, scaleFactor)
-      : activeFilter === "sectors" ? 10 : 3.0;
+      : activeFilter === "sectors" ? 10 : activeFilter === "subsectors" ? 6 : 3.0;
 
     dot.setAttribute("r", radius);
     dot.setAttribute("fill", SECTOR_COLORS[stock.sector] || "#7aa5ff");
@@ -743,8 +881,8 @@ function buildChart(stocks) {
         ? `<div>${stock.symbol === APP_CONFIG.broadSymbol ? "Benchmark" : `${APP_CONFIG.broadLabel} weight`} ${stock.symbol === APP_CONFIG.broadSymbol ? "100%" : `${stock.sp500Weight.toFixed(1)}%`}</div>`
         : "";
       return `
-        <div><strong>${stock.symbol}</strong> • ${stock.security}</div>
-        <div>Sector ${stock.sector}${stock.subIndustry ? ` • ${stock.subIndustry}` : ""}</div>
+        <div><strong>${displayStockLabel(stock)}</strong>${stock.isSubIndustry ? "" : ` • ${stock.security}`}</div>
+        <div>Sector ${stock.sector}${stock.isSubIndustry ? ` • ${stock.constituentCount} constituents` : stock.subIndustry ? ` • ${stock.subIndustry}` : ""}</div>
         ${replayLine}
         ${weightLine}
         <div>1W ${formatPerf(stock.perf1w)} · 1M ${formatPerf(stock.perf1m)} · 3M ${formatPerf(stock.perf3m)}</div>
@@ -762,6 +900,21 @@ function buildChart(stocks) {
     dot.addEventListener("mouseleave", hideTooltip);
     dot.addEventListener("click", (event) => {
       event.stopPropagation();
+      if (stock.isSubIndustry) {
+        activeFilter = "all";
+        viewMode = "subindustry";
+        selectedSector = stock.sector;
+        selectedSubIndustry = stock.subIndustry;
+        filterButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.filter === "all");
+        });
+        syncSectorFilterButtons();
+        syncBackButton();
+        updateSubhead();
+        if (replayActive) calculateReplayRange();
+        renderCurrentChart();
+        return;
+      }
       if (pinnedSymbols.has(stock.symbol)) {
         pinnedSymbols.delete(stock.symbol);
       } else {
@@ -780,7 +933,7 @@ function buildChart(stocks) {
       text.setAttribute("y", y - 8);
       text.setAttribute("class", "pinned-label");
       text.dataset.symbol = stock.symbol;
-      text.textContent = `${stock.symbol} ${metricLabel}`;
+      text.textContent = `${displayStockLabel(stock)} ${metricLabel}`;
       pinnedLabels.push(text);
     }
   });
@@ -900,7 +1053,8 @@ function getReplayPoints(stock, period = replayPeriod, cutoffTimestamp = null) {
 
 function replayStocksAt(index) {
   const timestamp = replayFrames[index];
-  return lastStocks.map((stock) => ({
+  const universe = activeFilter === "subsectors" ? lastSubIndustries : lastStocks;
+  return universe.map((stock) => ({
     ...stock,
     __replayValue: getReplayValue(stock, timestamp),
   }));
@@ -916,9 +1070,14 @@ function getMomentumUniverse() {
 function getBaseScanUniverse() {
   let stocks = activeFilter === "sectors"
     ? lastBenchmarks.filter((stock) => stock.symbol !== APP_CONFIG.broadSymbol)
-    : applyFilter(lastStocks);
+    : activeFilter === "subsectors"
+      ? lastSubIndustries
+      : applyFilter(lastStocks);
   if (viewMode === "subindustry" && selectedSector) {
-    stocks = stocks.filter((stock) => stock.sector === selectedSector);
+    stocks = stocks.filter((stock) =>
+      stock.sector === selectedSector &&
+      (!selectedSubIndustry || stock.subIndustry === selectedSubIndustry)
+    );
   }
   return stocks;
 }
@@ -1095,7 +1254,9 @@ function renderMomentumScanner() {
   if (!available) return;
 
   const rows = calculateMomentumScores().slice(0, 10);
-  const subject = activeFilter === "sectors" ? "Sector ETFs" : "Stocks";
+  const subject = activeFilter === "sectors"
+    ? "Sector ETFs"
+    : activeFilter === "subsectors" ? "Subsectors" : "Stocks";
   momentumDescription.textContent = momentumMode === "persistent"
     ? `${subject} that stayed near the top throughout this replay window.`
     : `${subject} whose relative strength improved most during the second half.`;
@@ -1113,8 +1274,10 @@ function renderMomentumScanner() {
     <button class="momentum-result" type="button" data-symbol="${row.symbol}">
       <span class="momentum-rank">${index + 1}</span>
       <span class="momentum-symbol">
-        <strong>${row.symbol}</strong>
-        <small>${viewMode === "subindustry"
+        <strong>${displayStockLabel(row.stock)}</strong>
+        <small>${row.stock.isSubIndustry
+          ? `${row.stock.sector} · ${constituentCountLabel(row.stock)}`
+          : viewMode === "subindustry"
           ? row.stock.subIndustry || row.stock.sector
           : row.stock.sector}</small>
       </span>
@@ -1149,7 +1312,9 @@ function renderWeaknessScanner() {
   const rows = calculateMomentumScores()
     .sort((a, b) => b[scoreField] - a[scoreField])
     .slice(0, 10);
-  const subject = activeFilter === "sectors" ? "Sector ETFs" : "Stocks";
+  const subject = activeFilter === "sectors"
+    ? "Sector ETFs"
+    : activeFilter === "subsectors" ? "Subsectors" : "Stocks";
   weaknessDescription.textContent = weaknessMode === "persistent"
     ? `${subject} that stayed near the bottom throughout this replay window.`
     : `${subject} whose relative strength deteriorated most during the second half.`;
@@ -1166,8 +1331,10 @@ function renderWeaknessScanner() {
     <button class="momentum-result weakness-result" type="button" data-symbol="${row.symbol}">
       <span class="momentum-rank">${index + 1}</span>
       <span class="momentum-symbol">
-        <strong>${row.symbol}</strong>
-        <small>${viewMode === "subindustry"
+        <strong>${displayStockLabel(row.stock)}</strong>
+        <small>${row.stock.isSubIndustry
+          ? `${row.stock.sector} · ${constituentCountLabel(row.stock)}`
+          : viewMode === "subindustry"
           ? row.stock.subIndustry || row.stock.sector
           : row.stock.sector}</small>
       </span>
@@ -1281,6 +1448,39 @@ function calculateConfluence(
   }).filter(Boolean).sort((a, b) => b.score - a.score);
 }
 
+function aggregateSubIndustryConfluence(rows, subIndustries = lastSubIndustries) {
+  const rowsBySymbol = new Map(rows.map((row) => [row.symbol, row]));
+  const stocksBySymbol = new Map(lastStocks.map((stock) => [stock.symbol, stock]));
+  return subIndustries.map((subIndustry) => {
+    const members = subIndustry.constituentSymbols
+      .map((symbol) => ({ row: rowsBySymbol.get(symbol), stock: stocksBySymbol.get(symbol) }))
+      .filter(({ row, stock }) => row && Number.isFinite(stock?.marketCap) && stock.marketCap > 0);
+    if (!members.length) return null;
+    const totalWeight = members.reduce((sum, member) => sum + member.stock.marketCap, 0);
+    const weightedValue = (valueForMember) => members.reduce((sum, member) =>
+      sum + valueForMember(member) * member.stock.marketCap, 0) / totalWeight;
+    const first = members[0].row;
+    const trendScores = first.trendScores.map((_, index) =>
+      weightedValue((member) => member.row.trendScores[index])
+    );
+    const accelerationScores = first.accelerationScores.map((_, index) =>
+      weightedValue((member) => member.row.accelerationScores[index])
+    );
+    const allScores = [...trendScores, ...accelerationScores];
+    return {
+      stock: subIndustry,
+      symbol: subIndustry.symbol,
+      trendPeriods: first.trendPeriods,
+      accelerationPeriods: first.accelerationPeriods,
+      trendScores,
+      accelerationScores,
+      confirmations: allScores.filter((score) => score >= 65).length,
+      negative: first.negative,
+      score: weightedValue((member) => member.row.score),
+    };
+  }).filter(Boolean).sort((a, b) => b.score - a.score);
+}
+
 function confluenceBadges(periods, scores, label, negative = false) {
   return `
     <span class="confluence-evidence">
@@ -1304,8 +1504,10 @@ function renderConfluenceRows(target, rows, negative = false) {
     <button class="confluence-result ${negative ? "negative-confluence-result" : ""}" type="button" data-symbol="${row.symbol}">
       <span class="momentum-rank">${index + 1}</span>
       <span class="momentum-symbol">
-        <strong>${row.symbol}</strong>
-        <small>${viewMode === "subindustry"
+        <strong>${displayStockLabel(row.stock)}</strong>
+        <small>${row.stock.isSubIndustry
+          ? `${row.stock.sector} · ${constituentCountLabel(row.stock)}`
+          : viewMode === "subindustry"
           ? row.stock.subIndustry || row.stock.sector
           : row.stock.sector}</small>
       </span>
@@ -1336,6 +1538,7 @@ function actionUniverseKey() {
     activeFilter,
     viewMode,
     selectedSector || "all-sectors",
+    selectedSubIndustry || "all-subindustries",
   ].join("|");
 }
 
@@ -1365,7 +1568,7 @@ function newYorkDateKey(value) {
   });
 }
 
-function serverActionSnapshots(sectorModeOverride = null) {
+function serverActionSnapshots(modeOverride = null) {
   const historyData = actionHistoryData || signalHistoryData;
   if (!historyData?.sessions?.length || !historyData?.rows?.length) return [];
   const currentAsOf = currentSignalAsOf();
@@ -1374,9 +1577,9 @@ function serverActionSnapshots(sectorModeOverride = null) {
     .filter((asOf) => !currentDate || newYorkDateKey(asOf) < currentDate)
     .sort((a, b) => new Date(a) - new Date(b))
     .slice(-5);
-  const sectorMode = typeof sectorModeOverride === "boolean"
-    ? sectorModeOverride
-    : activeFilter === "sectors";
+  const mode = modeOverride || (
+    activeFilter === "sectors" ? "sector" : activeFilter === "subsectors" ? "subindustry" : "stock"
+  );
   return sessions.map((asOf) => {
     const snapshot = {
       asOf,
@@ -1385,16 +1588,45 @@ function serverActionSnapshots(sectorModeOverride = null) {
       negativeShort: {},
       negativeLong: {},
     };
-    historyData.rows.forEach((row) => {
-      if (
-        Boolean(row.is_sector) !== sectorMode ||
-        new Date(row.snapshot_at).toISOString() !== asOf
-      ) return;
-      snapshot.positiveShort[row.symbol] = Number(row.positive_short) || 0;
-      snapshot.positiveLong[row.symbol] = Number(row.positive_long) || 0;
-      snapshot.negativeShort[row.symbol] = Number(row.negative_short) || 0;
-      snapshot.negativeLong[row.symbol] = Number(row.negative_long) || 0;
-    });
+    const sessionRows = historyData.rows.filter((row) =>
+      new Date(row.snapshot_at).toISOString() === asOf
+    );
+    if (mode === "subindustry") {
+      const groups = new Map();
+      sessionRows.forEach((row) => {
+        if (row.is_sector || !row.sub_industry || !row.sector || row.symbol === "GOOGL") return;
+        const key = `${row.sector}\u0000${row.sub_industry}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+      });
+      groups.forEach((rows) => {
+        const symbol = subIndustrySymbol(rows[0].sector, rows[0].sub_industry);
+        const weightedScore = (field) => {
+          let total = 0;
+          let weight = 0;
+          rows.forEach((row) => {
+            const value = Number(row[field]);
+            const rowWeight = Math.max(1, Number(row.market_cap) || 1);
+            if (!Number.isFinite(value)) return;
+            total += value * rowWeight;
+            weight += rowWeight;
+          });
+          return weight > 0 ? total / weight : 0;
+        };
+        snapshot.positiveShort[symbol] = weightedScore("positive_short");
+        snapshot.positiveLong[symbol] = weightedScore("positive_long");
+        snapshot.negativeShort[symbol] = weightedScore("negative_short");
+        snapshot.negativeLong[symbol] = weightedScore("negative_long");
+      });
+    } else {
+      sessionRows.forEach((row) => {
+        if (Boolean(row.is_sector) !== (mode === "sector")) return;
+        snapshot.positiveShort[row.symbol] = Number(row.positive_short) || 0;
+        snapshot.positiveLong[row.symbol] = Number(row.positive_long) || 0;
+        snapshot.negativeShort[row.symbol] = Number(row.negative_short) || 0;
+        snapshot.negativeLong[row.symbol] = Number(row.negative_long) || 0;
+      });
+    }
     return snapshot;
   });
 }
@@ -1507,7 +1739,12 @@ function relativeStrengthContext(stock, period, sectorSignals) {
   };
 }
 
-function sectorAlignment(context, negative = false, sectorBoard = activeFilter === "sectors") {
+function sectorAlignment(
+  context,
+  negative = false,
+  sectorBoard = activeFilter === "sectors",
+  subIndustryBoard = activeFilter === "subsectors"
+) {
   const sectorPositive = Math.max(
     context.sectorSignals.positiveShort || 0,
     context.sectorSignals.positiveLong || 0
@@ -1527,15 +1764,31 @@ function sectorAlignment(context, negative = false, sectorBoard = activeFilter =
   if (oppositeScore >= 55 && oppositeScore > alignedScore) {
     return { key: "against", label: "Against sector", rankAdjustment: -8 };
   }
-  return { key: "specific", label: "Stock-specific", rankAdjustment: 0 };
+  return {
+    key: "specific",
+    label: subIndustryBoard ? "Subsector-specific" : "Stock-specific",
+    rankAdjustment: 0,
+  };
 }
 
-function addRelativeStrength(rows, periods, sectorSignals, negative = false, sectorBoard = activeFilter === "sectors") {
+function addRelativeStrength(
+  rows,
+  periods,
+  sectorSignals,
+  negative = false,
+  sectorBoard = activeFilter === "sectors",
+  subIndustryBoard = activeFilter === "subsectors"
+) {
   rows.forEach((row) => {
     row.relativeStrength = periods.map((period) =>
       relativeStrengthContext(row.stock, period, sectorSignals)
     );
-    row.sectorAlignment = sectorAlignment(row.relativeStrength[0], negative, sectorBoard);
+    row.sectorAlignment = sectorAlignment(
+      row.relativeStrength[0],
+      negative,
+      sectorBoard,
+      subIndustryBoard
+    );
     row.relativeClassification = row.sectorAlignment.label;
     row.candidateScore = row.bucketScore + row.sectorAlignment.rankAdjustment;
   });
@@ -1559,8 +1812,10 @@ function renderActionBucket(target, rows, scoreLabel, bucketKey) {
   target.innerHTML = rows.slice(0, 5).map((row) => `
     <button class="action-bucket-result" type="button" data-symbol="${row.symbol}" data-bucket="${bucketKey}">
       <span class="momentum-symbol">
-        <strong>${row.symbol}</strong>
-        <small>${viewMode === "subindustry"
+        <strong>${displayStockLabel(row.stock)}</strong>
+        <small>${row.stock.isSubIndustry
+          ? `${row.stock.sector} · ${constituentCountLabel(row.stock)}`
+          : viewMode === "subindustry"
           ? row.stock.subIndustry || row.stock.sector
           : row.stock.sector}</small>
         <small class="sector-designation ${row.sectorAlignment?.key || "specific"}" title="Sector alignment affects candidate order">${row.relativeClassification || ""}</small>
@@ -1570,7 +1825,7 @@ function renderActionBucket(target, rows, scoreLabel, bucketKey) {
               <small>
                 <b>${context.period === "1d" ? "OPEN" : context.period.toUpperCase()}</b>
                 <span class="${Number.isFinite(context.stockReturn) && context.stockReturn >= 0 ? "positive" : "negative"}">
-                  ${row.symbol} ${formatPerf(context.stockReturn)}
+                  ${row.stock.isSubIndustry ? "Group" : row.symbol} ${formatPerf(context.stockReturn)}
                 </span>
                 <span class="${Number.isFinite(context.spyReturn) && context.spyReturn >= 0 ? "positive" : "negative"}">
                   ${APP_CONFIG.broadSymbol} ${formatPerf(context.spyReturn)}
@@ -1601,9 +1856,16 @@ function renderActionBuckets(
   options = {}
 ) {
   const renderUi = options.renderUi !== false;
-  const sectorBoard = options.forceStockBoard ? false : activeFilter === "sectors";
+  const boardMode = options.forceStockBoard
+    ? "stock"
+    : activeFilter === "sectors"
+      ? "sector"
+      : activeFilter === "subsectors" ? "subindustry" : "stock";
+  const sectorBoard = boardMode === "sector";
+  const subIndustryBoard = boardMode === "subindustry";
+  const aggregateBoard = boardMode === "sector" || boardMode === "subindustry";
   const key = options.forceStockBoard ? "all|sector|all-sectors" : actionUniverseKey();
-  const serverSnapshots = serverActionSnapshots(sectorBoard);
+  const serverSnapshots = serverActionSnapshots(boardMode);
   const usingServerHistory = serverSnapshots.length > 0;
   let priorSnapshots = serverSnapshots;
   if (!usingServerHistory) {
@@ -1622,7 +1884,7 @@ function renderActionBuckets(
   const positiveLongBySymbol = new Map(positiveLong.map((row) => [row.symbol, row]));
   const negativeShortBySymbol = new Map(negativeShort.map((row) => [row.symbol, row]));
   const negativeLongBySymbol = new Map(negativeLong.map((row) => [row.symbol, row]));
-  const thresholds = sectorBoard
+  const thresholds = aggregateBoard
     ? {
         acceleration: 60,
         confirmedShort: 55,
@@ -1842,10 +2104,10 @@ function renderActionBuckets(
     ["breakdown", "Bearish reversal", breakdownWarning, ["1w", "1m"], "Reversal"],
   ];
   bullish.forEach(([, , rows, periods]) =>
-    addRelativeStrength(rows, periods, sectorSignals, false, sectorBoard)
+    addRelativeStrength(rows, periods, sectorSignals, false, sectorBoard, subIndustryBoard)
   );
   bearish.forEach(([, , rows, periods]) =>
-    addRelativeStrength(rows, periods, sectorSignals, true, sectorBoard)
+    addRelativeStrength(rows, periods, sectorSignals, true, sectorBoard, subIndustryBoard)
   );
   [...bullish, ...bearish].forEach(([, , rows]) => rankActionCandidates(rows));
 
@@ -2130,11 +2392,14 @@ function openActionDrawer(bucket, symbol) {
   if (!row || !actionDrawer) return;
   activeActionDetail = row;
   updateWatchlistControls();
+  if (actionDrawerWatch) actionDrawerWatch.hidden = Boolean(row.stock.isSubIndustry);
   const distance5d = distanceFromDayAverage(row.stock, 5);
   const distance20d = distanceFromDayAverage(row.stock, 20);
   actionDrawerBucket.textContent = row.bucketLabel;
-  actionDrawerTitle.textContent = row.symbol;
-  actionDrawerCompany.textContent = `${row.stock.security} · ${row.stock.subIndustry || row.stock.sector}`;
+  actionDrawerTitle.textContent = displayStockLabel(row.stock);
+  actionDrawerCompany.textContent = row.stock.isSubIndustry
+    ? `${row.stock.sector} · ${row.stock.constituentCount} S&P 500 constituents`
+    : `${row.stock.security} · ${row.stock.subIndustry || row.stock.sector}`;
   actionDrawerBody.innerHTML = `
     <div class="action-detail-summary">
       <span>${row.relativeClassification || "Mixed confirmation"}</span>
@@ -2519,18 +2784,24 @@ function renderConfluenceScanner(watchlistOnly = false) {
         ),
       ])
     );
-  const allPositiveShort = calculateConfluence(
+  let allPositiveShort = calculateConfluence(
     ["1m", "2m"], ["1d", "2d"], false, periodRows, scoreUniverse
   );
-  const allPositiveLong = calculateConfluence(
+  let allPositiveLong = calculateConfluence(
     ["3m", "6m"], ["1w", "2w"], false, periodRows, scoreUniverse
   );
-  const allNegativeShort = calculateConfluence(
+  let allNegativeShort = calculateConfluence(
     ["1m", "2m"], ["1d", "2d"], true, periodRows, scoreUniverse
   );
-  const allNegativeLong = calculateConfluence(
+  let allNegativeLong = calculateConfluence(
     ["3m", "6m"], ["1w", "2w"], true, periodRows, scoreUniverse
   );
+  if (appView === "action" && activeFilter === "subsectors" && !watchlistOnly) {
+    allPositiveShort = aggregateSubIndustryConfluence(allPositiveShort);
+    allPositiveLong = aggregateSubIndustryConfluence(allPositiveLong);
+    allNegativeShort = aggregateSubIndustryConfluence(allNegativeShort);
+    allNegativeLong = aggregateSubIndustryConfluence(allNegativeLong);
+  }
   const allowedSymbols = new Set(visibleUniverse.map((stock) => stock.symbol));
   const visibleRows = (rows) => rows.filter((row) => allowedSymbols.has(row.symbol));
   const positiveShort = visibleRows(allPositiveShort);
@@ -2729,14 +3000,15 @@ function pinSearchedTicker() {
   if (stayInSubindustry) {
     viewMode = "subindustry";
     selectedSector = match.sector;
+    selectedSubIndustry = null;
     syncSectorFilterButtons();
-    if (backBtn) backBtn.classList.add("visible");
   } else {
     viewMode = "sector";
     selectedSector = null;
+    selectedSubIndustry = null;
     syncSectorFilterButtons();
-    if (backBtn) backBtn.classList.remove("visible");
   }
+  syncBackButton();
   filterButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.filter === activeFilter);
   });
@@ -2806,7 +3078,9 @@ function buildReplayTimeline() {
 function calculateReplayRange() {
   let candidates = activeFilter === "sectors"
     ? buildSectorViewStocks()
-    : applyFilter(lastStocks);
+    : activeFilter === "subsectors"
+      ? lastSubIndustries
+      : applyFilter(lastStocks);
   if (activeFilter !== "sectors") {
     const benchmarks = buildSectorViewStocks();
     const benchmark = viewMode === "sector"
@@ -2815,7 +3089,10 @@ function calculateReplayRange() {
     if (benchmark) candidates = [...candidates, benchmark];
   }
   if (viewMode === "subindustry" && selectedSector) {
-    candidates = candidates.filter((stock) => stock.sector === selectedSector);
+    candidates = candidates.filter((stock) =>
+      stock.sector === selectedSector &&
+      (!selectedSubIndustry || stock.isBenchmark || stock.subIndustry === selectedSubIndustry)
+    );
   }
   const values = [];
   replayFrames.forEach((timestamp) => {
@@ -3024,6 +3301,7 @@ async function loadData(forceRefresh = false) {
 
     lastStocks = data.stocks || [];
     lastBenchmarks = data.benchmarks || [];
+    lastSubIndustries = buildSubIndustryStocks(lastStocks);
     actionPeriodRowsCache.clear();
     populateTickerSearch();
     buildReplayTimeline();
@@ -3078,8 +3356,9 @@ filterButtons.forEach((button) => {
     });
     viewMode = "sector";
     selectedSector = null;
+    selectedSubIndustry = null;
     syncSectorFilterButtons();
-    if (backBtn) backBtn.classList.remove("visible");
+    syncBackButton();
     updateSubhead();
     if (replayActive) {
       calculateReplayRange();
@@ -3091,10 +3370,18 @@ filterButtons.forEach((button) => {
 
 if (backBtn) {
   backBtn.addEventListener("click", () => {
+    const returnToSubsectors = Boolean(selectedSubIndustry);
     viewMode = "sector";
     selectedSector = null;
+    selectedSubIndustry = null;
+    if (returnToSubsectors) {
+      activeFilter = "subsectors";
+      filterButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.filter === "subsectors");
+      });
+    }
     syncSectorFilterButtons();
-    backBtn.classList.remove("visible");
+    syncBackButton();
     updateSubhead();
     if (replayActive) {
       calculateReplayRange();
@@ -3109,11 +3396,12 @@ sectorFilterButtons.forEach((button) => {
     activeFilter = "all";
     viewMode = "subindustry";
     selectedSector = button.dataset.sector;
+    selectedSubIndustry = null;
     filterButtons.forEach((filterButton) => {
       filterButton.classList.toggle("active", filterButton.dataset.filter === "all");
     });
     syncSectorFilterButtons();
-    if (backBtn) backBtn.classList.add("visible");
+    syncBackButton();
     updateSubhead();
     if (replayActive) {
       calculateReplayRange();
@@ -3288,7 +3576,7 @@ document.addEventListener("keydown", (event) => {
 actionDrawerPin?.addEventListener("click", () => {
   if (!activeActionDetail) return;
   pinnedSymbols.add(activeActionDetail.symbol);
-  tickerSearchStatus.textContent = `Pinned ${activeActionDetail.symbol} from Action Board.`;
+  tickerSearchStatus.textContent = `Pinned ${displayStockLabel(activeActionDetail.stock)} from Action Board.`;
   closeActionDrawer();
   setAppView("replay");
 });
