@@ -361,20 +361,18 @@ function authorized(req) {
     req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
 }
 
-function newYorkHour(date = new Date()) {
+function newYorkTime(date = new Date()) {
   const values = Object.fromEntries(
     new Intl.DateTimeFormat("en-US", {
       timeZone: "America/New_York",
       weekday: "short",
       hour: "2-digit",
-      minute: "2-digit",
       hourCycle: "h23",
     }).formatToParts(date).map((part) => [part.type, part.value])
   );
   return {
     weekday: values.weekday,
     hour: Number(values.hour),
-    minute: Number(values.minute),
   };
 }
 
@@ -407,9 +405,9 @@ async function priorSnapshots(limit = 5) {
 
 async function capture(req) {
   if (!authorized(req)) return { status: 401, body: { error: "Unauthorized" } };
-  const ny = newYorkHour();
-  if (["Sat", "Sun"].includes(ny.weekday) || ![15, 16].includes(ny.hour) || ny.minute > 20) {
-    return { status: 200, body: { skipped: true, reason: "Not the daily 3 PM snapshot window" } };
+  const ny = newYorkTime();
+  if (["Sat", "Sun"].includes(ny.weekday) || ny.hour < 15) {
+    return { status: 200, body: { skipped: true, reason: "Before the daily 3 PM snapshot window" } };
   }
   const payload = await fetchMarketPayload(req, true);
   const cutoffs = historicalCutoffs(payload, 1);
