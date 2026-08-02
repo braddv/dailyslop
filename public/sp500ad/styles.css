@@ -110,6 +110,18 @@ h1 {
   margin-left: 0;
 }
 
+.controls.action-board-active .cap-size-toggle {
+  display: none;
+}
+
+.cap-size-toggle {
+  padding: 9px 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(10, 14, 22, 0.7);
+  white-space: nowrap;
+}
+
 .sector-filter-bar {
   display: flex;
   align-items: flex-start;

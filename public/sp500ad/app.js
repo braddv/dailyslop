@@ -117,6 +117,7 @@ let actionHistoryData = null;
 let signalHistoryData = null;
 let selectedHistorySession = null;
 let signalHistorySide = "bullish";
+const actionPeriodRowsCache = new Map();
 
 const REPLAY_PERIODS = {
   "1d": { field: "replayDay15m", label: "1-day", cadence: "15-minute", bars: 26 },
@@ -877,11 +878,32 @@ function calculateReplayScores(
 ) {
   if (universe.length < 2 || frames.length < 8) return [];
 
-  const frameValues = frames.map((timestamp) => {
+  // Build each symbol's return series once. The former implementation called
+  // getReplayPoints for every symbol at every frame, repeatedly slicing and
+  // walking the same arrays. That becomes prohibitively expensive for the
+  // SmallCap 600 Action Board, which evaluates all eight replay periods.
+  const seriesBySymbol = new Map(universe.map((stock) => {
+    const points = getReplayPoints(stock, period, cutoffTimestamp);
+    const base = points[0]?.[1];
+    let pointIndex = -1;
+    let price = null;
+    const values = frames.map((timestamp) => {
+      while (pointIndex + 1 < points.length && points[pointIndex + 1][0] <= timestamp) {
+        pointIndex += 1;
+        price = points[pointIndex][1];
+      }
+      return Number.isFinite(price) && Number.isFinite(base) && base !== 0
+        ? ((price / base) - 1) * 100
+        : null;
+    });
+    return [stock.symbol, values];
+  }));
+
+  const frameValues = frames.map((timestamp, frameIndex) => {
     const values = universe
       .map((stock) => ({
         symbol: stock.symbol,
-        value: getReplayValueForPeriod(stock, timestamp, period, cutoffTimestamp),
+        value: seriesBySymbol.get(stock.symbol)?.[frameIndex],
       }))
       .filter((row) => Number.isFinite(row.value))
       .sort((a, b) => b.value - a.value);
@@ -1109,20 +1131,39 @@ function calculatePeriodScores(period, cutoffTimestamp = null, universeOverride 
   let universe = universeOverride
     ? [...universeOverride]
     : getBaseScanUniverse();
-  let frames = Array.from(new Set(
-    universe.flatMap((stock) =>
-      getReplayPoints(stock, period, cutoffTimestamp).map((point) => point[0])
-    )
-  )).filter(Number.isFinite).sort((a, b) => a - b);
+  const pointCounts = universe
+    .map((stock) => getReplayPoints(stock, period, cutoffTimestamp).length)
+    .filter((count) => count > 0)
+    .sort((a, b) => a - b);
+  const referenceCount = pointCounts.length
+    ? pointCounts[Math.min(pointCounts.length - 1, Math.floor(pointCounts.length * 0.9))]
+    : 0;
+  const minimumPoints = Math.max(8, Math.ceil(referenceCount * 0.7));
   universe = universe.filter((stock) =>
-    getReplayPoints(stock, period, cutoffTimestamp).length >= Math.max(8, frames.length * 0.7)
+    getReplayPoints(stock, period, cutoffTimestamp).length >= minimumPoints
   );
-  frames = Array.from(new Set(
+  const frames = Array.from(new Set(
     universe.flatMap((stock) =>
       getReplayPoints(stock, period, cutoffTimestamp).map((point) => point[0])
     )
   )).filter(Number.isFinite).sort((a, b) => a - b);
   return calculateReplayScores(universe, frames, period, cutoffTimestamp);
+}
+
+function getActionPeriodRows(scope, universe) {
+  const cacheKey = `${scope}:${lastAsOf || "unknown"}`;
+  if (actionPeriodRowsCache.has(cacheKey)) return actionPeriodRowsCache.get(cacheKey);
+  const rows = new Map(
+    Object.keys(REPLAY_PERIODS).map((period) => [
+      period,
+      new Map(
+        calculatePeriodScores(period, null, universe)
+          .map((row) => [row.symbol, row])
+      ),
+    ])
+  );
+  actionPeriodRowsCache.set(cacheKey, rows);
+  return rows;
 }
 
 function calculateConfluence(
@@ -1497,7 +1538,10 @@ function renderActionBuckets(
   const usingServerHistory = serverSnapshots.length > 0;
   let priorSnapshots = serverSnapshots;
   if (!usingServerHistory) {
-    seedHistoricalActionHistory(key);
+    // Synthesizing historical snapshots on the client evaluates every period
+    // several extra times. Avoid that heavyweight fallback for the SmallCap
+    // 600; its change-based buckets should be driven by shared server history.
+    if (APP_CONFIG.universe !== "smallcaps") seedHistoricalActionHistory(key);
     const history = readActionHistory();
     const signalAsOf = currentSignalAsOf();
     priorSnapshots = (Array.isArray(history[key]) ? history[key] : [])
@@ -2076,15 +2120,17 @@ function renderConfluenceScanner() {
       ? sectorUniverse
       : lastStocks
     : visibleUniverse;
-  const periodRows = new Map(
-    Object.keys(REPLAY_PERIODS).map((period) => [
-      period,
-      new Map(
-        calculatePeriodScores(period, null, scoreUniverse)
-          .map((row) => [row.symbol, row])
-      ),
-    ])
-  );
+  const periodRows = appView === "action"
+    ? getActionPeriodRows(activeFilter === "sectors" ? "sectors" : "stocks", scoreUniverse)
+    : new Map(
+      Object.keys(REPLAY_PERIODS).map((period) => [
+        period,
+        new Map(
+          calculatePeriodScores(period, null, scoreUniverse)
+            .map((row) => [row.symbol, row])
+        ),
+      ])
+    );
   const allPositiveShort = calculateConfluence(
     ["1m", "2m"], ["1d", "2d"], false, periodRows, scoreUniverse
   );
@@ -2103,15 +2149,17 @@ function renderConfluenceScanner() {
   const positiveLong = visibleRows(allPositiveLong);
   const negativeShort = visibleRows(allNegativeShort);
   const negativeLong = visibleRows(allNegativeLong);
-  const sectorPeriodRows = new Map(
-    Object.keys(REPLAY_PERIODS).map((period) => [
-      period,
-      new Map(
-        calculatePeriodScores(period, null, sectorUniverse)
-          .map((row) => [row.symbol, row])
-      ),
-    ])
-  );
+  const sectorPeriodRows = appView === "action"
+    ? getActionPeriodRows("sectors", sectorUniverse)
+    : new Map(
+      Object.keys(REPLAY_PERIODS).map((period) => [
+        period,
+        new Map(
+          calculatePeriodScores(period, null, sectorUniverse)
+            .map((row) => [row.symbol, row])
+        ),
+      ])
+    );
   const sectorPositiveShort = calculateConfluence(
     ["1m", "2m"],
     ["1d", "2d"],
@@ -2521,6 +2569,7 @@ async function loadData(forceRefresh = false) {
 
     lastStocks = data.stocks || [];
     lastBenchmarks = data.benchmarks || [];
+    actionPeriodRowsCache.clear();
     populateTickerSearch();
     buildChart(lastStocks);
     buildReplayTimeline();
