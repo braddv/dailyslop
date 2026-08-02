@@ -62,6 +62,7 @@ const longNegativeConfluenceList = document.getElementById("longNegativeConfluen
 const workspaceNavButtons = document.querySelectorAll(".workspace-nav-btn");
 const marketReplayView = document.getElementById("marketReplayView");
 const actionBoardView = document.getElementById("actionBoardView");
+const regimeMonitor = document.getElementById("regimeMonitor");
 const newAccelerationList = document.getElementById("newAccelerationList");
 const confirmedLeadersList = document.getElementById("confirmedLeadersList");
 const pullbackTrendList = document.getElementById("pullbackTrendList");
@@ -2348,6 +2349,106 @@ function renderSignalHistory() {
   `).join("") : "<p class=\"signal-history-empty\">No persistent signals in this filtered history.</p>";
 }
 
+function regimeClassName(label) {
+  return String(label || "unclear")
+    .toLowerCase()
+    .replace(/[^a-z]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function regimeMetric(details, directionScore, type) {
+  const families = details?.families || {};
+  const bullish = families[type === "continuation" ? "bullishContinuation" : "bullishReversal"];
+  const bearish = families[type === "continuation" ? "bearishContinuation" : "bearishReversal"];
+  if (directionScore >= 20) return { ...bullish, direction: "Bullish" };
+  if (directionScore <= -20) return { ...bearish, direction: "Bearish" };
+  const bullishAverage = Number(bullish?.average);
+  const bearishAverage = Number(bearish?.average);
+  return Number.isFinite(bullishAverage) && (
+    !Number.isFinite(bearishAverage) || bullishAverage >= bearishAverage
+  )
+    ? { ...bullish, direction: "Bullish" }
+    : { ...bearish, direction: "Bearish" };
+}
+
+function regimeAverage(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "--";
+  return `${number >= 0 ? "+" : ""}${number.toFixed(2)}%`;
+}
+
+function renderRegimeMonitor() {
+  if (!regimeMonitor || appView !== "action") return;
+  const regimes = actionHistoryData?.regimes || [];
+  if (!regimes.length) {
+    regimeMonitor.innerHTML = "<div class=\"regime-monitor-loading\">Regime history will begin with the next saved signal snapshot.</div>";
+    return;
+  }
+  const selectedKey = viewMode === "subindustry" && selectedSector
+    ? `sector:${selectedSector}`
+    : "market";
+  const focused = regimes.find((row) => row.scope_key === selectedKey) ||
+    regimes.find((row) => row.scope_key === "market") || regimes[0];
+  const directionScore = Number(focused.direction_score) || 0;
+  const continuation = regimeMetric(focused.details, directionScore, "continuation");
+  const reversal = regimeMetric(focused.details, directionScore, "reversal");
+  const structure = directionScore >= 20
+    ? "Bullish structure"
+    : directionScore <= -20
+      ? "Bearish structure"
+      : "Mixed structure";
+  const title = focused.sector || "S&P 500 market";
+  const currentThrough = historyDateLabel(focused.snapshot_at);
+  const evidenceThrough = focused.evidence_through
+    ? historyDateLabel(focused.evidence_through)
+    : "waiting for outcomes";
+  const sectorRegimes = regimes
+    .filter((row) => row.sector)
+    .sort((a, b) =>
+      SECTORS.findIndex((sector) => sector.gics === a.sector) -
+      SECTORS.findIndex((sector) => sector.gics === b.sector)
+    );
+  regimeMonitor.className = `regime-monitor ${regimeClassName(focused.regime)}`;
+  regimeMonitor.innerHTML = `
+    <div class="regime-primary">
+      <div class="regime-heading">
+        <div>
+          <p class="momentum-kicker">Observed regime</p>
+          <h3>${title} · ${focused.regime}</h3>
+          <p>Current structure through ${currentThrough} · validated 10-session outcomes through ${evidenceThrough}</p>
+        </div>
+        <span class="regime-confidence ${focused.confidence}">${focused.confidence} confidence</span>
+      </div>
+      <div class="regime-evidence">
+        <span><small>Direction</small><strong>${structure} ${Math.round(directionScore)}</strong></span>
+        <span class="${Number(continuation?.average) >= 0 ? "positive" : "negative"}">
+          <small>${continuation?.direction || "Selected"} continuation</small>
+          <strong>${regimeAverage(continuation?.average)} · ${continuation?.sampleSize || 0} results</strong>
+        </span>
+        <span class="${Number(reversal?.average) >= 0 ? "positive" : "negative"}">
+          <small>${reversal?.direction || "Selected"} reversal</small>
+          <strong>${regimeAverage(reversal?.average)} · ${reversal?.sampleSize || 0} results</strong>
+        </span>
+        ${focused.pending_label ? `
+          <span class="regime-pending"><small>Possible transition</small><strong>${focused.pending_label}</strong></span>
+        ` : ""}
+      </div>
+    </div>
+    <div class="regime-sector-strip" aria-label="Sector regimes">
+      ${sectorRegimes.map((row) => {
+        const symbol = SECTORS.find((sector) => sector.gics === row.sector)?.label || "";
+        return `
+          <button class="regime-sector-chip ${regimeClassName(row.regime)} ${row.scope_key === selectedKey ? "active" : ""}"
+            type="button" data-regime-sector="${row.sector}">
+            <span>${symbol} ${row.sector}</span>
+            <strong>${row.regime}</strong>
+          </button>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 async function loadSignalHistory(scope = appView === "action" ? "action" : "history") {
   const actionScope = scope === "action" || scope === "watchlist";
   const requestedLimit = scope === "watchlist" ? 20 : 6;
@@ -2389,6 +2490,7 @@ async function loadSignalHistory(scope = appView === "action" ? "action" : "hist
 
 function renderConfluenceScanner(watchlistOnly = false) {
   if (!confluenceScanner || !negativeConfluenceScanner) return;
+  if (!watchlistOnly) renderRegimeMonitor();
   const visibleUniverse = watchlistOnly ? lastStocks : getBaseScanUniverse();
   const available = visibleUniverse.length >= 2;
   const actionBoardBullish = appView === "action" && actionBoardSide === "bullish";
@@ -3020,6 +3122,17 @@ sectorFilterButtons.forEach((button) => {
     renderCurrentChart();
   });
 });
+
+if (regimeMonitor) {
+  regimeMonitor.addEventListener("click", (event) => {
+    const chip = event.target.closest("button[data-regime-sector]");
+    if (!chip) return;
+    const filterButton = [...sectorFilterButtons].find((button) =>
+      button.dataset.sector === chip.dataset.regimeSector
+    );
+    filterButton?.click();
+  });
+}
 
 window.addEventListener("resize", () => {
   if (appView !== "replay") return;
