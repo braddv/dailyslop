@@ -2259,6 +2259,13 @@ h1 {
   font-size: 0.72rem;
 }
 
+@media (hover: none), (pointer: coarse) {
+  .tooltip,
+  .tooltip.visible {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .chart-shell {
     grid-template-columns: 50px 1fr;
