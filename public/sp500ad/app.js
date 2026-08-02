@@ -1,3 +1,12 @@
+const APP_CONFIG = window.SECTOR_AD_CONFIG || {
+  universe: "sp500",
+  marketEndpoint: "/api/sector-ad",
+  historyEndpoint: "/api/signal-history",
+  broadSymbol: "SPY",
+  broadSector: "S&P 500",
+  broadLabel: "S&P 500",
+};
+
 const chartEl = document.getElementById("chart");
 const yAxisEl = document.getElementById("yAxis");
 const asOfEl = document.getElementById("asOf");
@@ -360,7 +369,7 @@ function updateSubhead() {
   } else if (activeFilter === "dow") {
     base = `${base} (Dow Jones)`;
   } else if (activeFilter === "sectors") {
-    base = `${base} (Sector ETFs and SPY)`;
+    base = `${base} (Sector ETFs and ${APP_CONFIG.broadSymbol})`;
   }
   if (viewMode === "subindustry" && selectedSector) {
     base = `${base} (${selectedSector} sub-industries)`;
@@ -410,7 +419,7 @@ function buildSectorViewStocks() {
   });
   const maxSectorCap = Math.max(0, ...sectorCaps.values());
   return lastBenchmarks.map((benchmark) => {
-    const isSpy = benchmark.symbol === "SPY";
+    const isSpy = benchmark.symbol === APP_CONFIG.broadSymbol;
     const sectorCap = sectorCaps.get(benchmark.sector) || 0;
     const weight = isSpy ? 100 : totalCap > 0 ? (sectorCap / totalCap) * 100 : null;
     return {
@@ -429,7 +438,7 @@ function getGroups(stocks) {
   if (activeFilter === "sectors") {
     return {
       groups: [
-        { key: "S&P 500", label: "SPY" },
+        { key: APP_CONFIG.broadSector, label: APP_CONFIG.broadSymbol },
         ...SECTORS.map((sector) => ({ key: sector.gics, label: sector.label })),
       ],
       keyFn: (stock) => stock.sector,
@@ -439,7 +448,7 @@ function getGroups(stocks) {
   if (viewMode === "sector") {
     return {
       groups: [
-        { key: "S&P 500", label: "SPY" },
+        { key: APP_CONFIG.broadSector, label: APP_CONFIG.broadSymbol },
         ...SECTORS.map((sector) => ({ key: sector.gics, label: sector.label })),
       ],
       keyFn: (stock) => stock.sector,
@@ -480,7 +489,7 @@ function buildChart(stocks) {
   if (activeFilter !== "sectors") {
     const benchmarks = buildSectorViewStocks();
     const benchmark = viewMode === "sector"
-      ? benchmarks.find((stock) => stock.symbol === "SPY")
+      ? benchmarks.find((stock) => stock.symbol === APP_CONFIG.broadSymbol)
       : benchmarks.find((stock) => stock.sector === selectedSector);
     if (benchmark) working = [...working, benchmark];
   }
@@ -572,7 +581,7 @@ function buildChart(stocks) {
     }
     if (interactive) {
       label.addEventListener("click", () => {
-        if (group.key === "S&P 500") return;
+        if (group.key === APP_CONFIG.broadSector) return;
         if (activeFilter === "sectors") {
           activeFilter = "all";
           filterButtons.forEach((button) => {
@@ -666,7 +675,7 @@ function buildChart(stocks) {
         ? `<div>${REPLAY_PERIODS[replayPeriod].label} replay ${formatPerf(getReplayValue(stock, replayFrames[replayFrameIndex]))}</div>`
         : "";
       const weightLine = Number.isFinite(stock.sp500Weight)
-        ? `<div>${stock.symbol === "SPY" ? "Benchmark" : "S&P 500 weight"} ${stock.symbol === "SPY" ? "100%" : `${stock.sp500Weight.toFixed(1)}%`}</div>`
+        ? `<div>${stock.symbol === APP_CONFIG.broadSymbol ? "Benchmark" : `${APP_CONFIG.broadLabel} weight`} ${stock.symbol === APP_CONFIG.broadSymbol ? "100%" : `${stock.sp500Weight.toFixed(1)}%`}</div>`
         : "";
       return `
         <div><strong>${stock.symbol}</strong> • ${stock.security}</div>
@@ -841,7 +850,7 @@ function getMomentumUniverse() {
 
 function getBaseScanUniverse() {
   let stocks = activeFilter === "sectors"
-    ? lastBenchmarks.filter((stock) => stock.symbol !== "SPY")
+    ? lastBenchmarks.filter((stock) => stock.symbol !== APP_CONFIG.broadSymbol)
     : applyFilter(lastStocks);
   if (viewMode === "subindustry" && selectedSector) {
     stocks = stocks.filter((stock) => stock.sector === selectedSector);
@@ -1215,7 +1224,7 @@ function renderConfluenceRows(target, rows, negative = false) {
   `).join("");
 }
 
-const ACTION_HISTORY_KEY = "sp500ad-action-history-v2";
+const ACTION_HISTORY_KEY = `${APP_CONFIG.universe}-action-history-v2`;
 
 function actionUniverseKey() {
   return [
@@ -1368,9 +1377,9 @@ function periodReturn(stock, period) {
 }
 
 function relativeStrengthContext(stock, period, sectorSignals) {
-  const spy = lastBenchmarks.find((benchmark) => benchmark.symbol === "SPY");
+  const spy = lastBenchmarks.find((benchmark) => benchmark.symbol === APP_CONFIG.broadSymbol);
   const sectorEtf = lastBenchmarks.find((benchmark) =>
-    benchmark.symbol !== "SPY" && benchmark.sector === stock.sector
+    benchmark.symbol !== APP_CONFIG.broadSymbol && benchmark.sector === stock.sector
   );
   const stockReturn = periodReturn(stock, period);
   const spyReturn = periodReturn(spy || {}, period);
@@ -1473,7 +1482,7 @@ function renderActionBucket(target, rows, scoreLabel, bucketKey) {
                   ${row.symbol} ${formatPerf(context.stockReturn)}
                 </span>
                 <span class="${Number.isFinite(context.spyReturn) && context.spyReturn >= 0 ? "positive" : "negative"}">
-                  SPY ${formatPerf(context.spyReturn)}
+                  ${APP_CONFIG.broadSymbol} ${formatPerf(context.spyReturn)}
                 </span>
                 ${activeFilter === "sectors" ? "" : `
                   <span class="${Number.isFinite(context.sectorReturn) && context.sectorReturn >= 0 ? "positive" : "negative"}">
@@ -2044,9 +2053,10 @@ async function loadSignalHistory(scope = appView === "action" ? "action" : "hist
     signalHistoryStatus.textContent = "Loading stored snapshots…";
   }
   try {
+    const separator = APP_CONFIG.historyEndpoint.includes("?") ? "&" : "?";
     const response = await fetch(actionOnly
-      ? "/api/signal-history?limit=6&compact=true"
-      : "/api/signal-history?limit=20");
+      ? `${APP_CONFIG.historyEndpoint}${separator}limit=6&compact=true`
+      : `${APP_CONFIG.historyEndpoint}${separator}limit=20`);
     const data = await readApiJson(response);
     if (!response.ok) throw new Error(data.error || `History unavailable (${response.status})`);
     if (actionOnly) actionHistoryData = data;
@@ -2075,7 +2085,7 @@ function renderConfluenceScanner() {
   confluenceScanner.hidden = !available || actionBoardBearish;
   negativeConfluenceScanner.hidden = !available || actionBoardBullish;
   if (!available) return;
-  const sectorUniverse = lastBenchmarks.filter((benchmark) => benchmark.symbol !== "SPY");
+  const sectorUniverse = lastBenchmarks.filter((benchmark) => benchmark.symbol !== APP_CONFIG.broadSymbol);
   const scoreUniverse = appView === "action"
     ? activeFilter === "sectors"
       ? sectorUniverse
@@ -2229,15 +2239,15 @@ function pinSearchedTicker() {
   if (!match) {
     tickerSearchStatus.textContent = tickerMatches.length > 1
       ? `${tickerMatches.length} tickers match “${query}”. Choose one from the list.`
-      : `No S&P 500 ticker found for “${query}”.`;
+      : `No ${APP_CONFIG.broadLabel} ticker found for “${query}”.`;
     return;
   }
 
   const isBenchmark = lastBenchmarks.some((stock) => stock.symbol === match.symbol);
-  const stayInSubindustry = viewMode === "subindustry" && match.symbol !== "SPY";
+  const stayInSubindustry = viewMode === "subindustry" && match.symbol !== APP_CONFIG.broadSymbol;
   activeFilter = stayInSubindustry
     ? "all"
-    : isBenchmark && match.symbol !== "SPY"
+    : isBenchmark && match.symbol !== APP_CONFIG.broadSymbol
       ? "sectors"
       : "all";
   if (stayInSubindustry) {
@@ -2304,7 +2314,7 @@ function calculateReplayRange() {
   if (activeFilter !== "sectors") {
     const benchmarks = buildSectorViewStocks();
     const benchmark = viewMode === "sector"
-      ? benchmarks.find((stock) => stock.symbol === "SPY")
+      ? benchmarks.find((stock) => stock.symbol === APP_CONFIG.broadSymbol)
       : benchmarks.find((stock) => stock.sector === selectedSector);
     if (benchmark) candidates = [...candidates, benchmark];
   }
@@ -2504,7 +2514,9 @@ async function loadData(forceRefresh = false) {
   notesEl.textContent = "";
 
   try {
-    const endpoint = forceRefresh ? "/api/sector-ad?refresh=true" : "/api/sector-ad";
+    const endpoint = forceRefresh
+      ? `${APP_CONFIG.marketEndpoint}${APP_CONFIG.marketEndpoint.includes("?") ? "&" : "?"}refresh=true`
+      : APP_CONFIG.marketEndpoint;
     const res = await fetch(endpoint);
     const data = await readApiJson(res);
     if (!res.ok) {

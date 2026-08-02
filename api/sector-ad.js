@@ -1,5 +1,6 @@
 const { readSharedCache, writeSharedCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
+const smallCapSeedData = require('../public/smallcaps/data/universe.json');
 
 const DAILY_CACHE_KEY = 'sector_ad_yahoo_daily_v2';
 const INTRADAY_CACHE_KEY = 'sector_ad_yahoo_intraday_v5';
@@ -23,6 +24,35 @@ const BENCHMARKS = [
   ['XLRE', 'Real Estate Select Sector SPDR', 'Real Estate'],
   ['XLU', 'Utilities Select Sector SPDR', 'Utilities'],
 ];
+const SMALLCAP_BENCHMARKS = [
+  ['SPSM', 'SPDR Portfolio S&P 600 Small Cap ETF', 'S&P SmallCap 600'],
+  ['PSCM', 'Invesco S&P SmallCap Materials ETF', 'Materials'],
+  ['PSCU', 'Invesco S&P SmallCap Utilities & Communication Services ETF', 'Communication Services'],
+  ['PSCD', 'Invesco S&P SmallCap Consumer Discretionary ETF', 'Consumer Discretionary'],
+  ['PSCC', 'Invesco S&P SmallCap Consumer Staples ETF', 'Consumer Staples'],
+  ['PSCE', 'Invesco S&P SmallCap Energy ETF', 'Energy'],
+  ['PSCF', 'Invesco S&P SmallCap Financials ETF', 'Financials'],
+  ['PSCH', 'Invesco S&P SmallCap Health Care ETF', 'Health Care'],
+  ['PSCI', 'Invesco S&P SmallCap Industrials ETF', 'Industrials'],
+  ['PSCT', 'Invesco S&P SmallCap Information Technology ETF', 'Information Technology'],
+  ['PSR', 'Invesco Active U.S. Real Estate ETF', 'Real Estate'],
+];
+
+function universeConfig(name) {
+  if (name === 'smallcaps') {
+    return {
+      name: 'smallcaps',
+      seed: smallCapSeedData,
+      benchmarks: SMALLCAP_BENCHMARKS,
+      dailyCacheKey: 'smallcaps_yahoo_daily_v1',
+      intradayCacheKey: 'smallcaps_yahoo_intraday_v1',
+    };
+  }
+  return {
+    name: 'sp500', seed: seedData, benchmarks: BENCHMARKS,
+    dailyCacheKey: DAILY_CACHE_KEY, intradayCacheKey: INTRADAY_CACHE_KEY,
+  };
+}
 
 function toYahooSymbol(symbol) {
   return String(symbol).replace(/\./g, '-').toUpperCase();
@@ -220,19 +250,20 @@ function buildSectorSummary(stocks) {
   return Array.from(bySector.values()).sort((a, b) => a.sector.localeCompare(b.sector));
 }
 
-function buildUniverse() {
-  return seedData.stocks.map((stock) => ({
+function buildUniverse(config) {
+  return config.seed.stocks.map((stock) => ({
     symbol: stock.symbol,
     yahooSymbol: toYahooSymbol(stock.symbol),
     security: stock.security,
     sector: stock.sector,
     subIndustry: stock.subIndustry,
     seedMarketCap: stock.marketCap,
+    portfolioWeight: stock.portfolioWeight,
   }));
 }
 
-function buildBenchmarkUniverse() {
-  return BENCHMARKS.map(([symbol, security, sector]) => ({
+function buildBenchmarkUniverse(config) {
+  return config.benchmarks.map(([symbol, security, sector]) => ({
     symbol,
     yahooSymbol: symbol,
     security,
@@ -286,9 +317,9 @@ function buildDailyBenchmark(stock, spark) {
   };
 }
 
-function buildDailyResponse() {
-  const universe = buildUniverse();
-  const benchmarkUniverse = buildBenchmarkUniverse();
+function buildDailyResponse(config) {
+  const universe = buildUniverse(config);
+  const benchmarkUniverse = buildBenchmarkUniverse(config);
 
   const symbols = [...new Set(
     [...universe, ...benchmarkUniverse].map((stock) => stock.yahooSymbol)
@@ -348,6 +379,7 @@ function buildDailyResponse() {
         change,
         changePercent,
         marketCap: Number.isFinite(meta.marketCap) ? meta.marketCap : stock.seedMarketCap,
+        portfolioWeight: stock.portfolioWeight,
         perf1w: calcPerf(currentPrice, timestamps, closes, 7),
         perf1m: calcPerf(currentPrice, timestamps, closes, 30),
         perf3m: calcPerf(currentPrice, timestamps, closes, 90),
@@ -371,7 +403,9 @@ function buildDailyResponse() {
     return {
       asOf: new Date().toISOString(),
       source: {
-        constituents: 'seed:/public/sp500ad/data/sector-ad.json',
+        constituents: config.name === 'smallcaps'
+          ? 'seed:/public/smallcaps/data/universe.json (SPSM/S&P SmallCap 600 fallback)'
+          : 'seed:/public/sp500ad/data/sector-ad.json',
         quotes: 'Yahoo Finance spark',
       },
       failures,
@@ -383,9 +417,9 @@ function buildDailyResponse() {
   });
 }
 
-function buildIntradayResponse() {
-  const universe = buildUniverse();
-  const benchmarkUniverse = buildBenchmarkUniverse();
+function buildIntradayResponse(config) {
+  const universe = buildUniverse(config);
+  const benchmarkUniverse = buildBenchmarkUniverse(config);
   const allRows = [...universe, ...benchmarkUniverse];
   const symbols = [...new Set(allRows.map((stock) => stock.yahooSymbol))];
   return Promise.all([
@@ -509,6 +543,7 @@ function mergePayloads(daily, intraday, cacheFresh) {
 
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
+  const config = universeConfig(String(req.query?.universe || '').toLowerCase());
 
   const refresh = String(req.query?.refresh || '').toLowerCase() === 'true';
   const intradayTtl = isUsMarketHours()
@@ -516,29 +551,29 @@ module.exports = async function handler(req, res) {
     : INTRADAY_OFF_HOURS_TTL_MS;
   let daily = refresh
     ? null
-    : await readSharedCache(DAILY_CACHE_KEY, DAILY_CACHE_TTL_MS);
+    : await readSharedCache(config.dailyCacheKey, DAILY_CACHE_TTL_MS);
   let intraday = refresh
     ? null
-    : await readSharedCache(INTRADAY_CACHE_KEY, intradayTtl);
+    : await readSharedCache(config.intradayCacheKey, intradayTtl);
   let dailyFresh = hasValidStocks(daily);
   let intradayFresh = hasValidIntraday(intraday);
 
   const [dailyAttempt, intradayAttempt] = await Promise.all([
     dailyFresh
       ? Promise.resolve(null)
-      : buildDailyResponse().then((value) => ({ value })).catch((error) => ({ error })),
+      : buildDailyResponse(config).then((value) => ({ value })).catch((error) => ({ error })),
     intradayFresh
       ? Promise.resolve(null)
-      : buildIntradayResponse().then((value) => ({ value })).catch((error) => ({ error })),
+      : buildIntradayResponse(config).then((value) => ({ value })).catch((error) => ({ error })),
   ]);
 
   if (dailyAttempt?.value) {
     daily = dailyAttempt.value;
     dailyFresh = true;
-    await writeSharedCache(DAILY_CACHE_KEY, daily, 7 * DAY_MS);
+    await writeSharedCache(config.dailyCacheKey, daily, 7 * DAY_MS);
   } else if (!dailyFresh) {
-    daily = await readSharedCache(DAILY_CACHE_KEY, 7 * DAY_MS);
-    if (!hasValidStocks(daily)) daily = seedData;
+    daily = await readSharedCache(config.dailyCacheKey, 7 * DAY_MS);
+    if (!hasValidStocks(daily)) daily = config.seed;
     daily = {
       ...daily,
       failures: [
@@ -551,9 +586,9 @@ module.exports = async function handler(req, res) {
   if (intradayAttempt?.value) {
     intraday = intradayAttempt.value;
     intradayFresh = true;
-    await writeSharedCache(INTRADAY_CACHE_KEY, intraday, 2 * DAY_MS);
+    await writeSharedCache(config.intradayCacheKey, intraday, 2 * DAY_MS);
   } else if (!intradayFresh) {
-    intraday = await readSharedCache(INTRADAY_CACHE_KEY, 2 * DAY_MS);
+    intraday = await readSharedCache(config.intradayCacheKey, 2 * DAY_MS);
     if (!hasValidIntraday(intraday)) {
       intraday = { asOf: daily.asOf, failures: [], stocks: [] };
     }

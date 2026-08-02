@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/smallcaps/" />
+    <title>US Small-Cap Sector Bubble Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/sp500ad/styles.css" />
+  </head>
+  <body>
+    <div class="glow"></div>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">S&amp;P SmallCap 600 market internals</p>
+          <h1>Sector bubble map</h1>
+          <p class="subhead" id="metricSubhead">Daily percent change by stock, grouped by sector.</p>
+        </div>
+        <div class="meta">
+          <div class="meta-card">
+            <span class="meta-label">As of</span>
+            <span id="asOf" class="meta-value">--</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Cache</span>
+            <span id="cache" class="meta-value">--</span>
+          </div>
+        </div>
+      </header>
+
+      <nav class="workspace-nav" aria-label="Small-cap analysis view">
+        <button class="workspace-nav-btn active" type="button" data-app-view="replay">
+          Market Replay
+        </button>
+        <button class="workspace-nav-btn" type="button" data-app-view="action">
+          Action Board
+        </button>
+        <button class="workspace-nav-btn" type="button" data-app-view="history">
+          Signal History
+        </button>
+      </nav>
+
+      <section class="controls">
+        <div class="toggle-group" id="metricToggle">
+          <button class="toggle-btn active" data-metric="changePercent">1D</button>
+          <button class="toggle-btn" data-metric="perf1w">1W</button>
+          <button class="toggle-btn" data-metric="perf1m">1M</button>
+          <button class="toggle-btn" data-metric="perf3m">3M</button>
+          <button class="toggle-btn" data-metric="pctFrom12wHigh">12W High</button>
+          <button class="toggle-btn" data-metric="pctFrom52wHigh">52W High</button>
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all">All Small Caps</button>
+          <button class="filter-btn" data-filter="sectors">Sectors</button>
+          <button class="filter-btn" data-filter="top50">Top 50</button>
+          <button class="filter-btn" data-filter="top250">Top 250</button>
+          <button class="filter-btn" data-filter="bottom250">Bottom 250</button>
+        </div>
+      </section>
+
+      <div class="sector-filter-bar" aria-label="Filter directly by sector">
+        <span>Sector</span>
+        <div class="sector-filter-group">
+          <button class="sector-filter-btn" type="button" data-sector="Materials">PSCM Materials</button>
+          <button class="sector-filter-btn" type="button" data-sector="Communication Services">PSCU Communication</button>
+          <button class="sector-filter-btn" type="button" data-sector="Information Technology">PSCT Technology</button>
+          <button class="sector-filter-btn" type="button" data-sector="Consumer Discretionary">PSCD Discretionary</button>
+          <button class="sector-filter-btn" type="button" data-sector="Consumer Staples">PSCC Staples</button>
+          <button class="sector-filter-btn" type="button" data-sector="Energy">PSCE Energy</button>
+          <button class="sector-filter-btn" type="button" data-sector="Financials">PSCF Financials</button>
+          <button class="sector-filter-btn" type="button" data-sector="Health Care">PSCH Health Care</button>
+          <button class="sector-filter-btn" type="button" data-sector="Industrials">PSCI Industrials</button>
+          <button class="sector-filter-btn" type="button" data-sector="Real Estate">PSR Real Estate</button>
+          <button class="sector-filter-btn" type="button" data-sector="Utilities">PSCU Utilities</button>
+        </div>
+      </div>
+
+      <form class="ticker-search" id="tickerSearch">
+        <label for="tickerSearchInput">Pin a ticker</label>
+        <div class="ticker-search-field">
+          <input
+            id="tickerSearchInput"
+            type="search"
+            list="tickerOptions"
+            placeholder="Search a small cap or SPSM…"
+            autocomplete="off"
+            aria-describedby="tickerSearchStatus"
+          />
+          <datalist id="tickerOptions"></datalist>
+          <button type="submit">Pin</button>
+        </div>
+        <button class="back-btn" id="backBtn" type="button">Back to sectors</button>
+        <span class="ticker-search-status" id="tickerSearchStatus" aria-live="polite"></span>
+      </form>
+
+      <div class="app-view" id="marketReplayView">
+      <section class="chart-shell">
+        <div class="y-axis" id="yAxis"></div>
+        <div class="chart" id="chart"></div>
+      </section>
+
+      <section class="replay-controls" aria-label="Market replay">
+        <div class="replay-heading">
+          <div>
+            <div class="view-mode-toggle" aria-label="Chart mode">
+              <button class="view-mode-btn active" id="liveModeBtn" type="button">Live</button>
+              <button class="view-mode-btn" id="replay1dModeBtn" type="button">1D Replay</button>
+              <button class="view-mode-btn" id="replay2dModeBtn" type="button">2D Replay</button>
+              <button class="view-mode-btn" id="replay1wModeBtn" type="button">1W Replay</button>
+              <button class="view-mode-btn" id="replay2wModeBtn" type="button">2W Replay</button>
+              <button class="view-mode-btn" id="replayModeBtn" type="button">1M Replay</button>
+              <button class="view-mode-btn" id="replay2mModeBtn" type="button">2M Replay</button>
+              <button class="view-mode-btn" id="replay3mModeBtn" type="button">3M Replay</button>
+              <button class="view-mode-btn" id="replay6mModeBtn" type="button">6M Replay</button>
+            </div>
+            <strong id="replayTimestamp">Daily closes</strong>
+          </div>
+          <span class="replay-status" id="replayStatus">Live market view</span>
+        </div>
+        <div class="replay-transport is-disabled" id="replayTransport">
+          <button class="replay-play" id="replayPlay" type="button" aria-label="Play one month replay">
+            <span id="replayPlayIcon">▶</span>
+            <span id="replayPlayLabel">Play</span>
+          </button>
+          <input
+            class="replay-scrubber"
+            id="replayScrubber"
+            type="range"
+            min="0"
+            max="0"
+            value="0"
+            step="1"
+            aria-label="One month replay timeline"
+          />
+          <label class="replay-speed">
+            Speed
+            <select id="replaySpeed">
+              <option value="1200">0.5×</option>
+              <option value="700" selected>1×</option>
+              <option value="350">2×</option>
+            </select>
+          </label>
+          <button class="back-live" id="backLiveBtn" type="button">Back to Live</button>
+        </div>
+      </section>
+
+      <section class="momentum-scanner" id="momentumScanner" hidden aria-label="Momentum scan">
+        <div class="momentum-heading">
+          <div>
+            <p class="momentum-kicker">Replay signal</p>
+            <h2>Momentum scan</h2>
+            <p id="momentumDescription">
+              Stocks that stayed near the top throughout this replay window.
+            </p>
+          </div>
+          <div class="momentum-mode" aria-label="Momentum scan type">
+            <button class="momentum-mode-btn active" type="button" data-momentum-mode="persistent">
+              Persistent leaders
+            </button>
+            <button class="momentum-mode-btn" type="button" data-momentum-mode="emerging">
+              Emerging momentum
+            </button>
+          </div>
+        </div>
+        <div class="momentum-list" id="momentumList"></div>
+        <p class="momentum-note">
+          Scores compare symbols in the current view. Select a result to pin it on the chart.
+        </p>
+      </section>
+
+      <section class="momentum-scanner weakness-scanner" id="weaknessScanner" hidden aria-label="Weakness scan">
+        <div class="momentum-heading">
+          <div>
+            <p class="momentum-kicker weakness-kicker">Inverse signal</p>
+            <h2>Weakness scan</h2>
+            <p id="weaknessDescription">
+              Stocks that stayed near the bottom throughout this replay window.
+            </p>
+          </div>
+          <div class="momentum-mode" aria-label="Weakness scan type">
+            <button class="weakness-mode-btn active" type="button" data-weakness-mode="persistent">
+              Persistent laggards
+            </button>
+            <button class="weakness-mode-btn" type="button" data-weakness-mode="emerging">
+              Emerging weakness
+            </button>
+          </div>
+        </div>
+        <div class="momentum-list" id="weaknessList"></div>
+        <p class="momentum-note">
+          Scores compare symbols in the current view. Select a result to pin it on the chart.
+        </p>
+      </section>
+      </div>
+
+      <div class="app-view action-board-view" id="actionBoardView" hidden>
+      <section class="action-board-intro">
+        <div class="action-board-title-row">
+          <div>
+            <p class="momentum-kicker">Stable multi-timeframe watchlist</p>
+            <h2>Action Board</h2>
+          </div>
+          <div class="action-side-toggle" aria-label="Action Board direction">
+            <button class="action-side-btn active" type="button" data-action-side="bullish">Bullish</button>
+            <button class="action-side-btn" type="button" data-action-side="bearish">Bearish</button>
+          </div>
+        </div>
+        <p>
+          Confluence is independent of the selected replay. Shared filters narrow the same
+          full-market signal set by market-cap group, sector ETFs, or sector drill-down.
+        </p>
+      </section>
+      <section class="action-buckets" aria-label="Actionable signal changes">
+        <div class="action-bucket">
+          <div class="action-bucket-heading">
+            <span class="action-bucket-icon acceleration" id="actionBucketIcon1">↗</span>
+            <div>
+              <h3 id="actionBucketTitle1">New acceleration</h3>
+              <p id="actionBucketDescription1">Entered positive short-term confluence since the last saved refresh.</p>
+            </div>
+          </div>
+          <div class="action-bucket-list" id="newAccelerationList"></div>
+        </div>
+        <div class="action-bucket">
+          <div class="action-bucket-heading">
+            <span class="action-bucket-icon confirmed" id="actionBucketIcon2">✓</span>
+            <div>
+              <h3 id="actionBucketTitle2">Confirmed leaders</h3>
+              <p id="actionBucketDescription2">Held positive confluence across several unique data refreshes.</p>
+            </div>
+          </div>
+          <div class="action-bucket-list" id="confirmedLeadersList"></div>
+        </div>
+        <div class="action-bucket">
+          <div class="action-bucket-heading">
+            <span class="action-bucket-icon pullback" id="actionBucketIcon3">↘</span>
+            <div>
+              <h3 id="actionBucketTitle3">Pullback in trend</h3>
+              <p id="actionBucketDescription3">Long-term leadership remains strong while 1D/2D momentum weakens.</p>
+            </div>
+          </div>
+          <div class="action-bucket-list" id="pullbackTrendList"></div>
+        </div>
+        <div class="action-bucket">
+          <div class="action-bucket-heading">
+            <span class="action-bucket-icon breakdown" id="actionBucketIcon4">!</span>
+            <div>
+              <h3 id="actionBucketTitle4">Breakdown warning</h3>
+              <p id="actionBucketDescription4">Prior positive confluence is giving way to emerging short-term weakness.</p>
+            </div>
+          </div>
+          <div class="action-bucket-list" id="breakdownWarningList"></div>
+        </div>
+      </section>
+      <p class="action-history-note" id="actionHistoryNote"></p>
+
+      <section class="confluence-scanner" id="confluenceScanner" hidden aria-label="Positive timeframe confluence">
+        <div class="confluence-heading">
+          <div>
+            <p class="momentum-kicker">Multi-timeframe bullish signal</p>
+            <h2>Positive timeframe confluence</h2>
+            <p>Independent of selected replay · recalculates only when the stock universe changes.</p>
+          </div>
+        </div>
+        <div class="confluence-sections">
+          <div class="confluence-section">
+            <div class="confluence-section-heading">
+              <div>
+                <h3>Short-term confluence</h3>
+                <p>1D + 2D acceleration against 1M + 2M leadership</p>
+              </div>
+            </div>
+            <div class="confluence-list" id="shortConfluenceList"></div>
+          </div>
+          <div class="confluence-section">
+            <div class="confluence-section-heading">
+              <div>
+                <h3>Long-term confluence</h3>
+                <p>1W + 2W acceleration against 3M + 6M leadership</p>
+              </div>
+            </div>
+            <div class="confluence-list" id="longConfluenceList"></div>
+          </div>
+        </div>
+        <p class="momentum-note">
+          Scores use full-period rankings, not the selected replay’s top 10. Select a result to pin it.
+        </p>
+      </section>
+
+      <section class="confluence-scanner negative-confluence-scanner" id="negativeConfluenceScanner" hidden aria-label="Negative timeframe confluence">
+        <div class="confluence-heading">
+          <div>
+            <p class="momentum-kicker weakness-kicker">Multi-timeframe bearish signal</p>
+            <h2>Negative timeframe confluence</h2>
+            <p>Independent of selected replay · recalculates only when the stock universe changes.</p>
+          </div>
+        </div>
+        <div class="confluence-sections">
+          <div class="confluence-section">
+            <div class="confluence-section-heading">
+              <div>
+                <h3>Short-term negative confluence</h3>
+                <p>1D + 2D deterioration against 1M + 2M persistent weakness</p>
+              </div>
+            </div>
+            <div class="confluence-list" id="shortNegativeConfluenceList"></div>
+          </div>
+          <div class="confluence-section">
+            <div class="confluence-section-heading">
+              <div>
+                <h3>Long-term negative confluence</h3>
+                <p>1W + 2W deterioration against 3M + 6M persistent weakness</p>
+              </div>
+            </div>
+            <div class="confluence-list" id="longNegativeConfluenceList"></div>
+          </div>
+        </div>
+        <p class="momentum-note">
+          Scores use full-period weakness rankings, not the selected replay’s bottom 10. Select a result to pin it.
+        </p>
+      </section>
+      </div>
+
+      <div class="app-view signal-history-view" id="signalHistoryView" hidden>
+        <section class="signal-history-intro">
+          <div class="action-board-title-row">
+            <div>
+              <p class="momentum-kicker">Server-stored daily monitoring</p>
+              <h2>Signal History</h2>
+            </div>
+            <div class="action-side-toggle" aria-label="Signal History direction">
+              <button class="history-side-btn active" type="button" data-history-side="bullish">Bullish</button>
+              <button class="history-side-btn" type="button" data-history-side="bearish">Bearish</button>
+            </div>
+          </div>
+          <p>
+            One shared snapshot near 3 PM Eastern each trading day. History is independent
+            of page visits and uses the shared market, size, and sector filters above.
+          </p>
+        </section>
+        <div class="signal-history-status" id="signalHistoryStatus">Loading stored snapshots…</div>
+        <div class="signal-session-picker" id="signalSessionPicker" aria-label="Signal snapshot date"></div>
+        <section class="signal-history-summary" id="signalHistorySummary"></section>
+        <section class="signal-history-panels">
+          <div class="signal-history-panel">
+            <div class="signal-history-panel-heading">
+              <div>
+                <p class="momentum-kicker">Selected snapshot</p>
+                <h3>Signal changes</h3>
+              </div>
+            </div>
+            <div class="signal-change-list" id="signalChangeList"></div>
+          </div>
+          <div class="signal-history-panel">
+            <div class="signal-history-panel-heading">
+              <div>
+                <p class="momentum-kicker">Across stored sessions</p>
+                <h3>Persistent signals</h3>
+              </div>
+            </div>
+            <div class="signal-persistence-list" id="signalPersistenceList"></div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <button class="refresh" id="refresh">Refresh</button>
+        <label class="toggle">
+          <input type="checkbox" id="capToggle" checked />
+          Scale by market cap
+        </label>
+        <div class="notes" id="notes"></div>
+      </footer>
+    </main>
+
+    <div class="tooltip" id="tooltip"></div>
+    <div class="action-drawer-backdrop" id="actionDrawerBackdrop" hidden></div>
+    <aside class="action-drawer" id="actionDrawer" hidden aria-labelledby="actionDrawerTitle">
+      <div class="action-drawer-header">
+        <div>
+          <p class="momentum-kicker" id="actionDrawerBucket">Action Board detail</p>
+          <h2 id="actionDrawerTitle">--</h2>
+          <p id="actionDrawerCompany"></p>
+        </div>
+        <button class="action-drawer-close" id="actionDrawerClose" type="button" aria-label="Close details">×</button>
+      </div>
+      <div class="action-drawer-body" id="actionDrawerBody"></div>
+      <div class="action-drawer-actions">
+        <button class="action-drawer-pin" id="actionDrawerPin" type="button">Pin on Market Replay</button>
+      </div>
+    </aside>
+
+    <script>
+      window.SECTOR_AD_CONFIG = {
+        universe: "smallcaps",
+        marketEndpoint: "/api/smallcaps",
+        historyEndpoint: "/api/smallcap-signal-history",
+        broadSymbol: "SPSM",
+        broadSector: "S&amp;P SmallCap 600",
+        broadLabel: "S&amp;P SmallCap 600"
+      };
+    </script>
+    <script src="/sp500ad/app.js"></script>
+  </body>
+</html>
