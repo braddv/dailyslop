@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { buildSignalSnapshot, historicalCutoffs } from "./_lib/signals.js";
+import { buildRegimeRecords, REGIME_VERSION } from "./_lib/regimes.js";
 
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 const OUTCOME_RESULT_LIMIT = 5000;
@@ -98,6 +99,30 @@ async function ensureSchema() {
   await sql`
     ALTER TABLE signal_outcome_state
     ADD COLUMN IF NOT EXISTS materialization_version INTEGER NOT NULL DEFAULT 0
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS signal_regimes (
+      snapshot_at TIMESTAMPTZ NOT NULL REFERENCES signal_runs(snapshot_at) ON DELETE CASCADE,
+      scope_key TEXT NOT NULL,
+      sector TEXT,
+      regime TEXT NOT NULL,
+      candidate_regime TEXT NOT NULL,
+      pending_label TEXT,
+      pending_streak INTEGER NOT NULL DEFAULT 0,
+      direction_score DOUBLE PRECISION,
+      confidence TEXT NOT NULL,
+      evidence_through TIMESTAMPTZ,
+      sample_size INTEGER NOT NULL DEFAULT 0,
+      details JSONB NOT NULL DEFAULT '{}'::jsonb,
+      materialization_version INTEGER NOT NULL DEFAULT 1,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (snapshot_at, scope_key)
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS signal_regimes_scope_time_idx
+    ON signal_regimes (scope_key, snapshot_at DESC)
   `;
   await sql`
     DELETE FROM signal_runs r
@@ -289,6 +314,118 @@ async function refreshSignalOutcomes(force = false) {
   return { refreshed: true, snapshotAt: latest.snapshot_at };
 }
 
+async function refreshRegimes(force = false) {
+  const [latest] = await sql`
+    SELECT MAX(snapshot_at) AS snapshot_at
+    FROM signal_snapshots
+  `;
+  if (!latest?.snapshot_at) return { refreshed: false, snapshotAt: null, records: [] };
+  const [existing] = await sql`
+    SELECT COUNT(*)::int AS total, MIN(materialization_version)::int AS version
+    FROM signal_regimes
+    WHERE snapshot_at = ${latest.snapshot_at}
+  `;
+  if (
+    !force &&
+    Number(existing?.total) > 0 &&
+    Number(existing?.version) === REGIME_VERSION
+  ) {
+    return { refreshed: false, snapshotAt: latest.snapshot_at, records: [] };
+  }
+  const currentRows = await sql`
+    SELECT
+      snapshot_at, symbol, sector, market_cap, is_sector, positive_long, negative_long,
+      return_1m, distance_20d
+    FROM signal_snapshots
+    WHERE snapshot_at = ${latest.snapshot_at}
+  `;
+  const maturedOutcomes = await sql`
+    WITH recent_dates AS (
+      SELECT DISTINCT snapshot_at
+      FROM signal_outcomes
+      WHERE ten_session_return IS NOT NULL
+      ORDER BY snapshot_at DESC
+      LIMIT 20
+    )
+    SELECT o.snapshot_at, o.symbol, o.sector, o.is_sector, o.signal_type, o.ten_session_return
+    FROM signal_outcomes o
+    JOIN recent_dates d USING (snapshot_at)
+    WHERE o.ten_session_return IS NOT NULL
+  `;
+  const previousRows = await sql`
+    SELECT scope_key, regime, pending_label, pending_streak
+    FROM signal_regimes
+    WHERE snapshot_at = (
+      SELECT MAX(snapshot_at)
+      FROM signal_regimes
+      WHERE snapshot_at < ${latest.snapshot_at}
+    )
+  `;
+  const records = buildRegimeRecords(
+    currentRows,
+    maturedOutcomes,
+    new Date(latest.snapshot_at).toISOString(),
+    previousRows
+  );
+  if (!records.length) return { refreshed: false, snapshotAt: latest.snapshot_at, records: [] };
+  const stored = JSON.stringify(records.map((record) => ({
+    snapshot_at: record.snapshotAt,
+    scope_key: record.scopeKey,
+    sector: record.sector,
+    regime: record.regime,
+    candidate_regime: record.candidateRegime,
+    pending_label: record.pendingLabel,
+    pending_streak: record.pendingStreak,
+    direction_score: record.directionScore,
+    confidence: record.confidence,
+    evidence_through: record.evidenceThrough,
+    sample_size: record.sampleSize,
+    details: record.details,
+    materialization_version: record.version,
+  })));
+  await sql`
+    INSERT INTO signal_regimes (
+      snapshot_at, scope_key, sector, regime, candidate_regime, pending_label,
+      pending_streak, direction_score, confidence, evidence_through, sample_size,
+      details, materialization_version
+    )
+    SELECT
+      x.snapshot_at, x.scope_key, x.sector, x.regime, x.candidate_regime,
+      x.pending_label, x.pending_streak, x.direction_score, x.confidence,
+      x.evidence_through, x.sample_size, x.details, x.materialization_version
+    FROM jsonb_to_recordset(${stored}::jsonb) AS x(
+      snapshot_at TIMESTAMPTZ,
+      scope_key TEXT,
+      sector TEXT,
+      regime TEXT,
+      candidate_regime TEXT,
+      pending_label TEXT,
+      pending_streak INTEGER,
+      direction_score DOUBLE PRECISION,
+      confidence TEXT,
+      evidence_through TIMESTAMPTZ,
+      sample_size INTEGER,
+      details JSONB,
+      materialization_version INTEGER
+    )
+    ON CONFLICT (snapshot_at, scope_key)
+    DO UPDATE SET
+      sector = EXCLUDED.sector,
+      regime = EXCLUDED.regime,
+      candidate_regime = EXCLUDED.candidate_regime,
+      pending_label = EXCLUDED.pending_label,
+      pending_streak = EXCLUDED.pending_streak,
+      direction_score = EXCLUDED.direction_score,
+      confidence = EXCLUDED.confidence,
+      evidence_through = EXCLUDED.evidence_through,
+      sample_size = EXCLUDED.sample_size,
+      details = EXCLUDED.details,
+      materialization_version = EXCLUDED.materialization_version,
+      updated_at = NOW()
+  `;
+  return { refreshed: true, snapshotAt: latest.snapshot_at, records };
+}
+
 function storedRows(rows) {
   return rows.map((row) => ({
     snapshot_at: row.snapshotAt,
@@ -450,6 +587,7 @@ async function capture(req) {
     saved += result.rows.length;
   }
   const outcomes = await refreshSignalOutcomes(true);
+  const regimes = await refreshRegimes(true);
   return {
     status: 200,
     body: {
@@ -458,6 +596,7 @@ async function capture(req) {
       sessions: cutoffs.map((cutoff) => new Date(cutoff * 1000).toISOString()),
       rowsSaved: saved,
       outcomesRefreshed: outcomes.refreshed,
+      regimesRefreshed: regimes.refreshed,
     },
   };
 }
@@ -497,9 +636,19 @@ async function history(req) {
         JOIN recent r USING (snapshot_at)
         ORDER BY s.snapshot_at DESC, s.symbol ASC
       `;
+  await refreshRegimes();
+  const regimes = await sql`
+    SELECT
+      snapshot_at, scope_key, sector, regime, candidate_regime, pending_label,
+      pending_streak, direction_score, confidence, evidence_through, sample_size, details
+    FROM signal_regimes
+    WHERE snapshot_at = (SELECT MAX(snapshot_at) FROM signal_regimes)
+    ORDER BY scope_key ASC
+  `;
   const response = {
     sessions: [...new Set(rows.map((row) => new Date(row.snapshot_at).toISOString()))],
     rows,
+    regimes,
   };
   if (!includeOutcomes) return response;
   await refreshSignalOutcomes();

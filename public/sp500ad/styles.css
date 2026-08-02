@@ -884,6 +884,163 @@ h1 {
   margin: 9px 0 0;
 }
 
+.regime-monitor {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(86, 194, 255, 0.24);
+  border-radius: 15px;
+  background: linear-gradient(135deg, rgba(86, 194, 255, 0.08), rgba(18, 22, 33, 0.82));
+}
+
+.regime-monitor.bull-trend,
+.regime-monitor.transitioning-bullish {
+  border-color: rgba(101, 214, 166, 0.3);
+  background: linear-gradient(135deg, rgba(101, 214, 166, 0.09), rgba(18, 22, 33, 0.82));
+}
+
+.regime-monitor.bear-trend,
+.regime-monitor.transitioning-bearish {
+  border-color: rgba(255, 143, 156, 0.3);
+  background: linear-gradient(135deg, rgba(255, 143, 156, 0.08), rgba(18, 22, 33, 0.82));
+}
+
+.regime-monitor.reversal-led-choppy {
+  border-color: rgba(247, 178, 103, 0.3);
+  background: linear-gradient(135deg, rgba(247, 178, 103, 0.08), rgba(18, 22, 33, 0.82));
+}
+
+.regime-monitor-loading {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.regime-heading,
+.regime-evidence,
+.regime-sector-strip {
+  display: flex;
+  align-items: center;
+}
+
+.regime-heading {
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.regime-heading h3 {
+  margin: 2px 0 3px;
+  font-size: 1.05rem;
+}
+
+.regime-heading p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+
+.regime-confidence {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.regime-confidence.high {
+  border-color: rgba(101, 214, 166, 0.3);
+  color: #65d6a6;
+}
+
+.regime-evidence {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.regime-evidence > span {
+  display: grid;
+  gap: 2px;
+  min-width: 145px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  background: rgba(7, 11, 18, 0.34);
+}
+
+.regime-evidence small {
+  color: var(--muted);
+  font-size: 0.56rem;
+}
+
+.regime-evidence strong {
+  font-size: 0.67rem;
+}
+
+.regime-evidence .positive strong {
+  color: #65d6a6;
+}
+
+.regime-evidence .negative strong {
+  color: #ff8f9c;
+}
+
+.regime-pending strong {
+  color: #f7b267;
+}
+
+.regime-sector-strip {
+  gap: 7px;
+  overflow-x: auto;
+  padding: 2px 1px 4px;
+}
+
+.regime-sector-chip {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 7px 9px;
+  color: var(--muted);
+  background: rgba(7, 11, 18, 0.42);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.regime-sector-chip span {
+  font-size: 0.57rem;
+}
+
+.regime-sector-chip strong {
+  color: var(--text);
+  font-size: 0.62rem;
+}
+
+.regime-sector-chip.bull-trend strong,
+.regime-sector-chip.transitioning-bullish strong {
+  color: #65d6a6;
+}
+
+.regime-sector-chip.bear-trend strong,
+.regime-sector-chip.transitioning-bearish strong {
+  color: #ff8f9c;
+}
+
+.regime-sector-chip.reversal-led-choppy strong {
+  color: #f7b267;
+}
+
+.regime-sector-chip.active {
+  border-color: rgba(86, 194, 255, 0.65);
+  box-shadow: 0 0 0 2px rgba(86, 194, 255, 0.08);
+}
+
 .meta {
   display: flex;
   gap: 16px;
@@ -1991,6 +2148,26 @@ h1 {
 
   .action-buckets {
     grid-template-columns: 1fr;
+  }
+
+  .regime-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .regime-evidence {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .regime-evidence > span {
+    min-width: 0;
+  }
+
+  .regime-sector-strip {
+    margin-right: -16px;
+    padding-right: 16px;
   }
 
   .signal-history-summary,
