@@ -301,7 +301,8 @@ h1 {
 }
 
 .signal-summary-card.acceleration,
-.signal-summary-card.leader {
+.signal-summary-card.leader,
+.signal-summary-card.breakout {
   border-color: rgba(101, 214, 166, 0.22);
 }
 
@@ -314,8 +315,7 @@ h1 {
 }
 
 .signal-summary-card.weakness,
-.signal-summary-card.laggard,
-.signal-summary-card.breakout {
+.signal-summary-card.laggard {
   border-color: rgba(255, 143, 156, 0.22);
 }
 
@@ -409,7 +409,8 @@ h1 {
 }
 
 .history-bucket.acceleration,
-.history-bucket.leader {
+.history-bucket.leader,
+.history-bucket.breakout {
   color: #65d6a6;
   background: rgba(101, 214, 166, 0.1);
 }
@@ -425,8 +426,7 @@ h1 {
 }
 
 .history-bucket.weakness,
-.history-bucket.laggard,
-.history-bucket.breakout {
+.history-bucket.laggard {
   color: #ff8f9c;
   background: rgba(255, 143, 156, 0.1);
 }
@@ -471,7 +471,8 @@ h1 {
 }
 
 .signal-timeline i.acceleration,
-.signal-timeline i.leader {
+.signal-timeline i.leader,
+.signal-timeline i.breakout {
   background: #65d6a6;
 }
 
@@ -484,8 +485,7 @@ h1 {
 }
 
 .signal-timeline i.weakness,
-.signal-timeline i.laggard,
-.signal-timeline i.breakout {
+.signal-timeline i.laggard {
   background: #ff8f9c;
 }
 
@@ -558,6 +558,11 @@ h1 {
 .action-bucket-icon.breakdown {
   color: #ff8f9c;
   background: rgba(255, 120, 139, 0.12);
+}
+
+.action-bucket-icon.breakout {
+  color: #65d6a6;
+  background: rgba(101, 214, 166, 0.12);
 }
 
 .action-bucket-list {

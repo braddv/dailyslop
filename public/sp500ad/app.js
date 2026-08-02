@@ -1728,13 +1728,13 @@ function renderActionBuckets(
     ["acceleration", "New acceleration", newAcceleration, ["1d", "1w", "1m"], "Confluence"],
     ["leaders", "Confirmed leaders", confirmedLeaders, ["1m", "3m"], "Combined"],
     ["pullback", "Pullback in trend", pullbackTrend, ["1d", "1w", "1m"], "Setup"],
-    ["breakdown", "Breakdown warning", breakdownWarning, ["1w", "1m"], "Warning"],
+    ["breakout", "Bullish reversal", breakoutWarning, ["1w", "1m"], "Reversal"],
   ];
   const bearish = [
     ["weakness", "New weakness", newWeakness, ["1d", "1w", "1m"], "Confluence"],
     ["laggards", "Confirmed laggards", confirmedLaggards, ["1m", "3m"], "Combined"],
     ["bounce", "Bounce in downtrend", bounceInDowntrend, ["1d", "1w", "1m"], "Setup"],
-    ["breakout", "Breakout warning", breakoutWarning, ["1w", "1m"], "Warning"],
+    ["breakdown", "Bearish reversal", breakdownWarning, ["1w", "1m"], "Reversal"],
   ];
   bullish.forEach(([, , rows, periods]) => addRelativeStrength(rows, periods, sectorSignals));
   bearish.forEach(([, , rows, periods]) => addRelativeStrength(rows, periods, sectorSignals, true));
@@ -1744,13 +1744,13 @@ function renderActionBuckets(
         "Entered negative short-term confluence since the prior shared snapshot.",
         "Held negative confluence across several shared snapshots.",
         "Long-term weakness remains intact while 1D/2D momentum rebounds.",
-        "Prior negative confluence is giving way to positive acceleration.",
+        "Prior positive confluence is giving way to negative acceleration.",
       ]
     : [
         "Entered positive short-term confluence since the prior shared snapshot.",
         "Held positive confluence across several shared snapshots.",
         "Long-term leadership remains strong while 1D/2D momentum weakens.",
-        "Prior positive confluence is giving way to emerging short-term weakness.",
+        "Prior negative confluence is giving way to positive acceleration.",
       ];
   activeBuckets.forEach(([, label], index) => {
     if (actionBucketTitles[index]) actionBucketTitles[index].textContent = label;
@@ -1762,6 +1762,10 @@ function renderActionBuckets(
   actionBucketIcons.forEach((icon, index) => {
     if (icon) icon.textContent = icons[index];
   });
+  if (actionBucketIcons[3]) {
+    actionBucketIcons[3].classList.toggle("breakout", actionBoardSide === "bullish");
+    actionBucketIcons[3].classList.toggle("breakdown", actionBoardSide === "bearish");
+  }
   actionBoardView.classList.toggle("bearish-board", actionBoardSide === "bearish");
   actionSideButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.actionSide === actionBoardSide);
@@ -1862,15 +1866,15 @@ const HISTORY_BUCKETS = {
   acceleration: { label: "New acceleration", className: "acceleration" },
   leader: { label: "Confirmed leader", className: "leader" },
   pullback: { label: "Pullback", className: "pullback" },
-  breakdown: { label: "Breakdown", className: "breakdown" },
+  breakdown: { label: "Bearish reversal", className: "breakdown" },
   weakness: { label: "New weakness", className: "weakness" },
   laggard: { label: "Confirmed laggard", className: "laggard" },
   bounce: { label: "Downtrend bounce", className: "bounce" },
-  breakout: { label: "Breakout warning", className: "breakout" },
+  breakout: { label: "Bullish reversal", className: "breakout" },
 };
 const HISTORY_BUCKET_GROUPS = {
-  bullish: ["acceleration", "leader", "pullback", "breakdown"],
-  bearish: ["weakness", "laggard", "bounce", "breakout"],
+  bullish: ["acceleration", "leader", "pullback", "breakout"],
+  bearish: ["weakness", "laggard", "bounce", "breakdown"],
 };
 
 function historyDateLabel(value, includeTime = false) {
