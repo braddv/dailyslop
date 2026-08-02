@@ -127,6 +127,7 @@ let activeActionDetail = null;
 let actionBoardSide = "bullish";
 let actionHistoryData = null;
 let actionHistoryLimit = 0;
+let drawerHistoryLoaded = false;
 let signalHistoryData = null;
 let selectedHistorySession = null;
 let signalHistorySide = "bullish";
@@ -921,6 +922,7 @@ function buildChart(stocks) {
         <div>From 12W High ${formatPerf(stock.pctFrom12wHigh)}</div>
         <div>From 52W High ${formatPerf(stock.pctFrom52wHigh)}</div>
         <div>Today ${formatPerf(stock.changePercent)}</div>
+        <div class="tooltip-hint">Tap to pin · tap again or tap the label for details</div>
       `;
     };
     dot.addEventListener("mouseenter", (event) => {
@@ -934,7 +936,8 @@ function buildChart(stocks) {
       event.stopPropagation();
       hideTooltip();
       if (pinnedSymbols.has(stock.symbol)) {
-        pinnedSymbols.delete(stock.symbol);
+        openBubbleDrawer(stock);
+        return;
       } else {
         pinnedSymbols.add(stock.symbol);
       }
@@ -950,8 +953,22 @@ function buildChart(stocks) {
       text.setAttribute("x", x + 8);
       text.setAttribute("y", y - 8);
       text.setAttribute("class", "pinned-label");
+      text.setAttribute("role", "button");
+      text.setAttribute("tabindex", "0");
       text.dataset.symbol = stock.symbol;
-      text.textContent = `${displayStockLabel(stock)} ${metricLabel}`;
+      text.dataset.label = displayStockLabel(stock);
+      text.setAttribute("aria-label", `Open details for ${displayStockLabel(stock)}`);
+      text.textContent = `${displayStockLabel(stock)} ${metricLabel} ⓘ`;
+      const openDetails = (event) => {
+        event.stopPropagation();
+        openBubbleDrawer(stock);
+      };
+      text.addEventListener("click", openDetails);
+      text.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        openDetails(event);
+      });
       pinnedLabels.push(text);
     }
   });
@@ -2411,6 +2428,7 @@ function openActionDrawer(bucket, symbol) {
   activeActionDetail = row;
   updateWatchlistControls();
   if (actionDrawerWatch) actionDrawerWatch.hidden = Boolean(row.stock.isSubIndustry);
+  if (actionDrawerPin) actionDrawerPin.textContent = "Pin on Market Replay";
   const distance5d = distanceFromDayAverage(row.stock, 5);
   const distance20d = distanceFromDayAverage(row.stock, 20);
   actionDrawerBucket.textContent = row.bucketLabel;
@@ -2433,6 +2451,168 @@ function openActionDrawer(bucket, symbol) {
   actionDrawer.hidden = false;
   actionDrawerBackdrop.hidden = false;
   document.body.classList.add("drawer-open");
+}
+
+function preferredDrawerHistoryData() {
+  return [actionHistoryData, signalHistoryData]
+    .filter((data) => data?.rows?.length)
+    .sort((a, b) => (b.sessions?.length || 0) - (a.sessions?.length || 0))[0] || null;
+}
+
+function bubbleSignalHistory(stock) {
+  const data = preferredDrawerHistoryData();
+  const sessions = (data?.sessions || []).slice().reverse();
+  const rows = (data?.rows || []).filter((row) =>
+    row.symbol === stock.symbol && Boolean(row.is_sector) === Boolean(stock.isBenchmark)
+  );
+  const rowsBySession = new Map(rows.map((row) => [
+    new Date(row.snapshot_at).toISOString(),
+    row,
+  ]));
+  const timeline = sessions.map((session) => {
+    const buckets = (rowsBySession.get(session)?.buckets || [])
+      .filter((bucket) => HISTORY_BUCKETS[bucket]);
+    const primaryBucket = buckets[0];
+    const labels = buckets.map((bucket) => HISTORY_BUCKETS[bucket].label).join(" · ");
+    return `<i class="${primaryBucket || "empty"}" title="${historyDateLabel(session)}${labels ? ` · ${labels}` : " · No signal"}"></i>`;
+  }).join("");
+  const activeRows = rows
+    .filter((row) => (row.buckets || []).some((bucket) => HISTORY_BUCKETS[bucket]))
+    .sort((a, b) => new Date(b.snapshot_at) - new Date(a.snapshot_at));
+  return {
+    sessionCount: sessions.length,
+    activeRows,
+    timeline: timeline || "<span class=\"watchlist-history-empty\">No stored snapshots yet</span>",
+  };
+}
+
+function renderBubbleSignalHistory(stock) {
+  const history = bubbleSignalHistory(stock);
+  if (!history.sessionCount && !preferredDrawerHistoryData() && !drawerHistoryLoaded) {
+    return `
+      <section class="bubble-detail-section">
+        <div class="bubble-detail-heading">
+          <h3>Historical signals</h3>
+          <span>Loading…</span>
+        </div>
+        <p class="bubble-detail-empty">Fetching the shared signal history.</p>
+      </section>
+    `;
+  }
+  return `
+    <section class="bubble-detail-section">
+      <div class="bubble-detail-heading">
+        <h3>Historical signals</h3>
+        <span>${history.activeRows.length} active ${history.activeRows.length === 1 ? "snapshot" : "snapshots"}</span>
+      </div>
+      <span class="signal-timeline bubble-signal-timeline" aria-label="Stored signal history for ${stock.symbol}">
+        ${history.timeline}
+      </span>
+      ${history.activeRows.length ? `
+        <div class="bubble-history-list">
+          ${history.activeRows.slice(0, 5).map((row) => `
+            <div class="bubble-history-row">
+              <span>${historyDateLabel(row.snapshot_at)}</span>
+              <span>${bucketBadges(row.buckets)}</span>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<p class="bubble-detail-empty">No Action Board signals in the last ${history.sessionCount || 0} stored snapshots.</p>`}
+    </section>
+  `;
+}
+
+function renderSubIndustryConstituents(subIndustry) {
+  const members = subIndustry.constituentSymbols
+    .map((symbol) => lastStocks.find((stock) => stock.symbol === symbol))
+    .filter(Boolean)
+    .sort((a, b) => (Number(b.marketCap) || 0) - (Number(a.marketCap) || 0));
+  const totalMarketCap = members.reduce((sum, stock) => sum + (Number(stock.marketCap) || 0), 0);
+  return `
+    <section class="bubble-detail-section">
+      <div class="bubble-detail-heading">
+        <h3>Constituents</h3>
+        <span>${members.length} ${members.length === 1 ? "stock" : "stocks"}</span>
+      </div>
+      <div class="drawer-constituent-list">
+        ${members.map((stock) => {
+          const history = bubbleSignalHistory(stock);
+          const latest = history.activeRows[0];
+          const weight = totalMarketCap > 0 ? (Number(stock.marketCap) || 0) / totalMarketCap * 100 : null;
+          return `
+            <button class="drawer-constituent-row" type="button" data-constituent-symbol="${stock.symbol}">
+              <span class="drawer-constituent-name">
+                <strong>${stock.symbol}</strong>
+                <small>${stock.security}</small>
+              </span>
+              <span class="drawer-constituent-signal">
+                ${latest ? bucketBadges(latest.buckets) : "<small>No recent signal</small>"}
+                <small>${history.activeRows.length} active ${history.activeRows.length === 1 ? "snapshot" : "snapshots"}</small>
+              </span>
+              <span class="drawer-constituent-metrics">
+                <strong class="${(stock.changePercent || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.changePercent)}</strong>
+                <small>${Number.isFinite(weight) ? `${weight.toFixed(1)}% of group` : "--"}</small>
+              </span>
+            </button>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderBubbleDrawerContent(stock, parentSubIndustry = null) {
+  activeActionDetail = {
+    drawerType: "bubble",
+    stock,
+    symbol: stock.symbol,
+    parentSubIndustry,
+  };
+  updateWatchlistControls();
+  const aggregate = Boolean(stock.isSubIndustry || stock.isBenchmark);
+  if (actionDrawerWatch) actionDrawerWatch.hidden = aggregate;
+  if (actionDrawerPin) {
+    actionDrawerPin.textContent = pinnedSymbols.has(stock.symbol)
+      ? "Unpin from Market Replay"
+      : "Pin on Market Replay";
+  }
+  actionDrawerBucket.textContent = stock.isSubIndustry
+    ? "Subsector details"
+    : stock.isBenchmark ? "Market benchmark details" : "Stock details";
+  actionDrawerTitle.textContent = displayStockLabel(stock);
+  actionDrawerCompany.textContent = stock.isSubIndustry
+    ? `${stock.sector} · ${stock.constituentCount} S&P 500 constituents`
+    : `${stock.security} · ${stock.subIndustry || stock.sector}`;
+  const distance5d = distanceFromDayAverage(stock, 5);
+  const distance20d = distanceFromDayAverage(stock, 20);
+  actionDrawerBody.innerHTML = `
+    ${parentSubIndustry ? `
+      <button class="bubble-drawer-back" type="button" data-drawer-back-subindustry="${parentSubIndustry.symbol}">
+        ← Back to ${parentSubIndustry.subIndustry}
+      </button>
+    ` : ""}
+    <div class="action-detail-grid bubble-metric-grid">
+      <div><small>1D</small><strong class="${(stock.changePercent || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.changePercent)}</strong></div>
+      <div><small>1W</small><strong class="${(stock.perf1w || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.perf1w)}</strong></div>
+      <div><small>1M</small><strong class="${(stock.perf1m || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.perf1m)}</strong></div>
+      <div><small>3M</small><strong class="${(stock.perf3m || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.perf3m)}</strong></div>
+      <div><small>From 5D average</small><strong class="${(distance5d || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance5d)}</strong></div>
+      <div><small>From 20D average</small><strong class="${(distance20d || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance20d)}</strong></div>
+    </div>
+    ${stock.isSubIndustry ? renderSubIndustryConstituents(stock) : renderBubbleSignalHistory(stock)}
+  `;
+}
+
+function openBubbleDrawer(stock, parentSubIndustry = null) {
+  if (!stock || !actionDrawer) return;
+  renderBubbleDrawerContent(stock, parentSubIndustry);
+  actionDrawer.hidden = false;
+  actionDrawerBackdrop.hidden = false;
+  document.body.classList.add("drawer-open");
+  const availableSessions = preferredDrawerHistoryData()?.sessions?.length || 0;
+  if (availableSessions < 20 && actionHistoryLimit < 20 && !drawerHistoryLoaded) {
+    loadSignalHistory("drawer");
+  }
 }
 
 const HISTORY_BUCKETS = {
@@ -2733,12 +2913,13 @@ function renderRegimeMonitor() {
 }
 
 async function loadSignalHistory(scope = appView === "action" ? "action" : "history") {
-  const actionScope = scope === "action" || scope === "watchlist";
-  const requestedLimit = scope === "watchlist" ? 20 : 6;
+  const drawerScope = scope === "drawer";
+  const actionScope = scope === "action" || scope === "watchlist" || drawerScope;
+  const requestedLimit = scope === "watchlist" || drawerScope ? 20 : 6;
   if (!actionScope && !signalHistoryStatus) return;
-  if (actionScope) {
+  if (scope === "action") {
     if (actionHistoryNote) actionHistoryNote.textContent = "Loading shared server baseline…";
-  } else {
+  } else if (!actionScope) {
     signalHistoryStatus.textContent = "Loading stored snapshots…";
   }
   try {
@@ -2751,21 +2932,33 @@ async function loadSignalHistory(scope = appView === "action" ? "action" : "hist
     if (actionScope) {
       actionHistoryData = data;
       actionHistoryLimit = requestedLimit;
+      if (drawerScope) drawerHistoryLoaded = true;
     }
     else signalHistoryData = data;
-    if (appView === "action") renderConfluenceScanner();
+    if (drawerScope && activeActionDetail?.drawerType === "bubble") {
+      renderBubbleDrawerContent(
+        activeActionDetail.stock,
+        activeActionDetail.parentSubIndustry
+      );
+    } else if (appView === "action") renderConfluenceScanner();
     else if (appView === "watchlist") renderWatchlist();
     else if (appView === "history" && !actionScope) renderSignalHistory();
   } catch (error) {
     if (actionScope) {
       actionHistoryData = { sessions: [], rows: [] };
       actionHistoryLimit = 0;
-      if (actionHistoryNote) actionHistoryNote.textContent = error.message;
+      if (drawerScope) drawerHistoryLoaded = true;
+      else if (actionHistoryNote) actionHistoryNote.textContent = error.message;
     } else {
       signalHistoryData = { sessions: [], rows: [] };
       signalHistoryStatus.textContent = error.message;
     }
-    if (appView === "action") renderConfluenceScanner();
+    if (drawerScope && activeActionDetail?.drawerType === "bubble") {
+      renderBubbleDrawerContent(
+        activeActionDetail.stock,
+        activeActionDetail.parentSubIndustry
+      );
+    } else if (appView === "action") renderConfluenceScanner();
     else if (appView === "watchlist") renderWatchlist();
     else if (appView === "history" && !actionScope) renderSignalHistory();
   }
@@ -3213,7 +3406,7 @@ function updateReplayFrame(index, rebuild = false) {
       ((maxLog - symLog(value)) / (maxLog - minLog)) * innerHeight +
       verticalJitter(label.dataset.symbol);
     label.setAttribute("y", y - 8);
-    label.textContent = `${label.dataset.symbol} ${formatPerf(value)}`;
+    label.textContent = `${label.dataset.label || label.dataset.symbol} ${formatPerf(value)} ⓘ`;
   });
 }
 
@@ -3600,11 +3793,46 @@ signalSessionPicker?.addEventListener("click", (event) => {
 
 actionDrawerClose?.addEventListener("click", closeActionDrawer);
 actionDrawerBackdrop?.addEventListener("click", closeActionDrawer);
+actionDrawerBody?.addEventListener("click", (event) => {
+  const constituent = event.target.closest("[data-constituent-symbol]");
+  if (constituent) {
+    const stock = lastStocks.find((candidate) => candidate.symbol === constituent.dataset.constituentSymbol);
+    const parent = activeActionDetail?.stock?.isSubIndustry
+      ? activeActionDetail.stock
+      : activeActionDetail?.parentSubIndustry;
+    if (stock) openBubbleDrawer(stock, parent || null);
+    return;
+  }
+  const back = event.target.closest("[data-drawer-back-subindustry]");
+  if (!back) return;
+  const parent = lastSubIndustries.find((candidate) => candidate.symbol === back.dataset.drawerBackSubindustry);
+  if (parent) openBubbleDrawer(parent);
+});
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !actionDrawer?.hidden) closeActionDrawer();
 });
 actionDrawerPin?.addEventListener("click", () => {
   if (!activeActionDetail) return;
+  if (activeActionDetail.drawerType === "bubble") {
+    const { stock, parentSubIndustry } = activeActionDetail;
+    if (pinnedSymbols.has(stock.symbol)) pinnedSymbols.delete(stock.symbol);
+    else pinnedSymbols.add(stock.symbol);
+    tickerSearchStatus.textContent = `${pinnedSymbols.has(stock.symbol) ? "Pinned" : "Unpinned"} ${displayStockLabel(stock)} from details.`;
+    if (parentSubIndustry && !stock.isSubIndustry && !stock.isBenchmark) {
+      activeFilter = "all";
+      viewMode = "subindustry";
+      selectedSector = stock.sector;
+      selectedSubIndustry = stock.subIndustry;
+      filterButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.filter === "all");
+      });
+      syncSectorFilterButtons();
+      syncBackButton();
+    }
+    closeActionDrawer();
+    setAppView("replay");
+    return;
+  }
   pinnedSymbols.add(activeActionDetail.symbol);
   tickerSearchStatus.textContent = `Pinned ${displayStockLabel(activeActionDetail.stock)} from Action Board.`;
   closeActionDrawer();
