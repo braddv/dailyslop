@@ -476,7 +476,7 @@ async function history(req) {
         )
         SELECT
           s.snapshot_at, s.symbol, s.is_sector, s.positive_short, s.positive_long,
-          s.negative_short, s.negative_long
+          s.negative_short, s.negative_long, s.buckets
         FROM signal_snapshots s
         JOIN recent r USING (snapshot_at)
         ORDER BY s.snapshot_at DESC, s.symbol ASC

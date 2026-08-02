@@ -44,6 +44,9 @@
         <button class="workspace-nav-btn" type="button" data-app-view="history">
           Signal History
         </button>
+        <button class="workspace-nav-btn" type="button" data-app-view="watchlist">
+          Watchlist <span class="workspace-nav-count" id="watchlistNavCount">0</span>
+        </button>
       </nav>
 
       <section class="controls">
@@ -98,6 +101,7 @@
           <datalist id="tickerOptions"></datalist>
           <button type="submit">Pin</button>
         </div>
+        <button class="watchlist-search-button" id="watchlistSearchButton" type="button">☆ Watch</button>
         <button class="back-btn" id="backBtn" type="button">Back to sectors</button>
         <span class="ticker-search-status" id="tickerSearchStatus" aria-live="polite"></span>
       </form>
@@ -372,6 +376,21 @@
         </section>
       </div>
 
+      <div class="app-view watchlist-view" id="watchlistView" hidden>
+        <section class="watchlist-intro">
+          <div>
+            <p class="momentum-kicker">Your browser-local favorites</p>
+            <h2>Watchlist</h2>
+            <p>
+              Moving-average position, active signals, and sector confirmation for the stocks
+              you care about. This list stays private to this browser.
+            </p>
+          </div>
+        </section>
+        <section class="watchlist-summary" id="watchlistSummary"></section>
+        <section class="watchlist-list" id="watchlistList"></section>
+      </div>
+
       <footer class="footer">
         <button class="refresh" id="refresh">Refresh</button>
         <label class="toggle">
@@ -395,6 +414,7 @@
       </div>
       <div class="action-drawer-body" id="actionDrawerBody"></div>
       <div class="action-drawer-actions">
+        <button class="action-drawer-watch" id="actionDrawerWatch" type="button">☆ Add to watchlist</button>
         <button class="action-drawer-pin" id="actionDrawerPin" type="button">Pin on Market Replay</button>
       </div>
     </aside>
