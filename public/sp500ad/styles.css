@@ -2150,6 +2150,39 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .action-bucket-result {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .action-bucket-result .momentum-symbol {
+    min-width: 0;
+  }
+
+  .action-relative-strength {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-column: 1;
+  }
+
+  .action-relative-strength small {
+    align-content: flex-start;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .action-status {
+    grid-column: 2;
+    grid-row: 1;
+    margin-left: 0;
+  }
+
+  .action-bucket-score {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
   .regime-heading {
     align-items: flex-start;
     flex-direction: column;
