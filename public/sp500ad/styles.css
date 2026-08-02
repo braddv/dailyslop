@@ -145,14 +145,24 @@ h1 {
   white-space: nowrap;
 }
 
-.sector-filter-bar {
+.sector-filter-bar,
+.subindustry-filter-bar {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   margin: -4px 0 16px;
 }
 
-.sector-filter-bar > span {
+.subindustry-filter-bar {
+  margin-top: -10px;
+}
+
+.subindustry-filter-bar[hidden] {
+  display: none;
+}
+
+.sector-filter-bar > span,
+.subindustry-filter-bar > span {
   padding-top: 7px;
   color: var(--muted);
   font-size: 0.68rem;
@@ -161,13 +171,15 @@ h1 {
   text-transform: uppercase;
 }
 
-.sector-filter-group {
+.sector-filter-group,
+.subindustry-filter-group {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.sector-filter-btn {
+.sector-filter-btn,
+.subindustry-filter-btn {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   padding: 6px 9px;
@@ -180,7 +192,9 @@ h1 {
 }
 
 .sector-filter-btn:hover,
-.sector-filter-btn.active {
+.sector-filter-btn.active,
+.subindustry-filter-btn:hover,
+.subindustry-filter-btn.active {
   border-color: rgba(86, 194, 255, 0.48);
   color: var(--text);
   background: rgba(86, 194, 255, 0.12);
@@ -2137,12 +2151,14 @@ h1 {
     justify-content: flex-start;
   }
 
-  .sector-filter-bar {
+  .sector-filter-bar,
+  .subindustry-filter-bar {
     flex-direction: column;
     gap: 6px;
   }
 
-  .sector-filter-bar > span {
+  .sector-filter-bar > span,
+  .subindustry-filter-bar > span {
     padding-top: 0;
   }
 
