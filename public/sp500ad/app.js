@@ -1400,52 +1400,27 @@ function relativeStrengthContext(stock, period, sectorSignals) {
   };
 }
 
-function classifyRelativeStrength(context) {
+function sectorAlignment(context, negative = false) {
   const sectorPositive = Math.max(
     context.sectorSignals.positiveShort || 0,
     context.sectorSignals.positiveLong || 0
   );
-  const sectorNegative = context.sectorSignals.negativeShort || 0;
+  const sectorNegative = Math.max(
+    context.sectorSignals.negativeShort || 0,
+    context.sectorSignals.negativeLong || 0
+  );
   if (activeFilter === "sectors") {
-    if ((context.vsSpy || 0) > 0 && sectorPositive >= 60) return "Sector leader";
-    if ((context.vsSpy || 0) < 0 && sectorNegative >= 60) return "Sector breakdown";
-    return "Mixed sector";
+    return { key: "sector", label: "Sector signal", rankAdjustment: 0 };
   }
-  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0 && sectorNegative >= 60) {
-    return "Fighting its sector";
+  const alignedScore = negative ? sectorNegative : sectorPositive;
+  const oppositeScore = negative ? sectorPositive : sectorNegative;
+  if (alignedScore >= 55 && alignedScore >= oppositeScore) {
+    return { key: "confirmed", label: "Sector confirmed", rankAdjustment: 8 };
   }
-  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0 && sectorPositive >= 60) {
-    return "Broadly confirmed";
+  if (oppositeScore >= 55 && oppositeScore > alignedScore) {
+    return { key: "against", label: "Against sector", rankAdjustment: -8 };
   }
-  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0) {
-    return "Stock-specific leader";
-  }
-  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) <= 0 && sectorPositive >= 60) {
-    return "Sector carried";
-  }
-  if ((context.vsSpy || 0) < 0 && (context.vsSector || 0) < 0 && sectorNegative >= 60) {
-    return "Broad breakdown";
-  }
-  return "Mixed confirmation";
-}
-
-function classifyRelativeWeakness(context) {
-  const sectorNegative = context.sectorSignals.negativeShort || 0;
-  if (activeFilter === "sectors") {
-    if ((context.vsSpy || 0) < 0 && sectorNegative >= 60) return "Sector laggard";
-    if ((context.vsSpy || 0) > 0) return "Sector rebound";
-    return "Mixed sector";
-  }
-  if ((context.vsSpy || 0) < 0 && (context.vsSector || 0) < 0 && sectorNegative >= 60) {
-    return "Broad weakness";
-  }
-  if ((context.vsSpy || 0) < 0 && (context.vsSector || 0) < 0) {
-    return "Stock-specific laggard";
-  }
-  if ((context.vsSpy || 0) > 0 && (context.vsSector || 0) > 0 && sectorNegative >= 60) {
-    return "Fighting downtrend";
-  }
-  return "Mixed confirmation";
+  return { key: "specific", label: "Stock-specific", rankAdjustment: 0 };
 }
 
 function addRelativeStrength(rows, periods, sectorSignals, negative = false) {
@@ -1453,9 +1428,18 @@ function addRelativeStrength(rows, periods, sectorSignals, negative = false) {
     row.relativeStrength = periods.map((period) =>
       relativeStrengthContext(row.stock, period, sectorSignals)
     );
-    row.relativeClassification = negative
-      ? classifyRelativeWeakness(row.relativeStrength[0])
-      : classifyRelativeStrength(row.relativeStrength[0]);
+    row.sectorAlignment = sectorAlignment(row.relativeStrength[0], negative);
+    row.relativeClassification = row.sectorAlignment.label;
+    row.candidateScore = row.bucketScore + row.sectorAlignment.rankAdjustment;
+  });
+}
+
+function rankActionCandidates(rows) {
+  const statusRank = { Signal: 3, Confirmed: 3, Building: 2, Early: 1, Developing: 1 };
+  rows.sort((a, b) => {
+    const statusDifference = (statusRank[b.status] || 0) - (statusRank[a.status] || 0);
+    return statusDifference ||
+      (b.candidateScore ?? b.bucketScore) - (a.candidateScore ?? a.bucketScore);
   });
 }
 
@@ -1472,7 +1456,7 @@ function renderActionBucket(target, rows, scoreLabel, bucketKey) {
         <small>${viewMode === "subindustry"
           ? row.stock.subIndustry || row.stock.sector
           : row.stock.sector}</small>
-        <small class="relative-classification">${row.relativeClassification || ""}</small>
+        <small class="sector-designation ${row.sectorAlignment?.key || "specific"}" title="Sector alignment affects candidate order">${row.relativeClassification || ""}</small>
       </span>
           <span class="action-relative-strength">
             ${(row.relativeStrength || []).map((context) => `
@@ -1747,6 +1731,7 @@ function renderActionBuckets(
   ];
   bullish.forEach(([, , rows, periods]) => addRelativeStrength(rows, periods, sectorSignals));
   bearish.forEach(([, , rows, periods]) => addRelativeStrength(rows, periods, sectorSignals, true));
+  [...bullish, ...bearish].forEach(([, , rows]) => rankActionCandidates(rows));
   const activeBuckets = actionBoardSide === "bearish" ? bearish : bullish;
   const descriptions = actionBoardSide === "bearish"
     ? [
@@ -2148,12 +2133,20 @@ function renderConfluenceScanner() {
     sectorPeriodRows,
     sectorUniverse
   );
+  const sectorNegativeLong = calculateConfluence(
+    ["3m", "6m"],
+    ["1w", "2w"],
+    true,
+    sectorPeriodRows,
+    sectorUniverse
+  );
   const sectorSignals = new Map(sectorUniverse.map((benchmark) => [
     benchmark.sector,
     {
       positiveShort: sectorPositiveShort.find((row) => row.symbol === benchmark.symbol)?.score || 0,
       positiveLong: sectorPositiveLong.find((row) => row.symbol === benchmark.symbol)?.score || 0,
       negativeShort: sectorNegativeShort.find((row) => row.symbol === benchmark.symbol)?.score || 0,
+      negativeLong: sectorNegativeLong.find((row) => row.symbol === benchmark.symbol)?.score || 0,
     },
   ]));
   renderConfluenceRows(shortConfluenceList, positiveShort);
