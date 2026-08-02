@@ -323,6 +323,7 @@ function classifyBuckets(symbol, scores, prior, sectorMode) {
     previousValue(snapshot, symbol, "positiveShort") >= thresholds.prior ||
     previousValue(snapshot, symbol, "positiveLong") >= thresholds.prior
   )) {
+    // Bullish confluence giving way to negative momentum: a bearish reversal.
     buckets.push("breakdown");
   }
   if (previous && negativeShort >= thresholds.acceleration &&
@@ -343,6 +344,7 @@ function classifyBuckets(symbol, scores, prior, sectorMode) {
     previousValue(snapshot, symbol, "negativeShort") >= thresholds.prior ||
     previousValue(snapshot, symbol, "negativeLong") >= thresholds.prior
   )) {
+    // Bearish confluence giving way to positive momentum: a bullish reversal.
     buckets.push("breakout");
   }
   return buckets;
