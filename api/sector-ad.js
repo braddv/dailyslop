@@ -262,6 +262,24 @@ function buildUniverse(config) {
   }));
 }
 
+function applySeedMarketCaps(payload, config) {
+  if (!Array.isArray(payload?.stocks)) return payload;
+  const seedCaps = new Map(
+    config.seed.stocks
+      .filter((stock) => Number.isFinite(stock.marketCap) && stock.marketCap > 0)
+      .map((stock) => [stock.symbol, stock.marketCap])
+  );
+  return {
+    ...payload,
+    stocks: payload.stocks.map((stock) => ({
+      ...stock,
+      marketCap: Number.isFinite(stock.marketCap) && stock.marketCap > 0
+        ? stock.marketCap
+        : seedCaps.get(stock.symbol) || null,
+    })),
+  };
+}
+
 function buildBenchmarkUniverse(config) {
   return config.benchmarks.map(([symbol, security, sector]) => ({
     symbol,
@@ -602,6 +620,11 @@ module.exports = async function handler(req, res) {
       };
     }
   }
+
+  // Shared daily caches may predate a seed enrichment. Hydrate missing caps at
+  // response time so a deployment gains bubble sizing immediately instead of
+  // waiting for the next full Yahoo daily refresh.
+  daily = applySeedMarketCaps(daily, config);
 
   return res.status(200).json(
     mergePayloads(daily, intraday, dailyFresh && intradayFresh)
