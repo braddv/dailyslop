@@ -2536,6 +2536,81 @@ function renderSubIndustryConstituents(subIndustry) {
   `;
 }
 
+function storedDrawerSignals(stock) {
+  const data = preferredDrawerHistoryData();
+  const latestSession = data?.sessions?.[0];
+  if (!latestSession) return { asOf: null, signals: [] };
+  const row = (data.rows || []).find((candidate) =>
+    candidate.symbol === stock.symbol &&
+    Boolean(candidate.is_sector) === Boolean(stock.isBenchmark) &&
+    new Date(candidate.snapshot_at).toISOString() === latestSession
+  );
+  if (!row) return { asOf: latestSession, signals: [] };
+  const signalScore = (bucket) => {
+    const positiveShort = Number(row.positive_short) || 0;
+    const positiveLong = Number(row.positive_long) || 0;
+    const negativeShort = Number(row.negative_short) || 0;
+    const negativeLong = Number(row.negative_long) || 0;
+    if (bucket === "leader") return (positiveShort + positiveLong) / 2;
+    if (bucket === "pullback") return (positiveLong + negativeShort) / 2;
+    if (bucket === "laggard") return (negativeShort + negativeLong) / 2;
+    if (bucket === "bounce") return (negativeLong + positiveShort) / 2;
+    return ["acceleration", "breakout"].includes(bucket) ? positiveShort : negativeShort;
+  };
+  return {
+    asOf: latestSession,
+    signals: (row.buckets || [])
+      .filter((bucket) => HISTORY_BUCKETS[bucket])
+      .map((bucket) => ({
+        key: bucket,
+        label: HISTORY_BUCKETS[bucket].label,
+        side: HISTORY_BUCKET_GROUPS.bullish.includes(bucket) ? "bullish" : "bearish",
+        score: signalScore(bucket),
+        stored: true,
+      })),
+  };
+}
+
+function renderLatestDrawerSignals(stock, actionRow = null) {
+  const liveSignals = watchlistActionSignals.get(stock.symbol) || [];
+  const stored = storedDrawerSignals(stock);
+  const signals = liveSignals.length ? liveSignals : stored.signals;
+  const signalAsOf = liveSignals.length ? currentSignalAsOf() : stored.asOf;
+  const scanLabel = signalAsOf ? historyDateLabel(signalAsOf, true) : "Latest scan";
+  const replayNote = replayActive ? " · independent of replay frame" : "";
+  const loading = !liveSignals.length && !preferredDrawerHistoryData() && !drawerHistoryLoaded;
+  return `
+    <section class="bubble-detail-section drawer-signal-section">
+      <div class="bubble-detail-heading">
+        <h3>Latest Action Board signals</h3>
+        <span>${scanLabel}${replayNote}</span>
+      </div>
+      ${signals.length ? `
+        <div class="drawer-current-signal-list">
+          ${signals.map((signal) => `
+            <div class="drawer-current-signal ${signal.side}">
+              <span>
+                <strong>${signal.label}</strong>
+                <small>${signal.sectorAlignment?.label || (signal.stored ? "Stored server signal" : "Stock-specific")}${signal.status ? ` · ${signal.status}` : ""}</small>
+              </span>
+              <span>
+                <small>Score</small>
+                <strong>${Math.round(signal.score || 0)}</strong>
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<p class="bubble-detail-empty">${loading ? "Loading the latest shared signal snapshot…" : "No active signal in the latest Action Board scan."}</p>`}
+      ${actionRow ? `
+        <div class="action-detail-grid drawer-signal-context-grid">
+          <div><small>Sector breadth</small><strong>${Number.isFinite(actionRow.sectorBreadth) ? `${Math.round(actionRow.sectorBreadth)}%` : "--"}</strong></div>
+          <div><small>Prior signal snapshots</small><strong>${actionRow.signalSnapshots}</strong></div>
+        </div>
+      ` : ""}
+    </section>
+  `;
+}
+
 function renderSharedDrawerContent(
   stock,
   { parentSubIndustry = null, actionRow = null, parentActionRow = null } = {}
@@ -2572,17 +2647,12 @@ function renderSharedDrawerContent(
       </button>
     ` : ""}
     ${actionRow ? `
-      <section class="bubble-detail-section action-drawer-context">
-        <div class="action-detail-summary">
-          <span>${actionRow.relativeClassification || "Mixed confirmation"}</span>
-          ${actionRow.status ? `<span>${actionRow.status}</span>` : ""}
-        </div>
-        <div class="action-detail-grid">
-          <div><small>Sector breadth</small><strong>${Number.isFinite(actionRow.sectorBreadth) ? `${Math.round(actionRow.sectorBreadth)}%` : "--"}</strong></div>
-          <div><small>Prior signal snapshots</small><strong>${actionRow.signalSnapshots}</strong></div>
-        </div>
-      </section>
+      <div class="action-detail-summary">
+        <span>${actionRow.relativeClassification || "Mixed confirmation"}</span>
+        ${actionRow.status ? `<span>${actionRow.status}</span>` : ""}
+      </div>
     ` : ""}
+    ${renderLatestDrawerSignals(stock, actionRow)}
     <div class="action-detail-grid bubble-metric-grid">
       <div><small>1D</small><strong class="${(stock.changePercent || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.changePercent)}</strong></div>
       <div><small>1W</small><strong class="${(stock.perf1w || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.perf1w)}</strong></div>
