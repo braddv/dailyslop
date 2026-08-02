@@ -22,6 +22,8 @@ const filterButtons = document.querySelectorAll(".filter-btn");
 const sectorFilterButtons = document.querySelectorAll(".sector-filter-btn");
 const controlsEl = document.querySelector(".controls");
 const sectorFilterBar = document.querySelector(".sector-filter-bar");
+const subIndustryFilterBar = document.getElementById("subIndustryFilterBar");
+const subIndustryFilterGroup = document.getElementById("subIndustryFilterGroup");
 const tickerSearchForm = document.getElementById("tickerSearch");
 const tickerSearchInput = document.getElementById("tickerSearchInput");
 const tickerOptions = document.getElementById("tickerOptions");
@@ -193,13 +195,43 @@ function syncSectorFilterButtons() {
       viewMode === "subindustry" && button.dataset.sector === selectedSector
     );
   });
+  renderSubIndustryFilter();
+}
+
+function renderSubIndustryFilter() {
+  if (!subIndustryFilterBar || !subIndustryFilterGroup) return;
+  const visible = viewMode === "subindustry" && Boolean(selectedSector);
+  subIndustryFilterBar.hidden = !visible;
+  if (!visible) {
+    subIndustryFilterGroup.innerHTML = "";
+    return;
+  }
+  const groups = lastSubIndustries.filter((stock) => stock.sector === selectedSector);
+  subIndustryFilterGroup.innerHTML = "";
+  const allButton = document.createElement("button");
+  allButton.className = `subindustry-filter-btn${selectedSubIndustry ? "" : " active"}`;
+  allButton.type = "button";
+  allButton.dataset.subIndustry = "";
+  allButton.textContent = `All ${SECTORS.find((sector) => sector.gics === selectedSector)?.label || selectedSector}`;
+  subIndustryFilterGroup.appendChild(allButton);
+  groups.forEach((stock) => {
+    const button = document.createElement("button");
+    button.className = `subindustry-filter-btn${stock.subIndustry === selectedSubIndustry ? " active" : ""}`;
+    button.type = "button";
+    button.dataset.subIndustry = stock.subIndustry;
+    button.textContent = stock.subIndustry;
+    subIndustryFilterGroup.appendChild(button);
+  });
 }
 
 function syncBackButton() {
   if (!backBtn) return;
   const drilled = viewMode === "subindustry" && Boolean(selectedSector);
   backBtn.classList.toggle("visible", drilled);
-  backBtn.textContent = selectedSubIndustry ? "Back to subsectors" : "Back to sectors";
+  const sectorLabel = SECTORS.find((sector) => sector.gics === selectedSector)?.label;
+  backBtn.textContent = selectedSubIndustry
+    ? `Back to ${sectorLabel || "sector"}`
+    : "Back to sectors";
 }
 
 const SECTOR_COLORS = {
@@ -900,21 +932,7 @@ function buildChart(stocks) {
     dot.addEventListener("mouseleave", hideTooltip);
     dot.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (stock.isSubIndustry) {
-        activeFilter = "all";
-        viewMode = "subindustry";
-        selectedSector = stock.sector;
-        selectedSubIndustry = stock.subIndustry;
-        filterButtons.forEach((button) => {
-          button.classList.toggle("active", button.dataset.filter === "all");
-        });
-        syncSectorFilterButtons();
-        syncBackButton();
-        updateSubhead();
-        if (replayActive) calculateReplayRange();
-        renderCurrentChart();
-        return;
-      }
+      hideTooltip();
       if (pinnedSymbols.has(stock.symbol)) {
         pinnedSymbols.delete(stock.symbol);
       } else {
@@ -3370,16 +3388,28 @@ filterButtons.forEach((button) => {
 
 if (backBtn) {
   backBtn.addEventListener("click", () => {
-    const returnToSubsectors = Boolean(selectedSubIndustry);
-    viewMode = "sector";
-    selectedSector = null;
-    selectedSubIndustry = null;
-    if (returnToSubsectors) {
-      activeFilter = "subsectors";
-      filterButtons.forEach((button) => {
-        button.classList.toggle("active", button.dataset.filter === "subsectors");
-      });
+    if (selectedSubIndustry) {
+      selectedSubIndustry = null;
+    } else {
+      viewMode = "sector";
+      selectedSector = null;
     }
+    syncSectorFilterButtons();
+    syncBackButton();
+    updateSubhead();
+    if (replayActive) {
+      calculateReplayRange();
+      updateReplaySubhead();
+    }
+    renderCurrentChart();
+  });
+}
+
+if (subIndustryFilterGroup) {
+  subIndustryFilterGroup.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-sub-industry]");
+    if (!button || !selectedSector) return;
+    selectedSubIndustry = button.dataset.subIndustry || null;
     syncSectorFilterButtons();
     syncBackButton();
     updateSubhead();
