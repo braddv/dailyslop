@@ -422,6 +422,10 @@ function setWatchlistSymbol(symbol, watched) {
 }
 
 function showTooltip(event, html) {
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    hideTooltip();
+    return;
+  }
   tooltipEl.innerHTML = html;
   tooltipEl.classList.add("visible");
   const pad = 16;
