@@ -777,6 +777,56 @@ h1 {
   margin: 0;
 }
 
+.drawer-current-signal-list {
+  display: grid;
+  gap: 7px;
+}
+
+.drawer-current-signal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(7, 11, 18, 0.46);
+}
+
+.drawer-current-signal.bullish {
+  border-color: rgba(101, 214, 166, 0.24);
+}
+
+.drawer-current-signal.bearish {
+  border-color: rgba(255, 143, 156, 0.24);
+}
+
+.drawer-current-signal > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-current-signal > span:last-child {
+  align-items: flex-end;
+}
+
+.drawer-current-signal small {
+  color: var(--muted);
+  font-size: 0.58rem;
+}
+
+.drawer-current-signal.bullish > span:first-child > strong {
+  color: #65d6a6;
+}
+
+.drawer-current-signal.bearish > span:first-child > strong {
+  color: #ff8f9c;
+}
+
+.drawer-signal-context-grid {
+  margin-top: 2px;
+}
+
 .bubble-signal-timeline {
   max-width: 100%;
   overflow-x: auto;

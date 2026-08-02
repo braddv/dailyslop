@@ -2429,32 +2429,7 @@ function closeActionDrawer() {
 function openActionDrawer(bucket, symbol) {
   const row = actionDetailRows.get(`${bucket}:${symbol}`);
   if (!row || !actionDrawer) return;
-  activeActionDetail = row;
-  updateWatchlistControls();
-  if (actionDrawerWatch) actionDrawerWatch.hidden = Boolean(row.stock.isSubIndustry);
-  if (actionDrawerPin) actionDrawerPin.textContent = "Pin on Market Replay";
-  const distance5d = distanceFromDayAverage(row.stock, 5);
-  const distance20d = distanceFromDayAverage(row.stock, 20);
-  actionDrawerBucket.textContent = row.bucketLabel;
-  actionDrawerTitle.textContent = displayStockLabel(row.stock);
-  actionDrawerCompany.textContent = row.stock.isSubIndustry
-    ? `${row.stock.sector} · ${row.stock.constituentCount} S&P 500 constituents`
-    : `${row.stock.security} · ${row.stock.subIndustry || row.stock.sector}`;
-  actionDrawerBody.innerHTML = `
-    <div class="action-detail-summary">
-      <span>${row.relativeClassification || "Mixed confirmation"}</span>
-      ${row.status ? `<span>${row.status}</span>` : ""}
-    </div>
-    <div class="action-detail-grid">
-      <div><small>From 5D average</small><strong class="${(distance5d || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance5d)}</strong></div>
-      <div><small>From 20D average</small><strong class="${(distance20d || 0) >= 0 ? "positive" : "negative"}">${formatPerf(distance20d)}</strong></div>
-      <div><small>Sector breadth</small><strong>${Number.isFinite(row.sectorBreadth) ? `${Math.round(row.sectorBreadth)}%` : "--"}</strong></div>
-      <div><small>Prior signal snapshots</small><strong>${row.signalSnapshots}</strong></div>
-    </div>
-  `;
-  actionDrawer.hidden = false;
-  actionDrawerBackdrop.hidden = false;
-  document.body.classList.add("drawer-open");
+  openSharedDrawer(row.stock, { actionRow: row });
 }
 
 function preferredDrawerHistoryData() {
@@ -2565,12 +2540,92 @@ function renderSubIndustryConstituents(subIndustry) {
   `;
 }
 
-function renderBubbleDrawerContent(stock, parentSubIndustry = null) {
+function storedDrawerSignals(stock) {
+  const data = preferredDrawerHistoryData();
+  const latestSession = data?.sessions?.[0];
+  if (!latestSession) return { asOf: null, signals: [] };
+  const row = (data.rows || []).find((candidate) =>
+    candidate.symbol === stock.symbol &&
+    Boolean(candidate.is_sector) === Boolean(stock.isBenchmark) &&
+    new Date(candidate.snapshot_at).toISOString() === latestSession
+  );
+  if (!row) return { asOf: latestSession, signals: [] };
+  const signalScore = (bucket) => {
+    const positiveShort = Number(row.positive_short) || 0;
+    const positiveLong = Number(row.positive_long) || 0;
+    const negativeShort = Number(row.negative_short) || 0;
+    const negativeLong = Number(row.negative_long) || 0;
+    if (bucket === "leader") return (positiveShort + positiveLong) / 2;
+    if (bucket === "pullback") return (positiveLong + negativeShort) / 2;
+    if (bucket === "laggard") return (negativeShort + negativeLong) / 2;
+    if (bucket === "bounce") return (negativeLong + positiveShort) / 2;
+    return ["acceleration", "breakout"].includes(bucket) ? positiveShort : negativeShort;
+  };
+  return {
+    asOf: latestSession,
+    signals: (row.buckets || [])
+      .filter((bucket) => HISTORY_BUCKETS[bucket])
+      .map((bucket) => ({
+        key: bucket,
+        label: HISTORY_BUCKETS[bucket].label,
+        side: HISTORY_BUCKET_GROUPS.bullish.includes(bucket) ? "bullish" : "bearish",
+        score: signalScore(bucket),
+        stored: true,
+      })),
+  };
+}
+
+function renderLatestDrawerSignals(stock, actionRow = null) {
+  const liveSignals = watchlistActionSignals.get(stock.symbol) || [];
+  const stored = storedDrawerSignals(stock);
+  const signals = liveSignals.length ? liveSignals : stored.signals;
+  const signalAsOf = liveSignals.length ? currentSignalAsOf() : stored.asOf;
+  const scanLabel = signalAsOf ? historyDateLabel(signalAsOf, true) : "Latest scan";
+  const replayNote = replayActive ? " · independent of replay frame" : "";
+  const loading = !liveSignals.length && !preferredDrawerHistoryData() && !drawerHistoryLoaded;
+  return `
+    <section class="bubble-detail-section drawer-signal-section">
+      <div class="bubble-detail-heading">
+        <h3>Latest Action Board signals</h3>
+        <span>${scanLabel}${replayNote}</span>
+      </div>
+      ${signals.length ? `
+        <div class="drawer-current-signal-list">
+          ${signals.map((signal) => `
+            <div class="drawer-current-signal ${signal.side}">
+              <span>
+                <strong>${signal.label}</strong>
+                <small>${signal.sectorAlignment?.label || (signal.stored ? "Stored server signal" : "Stock-specific")}${signal.status ? ` · ${signal.status}` : ""}</small>
+              </span>
+              <span>
+                <small>Score</small>
+                <strong>${Math.round(signal.score || 0)}</strong>
+              </span>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<p class="bubble-detail-empty">${loading ? "Loading the latest shared signal snapshot…" : "No active signal in the latest Action Board scan."}</p>`}
+      ${actionRow ? `
+        <div class="action-detail-grid drawer-signal-context-grid">
+          <div><small>Sector breadth</small><strong>${Number.isFinite(actionRow.sectorBreadth) ? `${Math.round(actionRow.sectorBreadth)}%` : "--"}</strong></div>
+          <div><small>Prior signal snapshots</small><strong>${actionRow.signalSnapshots}</strong></div>
+        </div>
+      ` : ""}
+    </section>
+  `;
+}
+
+function renderSharedDrawerContent(
+  stock,
+  { parentSubIndustry = null, actionRow = null, parentActionRow = null } = {}
+) {
   activeActionDetail = {
     drawerType: "bubble",
     stock,
     symbol: stock.symbol,
     parentSubIndustry,
+    actionRow,
+    parentActionRow,
   };
   updateWatchlistControls();
   const aggregate = Boolean(stock.isSubIndustry || stock.isBenchmark);
@@ -2580,9 +2635,9 @@ function renderBubbleDrawerContent(stock, parentSubIndustry = null) {
       ? "Unpin from Market Replay"
       : "Pin on Market Replay";
   }
-  actionDrawerBucket.textContent = stock.isSubIndustry
+  actionDrawerBucket.textContent = actionRow?.bucketLabel || (stock.isSubIndustry
     ? "Subsector details"
-    : stock.isBenchmark ? "Market benchmark details" : "Stock details";
+    : stock.isBenchmark ? "Market benchmark details" : "Stock details");
   actionDrawerTitle.textContent = displayStockLabel(stock);
   actionDrawerCompany.textContent = stock.isSubIndustry
     ? `${stock.sector} · ${stock.constituentCount} S&P 500 constituents`
@@ -2595,6 +2650,13 @@ function renderBubbleDrawerContent(stock, parentSubIndustry = null) {
         ← Back to ${parentSubIndustry.subIndustry}
       </button>
     ` : ""}
+    ${actionRow ? `
+      <div class="action-detail-summary">
+        <span>${actionRow.relativeClassification || "Mixed confirmation"}</span>
+        ${actionRow.status ? `<span>${actionRow.status}</span>` : ""}
+      </div>
+    ` : ""}
+    ${renderLatestDrawerSignals(stock, actionRow)}
     <div class="action-detail-grid bubble-metric-grid">
       <div><small>1D</small><strong class="${(stock.changePercent || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.changePercent)}</strong></div>
       <div><small>1W</small><strong class="${(stock.perf1w || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.perf1w)}</strong></div>
@@ -2607,9 +2669,9 @@ function renderBubbleDrawerContent(stock, parentSubIndustry = null) {
   `;
 }
 
-function openBubbleDrawer(stock, parentSubIndustry = null) {
+function openSharedDrawer(stock, options = {}) {
   if (!stock || !actionDrawer) return;
-  renderBubbleDrawerContent(stock, parentSubIndustry);
+  renderSharedDrawerContent(stock, options);
   actionDrawer.hidden = false;
   actionDrawerBackdrop.hidden = false;
   document.body.classList.add("drawer-open");
@@ -2617,6 +2679,10 @@ function openBubbleDrawer(stock, parentSubIndustry = null) {
   if (availableSessions < 20 && actionHistoryLimit < 20 && !drawerHistoryLoaded) {
     loadSignalHistory("drawer");
   }
+}
+
+function openBubbleDrawer(stock, parentSubIndustry = null, parentActionRow = null) {
+  openSharedDrawer(stock, { parentSubIndustry, parentActionRow });
 }
 
 const HISTORY_BUCKETS = {
@@ -2940,10 +3006,11 @@ async function loadSignalHistory(scope = appView === "action" ? "action" : "hist
     }
     else signalHistoryData = data;
     if (drawerScope && activeActionDetail?.drawerType === "bubble") {
-      renderBubbleDrawerContent(
-        activeActionDetail.stock,
-        activeActionDetail.parentSubIndustry
-      );
+      renderSharedDrawerContent(activeActionDetail.stock, {
+        parentSubIndustry: activeActionDetail.parentSubIndustry,
+        actionRow: activeActionDetail.actionRow,
+        parentActionRow: activeActionDetail.parentActionRow,
+      });
     } else if (appView === "action") renderConfluenceScanner();
     else if (appView === "watchlist") renderWatchlist();
     else if (appView === "history" && !actionScope) renderSignalHistory();
@@ -2958,10 +3025,11 @@ async function loadSignalHistory(scope = appView === "action" ? "action" : "hist
       signalHistoryStatus.textContent = error.message;
     }
     if (drawerScope && activeActionDetail?.drawerType === "bubble") {
-      renderBubbleDrawerContent(
-        activeActionDetail.stock,
-        activeActionDetail.parentSubIndustry
-      );
+      renderSharedDrawerContent(activeActionDetail.stock, {
+        parentSubIndustry: activeActionDetail.parentSubIndustry,
+        actionRow: activeActionDetail.actionRow,
+        parentActionRow: activeActionDetail.parentActionRow,
+      });
     } else if (appView === "action") renderConfluenceScanner();
     else if (appView === "watchlist") renderWatchlist();
     else if (appView === "history" && !actionScope) renderSignalHistory();
@@ -3804,13 +3872,14 @@ actionDrawerBody?.addEventListener("click", (event) => {
     const parent = activeActionDetail?.stock?.isSubIndustry
       ? activeActionDetail.stock
       : activeActionDetail?.parentSubIndustry;
-    if (stock) openBubbleDrawer(stock, parent || null);
+    const parentActionRow = activeActionDetail?.actionRow || activeActionDetail?.parentActionRow;
+    if (stock) openBubbleDrawer(stock, parent || null, parentActionRow || null);
     return;
   }
   const back = event.target.closest("[data-drawer-back-subindustry]");
   if (!back) return;
   const parent = lastSubIndustries.find((candidate) => candidate.symbol === back.dataset.drawerBackSubindustry);
-  if (parent) openBubbleDrawer(parent);
+  if (parent) openSharedDrawer(parent, { actionRow: activeActionDetail?.parentActionRow || null });
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !actionDrawer?.hidden) closeActionDrawer();
