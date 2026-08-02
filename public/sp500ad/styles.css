@@ -726,8 +726,28 @@ h1 {
   min-width: 92px;
 }
 
-.relative-classification {
+.sector-designation {
+  width: fit-content;
+  margin-top: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 2px 6px;
   color: rgba(230, 233, 242, 0.76) !important;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.52rem !important;
+  line-height: 1.2;
+}
+
+.sector-designation.confirmed {
+  border-color: rgba(101, 214, 166, 0.3);
+  color: #65d6a6 !important;
+  background: rgba(101, 214, 166, 0.1);
+}
+
+.sector-designation.against {
+  border-color: rgba(255, 143, 156, 0.3);
+  color: #ff8f9c !important;
+  background: rgba(255, 143, 156, 0.1);
 }
 
 .action-relative-strength {
