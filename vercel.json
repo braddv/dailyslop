@@ -68,11 +68,5 @@
       "memory": 1024,
       "maxDuration": 60
     }
-  },
-  "crons": [
-    {
-      "path": "/api/capture-signals",
-      "schedule": "0 21 * * 1-5"
-    }
-  ]
+  }
 }
