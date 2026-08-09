@@ -434,12 +434,12 @@ async function priorSnapshots(limit = 5) {
 async function capture(req) {
   if (!authorized(req)) return { status: 401, body: { error: "Unauthorized" } };
   const ny = newYorkTime();
-  if (["Sat", "Sun"].includes(ny.weekday) || ny.hour < 15) {
-    return { status: 200, body: { skipped: true, reason: "Before the daily 3 PM snapshot window" } };
+  if (["Sat", "Sun"].includes(ny.weekday) || ny.hour < 14) {
+    return { status: 200, body: { skipped: true, reason: "Before the daily 2 PM snapshot window" } };
   }
   const payload = await fetchMarketPayload(req, true);
-  const cutoffs = historicalCutoffs(payload, 1);
-  if (!cutoffs.length) throw new Error("No eligible 3 PM market sessions found");
+  const cutoffs = historicalCutoffs(payload, 1, 14);
+  if (!cutoffs.length) throw new Error("No eligible 2 PM market sessions found");
   const prior = await priorSnapshots();
   let saved = 0;
   for (const cutoff of cutoffs) {

@@ -5,8 +5,10 @@ name: Capture daily market signals
 
 on:
   schedule:
-    # 4:15 PM Eastern during daylight time and 3:15 PM Eastern during standard time.
-    - cron: "15 20 * * 1-5"
+    # GitHub cron uses UTC. Schedule both possible 2 PM Eastern hours, then let the
+    # capture step run only when New York local time is actually in the 2 PM hour.
+    - cron: "0 18 * * 1-5"
+    - cron: "0 19 * * 1-5"
   workflow_dispatch:
 
 permissions: {}
@@ -46,6 +48,14 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
+            eastern_hour="$(TZ=America/New_York date +%H)"
+            if [[ "${eastern_hour}" != "14" ]]; then
+              echo "Skipping the DST companion schedule; current Eastern hour is ${eastern_hour}."
+              exit 0
+            fi
+          fi
+
           response_file="$(mktemp)"
           status_code="$(curl \
             --silent \
@@ -68,4 +78,4 @@ jobs:
             exit 1
           fi
 
-          jq --exit-status '.success == true or .skipped == true' "${response_file}" >/dev/null
+          jq --exit-status '.success == true' "${response_file}" >/dev/null
