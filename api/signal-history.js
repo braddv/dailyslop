@@ -1,10 +1,19 @@
 import { neon } from "@neondatabase/serverless";
 import { buildSignalSnapshot, historicalCutoffs } from "./_lib/signals.js";
-import { buildRegimeRecords, REGIME_VERSION } from "./_lib/regimes.js";
+import {
+  buildHistoricalRegimeBackfill,
+  buildRegimeRecords,
+  REGIME_VERSION,
+} from "./_lib/regimes.js";
+import {
+  attachPointInTimeRegimes,
+  buildBullishRegimeBacktest,
+  regimeCoverage,
+} from "./_lib/backtests.js";
 
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 const OUTCOME_RESULT_LIMIT = 5000;
-const OUTCOME_MATERIALIZATION_VERSION = 3;
+const OUTCOME_MATERIALIZATION_VERSION = 4;
 let schemaPromise = null;
 
 async function ensureSchema() {
@@ -169,7 +178,16 @@ async function refreshSignalOutcomes(force = false) {
       outcome_5_at, outcome_5_price, five_session_return,
       outcome_10_at, outcome_10_price, ten_session_return, updated_at
     )
-    WITH ordered AS (
+    WITH session_targets AS (
+      SELECT
+        snapshot_at,
+        LEAD(snapshot_at, 1) OVER (ORDER BY snapshot_at) AS outcome_1_at,
+        LEAD(snapshot_at, 3) OVER (ORDER BY snapshot_at) AS outcome_3_at,
+        LEAD(snapshot_at, 5) OVER (ORDER BY snapshot_at) AS outcome_5_at,
+        LEAD(snapshot_at, 10) OVER (ORDER BY snapshot_at) AS outcome_10_at
+      FROM signal_runs
+    ),
+    ordered_base AS (
       SELECT
         s.snapshot_at,
         s.symbol,
@@ -183,39 +201,29 @@ async function refreshSignalOutcomes(force = false) {
           PARTITION BY s.symbol
           ORDER BY s.snapshot_at
         ) AS previous_buckets,
-        LEAD(s.snapshot_at, 1) OVER (
-          PARTITION BY s.symbol
-          ORDER BY s.snapshot_at
-        ) AS outcome_1_at,
-        LEAD(s.current_price, 1) OVER (
-          PARTITION BY s.symbol
-          ORDER BY s.snapshot_at
-        ) AS outcome_1_price,
-        LEAD(s.snapshot_at, 3) OVER (
-          PARTITION BY s.symbol
-          ORDER BY s.snapshot_at
-        ) AS outcome_3_at,
-        LEAD(s.current_price, 3) OVER (
-          PARTITION BY s.symbol
-          ORDER BY s.snapshot_at
-        ) AS outcome_3_price,
-        LEAD(s.snapshot_at, 5) OVER (
-          PARTITION BY s.symbol
-          ORDER BY s.snapshot_at
-        ) AS outcome_5_at,
-        LEAD(s.current_price, 5) OVER (
-          PARTITION BY s.symbol
-          ORDER BY s.snapshot_at
-        ) AS outcome_5_price,
-        LEAD(s.snapshot_at, 10) OVER (
-          PARTITION BY s.symbol
-          ORDER BY s.snapshot_at
-        ) AS outcome_10_at,
-        LEAD(s.current_price, 10) OVER (
-          PARTITION BY s.symbol
-          ORDER BY s.snapshot_at
-        ) AS outcome_10_price
+        t.outcome_1_at,
+        t.outcome_3_at,
+        t.outcome_5_at,
+        t.outcome_10_at
       FROM signal_snapshots s
+      JOIN session_targets t USING (snapshot_at)
+    ),
+    ordered AS (
+      SELECT
+        b.*,
+        p1.current_price AS outcome_1_price,
+        p3.current_price AS outcome_3_price,
+        p5.current_price AS outcome_5_price,
+        p10.current_price AS outcome_10_price
+      FROM ordered_base b
+      LEFT JOIN signal_snapshots p1
+        ON p1.snapshot_at = b.outcome_1_at AND p1.symbol = b.symbol
+      LEFT JOIN signal_snapshots p3
+        ON p3.snapshot_at = b.outcome_3_at AND p3.symbol = b.symbol
+      LEFT JOIN signal_snapshots p5
+        ON p5.snapshot_at = b.outcome_5_at AND p5.symbol = b.symbol
+      LEFT JOIN signal_snapshots p10
+        ON p10.snapshot_at = b.outcome_10_at AND p10.symbol = b.symbol
     ),
     events AS (
       SELECT
@@ -314,43 +322,30 @@ async function refreshSignalOutcomes(force = false) {
   return { refreshed: true, snapshotAt: latest.snapshot_at };
 }
 
-async function refreshRegimes(force = false) {
-  const [latest] = await sql`
-    SELECT MAX(snapshot_at) AS snapshot_at
-    FROM signal_snapshots
-  `;
-  if (!latest?.snapshot_at) return { refreshed: false, snapshotAt: null, records: [] };
-  const [existing] = await sql`
-    SELECT COUNT(*)::int AS total, MIN(materialization_version)::int AS version
-    FROM signal_regimes
-    WHERE snapshot_at = ${latest.snapshot_at}
-  `;
-  if (
-    !force &&
-    Number(existing?.total) > 0 &&
-    Number(existing?.version) === REGIME_VERSION
-  ) {
-    return { refreshed: false, snapshotAt: latest.snapshot_at, records: [] };
-  }
+async function regimeInputs(snapshotAt) {
   const currentRows = await sql`
     SELECT
       snapshot_at, symbol, sector, market_cap, is_sector, positive_long, negative_long,
       return_1m, distance_20d
     FROM signal_snapshots
-    WHERE snapshot_at = ${latest.snapshot_at}
+    WHERE snapshot_at = ${snapshotAt}
   `;
   const maturedOutcomes = await sql`
     WITH recent_dates AS (
       SELECT DISTINCT snapshot_at
       FROM signal_outcomes
       WHERE ten_session_return IS NOT NULL
+        AND outcome_10_at <= ${snapshotAt}
       ORDER BY snapshot_at DESC
       LIMIT 20
     )
-    SELECT o.snapshot_at, o.symbol, o.sector, o.is_sector, o.signal_type, o.ten_session_return
+    SELECT
+      o.snapshot_at, o.outcome_10_at, o.symbol, o.sector, o.is_sector,
+      o.signal_type, o.ten_session_return
     FROM signal_outcomes o
     JOIN recent_dates d USING (snapshot_at)
     WHERE o.ten_session_return IS NOT NULL
+      AND o.outcome_10_at <= ${snapshotAt}
   `;
   const previousRows = await sql`
     SELECT scope_key, regime, pending_label, pending_streak
@@ -358,16 +353,14 @@ async function refreshRegimes(force = false) {
     WHERE snapshot_at = (
       SELECT MAX(snapshot_at)
       FROM signal_regimes
-      WHERE snapshot_at < ${latest.snapshot_at}
+      WHERE snapshot_at < ${snapshotAt}
     )
   `;
-  const records = buildRegimeRecords(
-    currentRows,
-    maturedOutcomes,
-    new Date(latest.snapshot_at).toISOString(),
-    previousRows
-  );
-  if (!records.length) return { refreshed: false, snapshotAt: latest.snapshot_at, records: [] };
+  return { currentRows, maturedOutcomes, previousRows };
+}
+
+async function persistRegimeRecords(records) {
+  if (!records.length) return;
   const stored = JSON.stringify(records.map((record) => ({
     snapshot_at: record.snapshotAt,
     scope_key: record.scopeKey,
@@ -423,7 +416,85 @@ async function refreshRegimes(force = false) {
       materialization_version = EXCLUDED.materialization_version,
       updated_at = NOW()
   `;
-  return { refreshed: true, snapshotAt: latest.snapshot_at, records };
+}
+
+async function materializeRegimeSnapshot(snapshotAt) {
+  const { currentRows, maturedOutcomes, previousRows } = await regimeInputs(snapshotAt);
+  const records = buildRegimeRecords(
+    currentRows,
+    maturedOutcomes,
+    new Date(snapshotAt).toISOString(),
+    previousRows
+  );
+  await persistRegimeRecords(records);
+  return records;
+}
+
+async function backfillMissingRegimes() {
+  const missing = await sql`
+    SELECT r.snapshot_at
+    FROM signal_runs r
+    LEFT JOIN signal_regimes g
+      ON g.snapshot_at = r.snapshot_at AND g.scope_key = 'market'
+    WHERE g.snapshot_at IS NULL
+    ORDER BY r.snapshot_at ASC
+  `;
+  if (!missing.length) return { snapshotsBackfilled: 0, recordsSaved: 0 };
+  const [snapshotRows, outcomeRows, existingRegimes] = await Promise.all([
+    sql`
+      SELECT
+        snapshot_at, symbol, sector, market_cap, is_sector, positive_long, negative_long,
+        return_1m, distance_20d
+      FROM signal_snapshots
+      ORDER BY snapshot_at ASC
+    `,
+    sql`
+      SELECT
+        snapshot_at, outcome_10_at, symbol, sector, is_sector, signal_type,
+        ten_session_return
+      FROM signal_outcomes
+      WHERE ten_session_return IS NOT NULL AND outcome_10_at IS NOT NULL
+      ORDER BY snapshot_at ASC
+    `,
+    sql`
+      SELECT snapshot_at, scope_key, regime, pending_label, pending_streak
+      FROM signal_regimes
+      ORDER BY snapshot_at ASC
+    `,
+  ]);
+  const recordsToSave = buildHistoricalRegimeBackfill({
+    missingSnapshotAts: missing.map((row) => row.snapshot_at),
+    snapshotRows,
+    outcomeRows,
+    existingRegimes,
+  });
+  await persistRegimeRecords(recordsToSave);
+  return {
+    snapshotsBackfilled: missing.length,
+    recordsSaved: recordsToSave.length,
+  };
+}
+
+async function refreshRegimes(force = false) {
+  const [latest] = await sql`
+    SELECT MAX(snapshot_at) AS snapshot_at
+    FROM signal_snapshots
+  `;
+  if (!latest?.snapshot_at) return { refreshed: false, snapshotAt: null, records: [] };
+  const [existing] = await sql`
+    SELECT COUNT(*)::int AS total, MIN(materialization_version)::int AS version
+    FROM signal_regimes
+    WHERE snapshot_at = ${latest.snapshot_at}
+  `;
+  if (
+    !force &&
+    Number(existing?.total) > 0 &&
+    Number(existing?.version) === REGIME_VERSION
+  ) {
+    return { refreshed: false, snapshotAt: latest.snapshot_at, records: [] };
+  }
+  const records = await materializeRegimeSnapshot(latest.snapshot_at);
+  return { refreshed: records.length > 0, snapshotAt: latest.snapshot_at, records };
 }
 
 function storedRows(rows) {
@@ -601,6 +672,24 @@ async function capture(req) {
   };
 }
 
+async function backfillRegimes(req) {
+  if (!authorized(req)) return { status: 401, body: { error: "Unauthorized" } };
+  const outcomes = await refreshSignalOutcomes(true);
+  const latest = await refreshRegimes(true);
+  const backfill = await backfillMissingRegimes();
+  return {
+    status: 200,
+    body: {
+      success: true,
+      mode: "backfill-regimes",
+      outcomesRefreshed: outcomes.refreshed,
+      latestRegimeRefreshed: latest.refreshed,
+      regimeSnapshotsBackfilled: backfill.snapshotsBackfilled,
+      regimeRecordsBackfilled: backfill.recordsSaved,
+    },
+  };
+}
+
 async function history(req) {
   const limit = Math.min(30, Math.max(1, Number(req.query?.limit) || 10));
   const includeOutcomes = String(req.query?.includeOutcomes || "").toLowerCase() === "true";
@@ -636,6 +725,7 @@ async function history(req) {
         JOIN recent r USING (snapshot_at)
         ORDER BY s.snapshot_at DESC, s.symbol ASC
       `;
+  if (includeOutcomes) await refreshSignalOutcomes();
   await refreshRegimes();
   const regimes = await sql`
     SELECT
@@ -651,12 +741,7 @@ async function history(req) {
     regimes,
   };
   if (!includeOutcomes) return response;
-  await refreshSignalOutcomes();
-  const [outcomeCount] = await sql`
-    SELECT COUNT(*)::int AS total
-    FROM signal_outcomes
-  `;
-  const outcomes = await sql`
+  const outcomeRows = await sql`
     SELECT
       snapshot_at, symbol, security, sector, sub_industry, is_sector, entry_price,
       outcome_1_at, outcome_1_price, one_session_return,
@@ -665,14 +750,26 @@ async function history(req) {
       outcome_10_at, outcome_10_price, ten_session_return, signal_type
     FROM signal_outcomes
     ORDER BY snapshot_at DESC, symbol ASC
-    LIMIT ${OUTCOME_RESULT_LIMIT}
   `;
-  const outcomeTotal = Number(outcomeCount?.total) || 0;
+  const historicalSectorRegimes = await sql`
+    SELECT
+      snapshot_at, sector, regime, confidence, evidence_through, materialization_version
+    FROM signal_regimes
+    WHERE sector IS NOT NULL
+    ORDER BY snapshot_at DESC, sector ASC
+  `;
+  const enrichedOutcomes = attachPointInTimeRegimes(outcomeRows, historicalSectorRegimes);
+  const outcomes = enrichedOutcomes.slice(0, OUTCOME_RESULT_LIMIT);
+  const outcomeTotal = enrichedOutcomes.length;
+  const bullishRegimeBacktest = buildBullishRegimeBacktest(enrichedOutcomes);
   return {
     ...response,
     outcomes,
     outcomeTotal,
     outcomesTruncated: outcomes.length < outcomeTotal,
+    outcomeRegimeCoverage: regimeCoverage(enrichedOutcomes),
+    bullishRegimeBacktest,
+    holdingRecommendations: bullishRegimeBacktest.recommendations,
   };
 }
 
@@ -686,6 +783,10 @@ export default async function handler(req, res) {
     const mode = String(req.query?.mode || "").toLowerCase();
     if (mode === "capture") {
       const result = await capture(req);
+      return res.status(result.status).json(result.body);
+    }
+    if (mode === "backfill-regimes") {
+      const result = await backfillRegimes(req);
       return res.status(result.status).json(result.body);
     }
     if (req.method !== "GET") return res.status(405).json({ error: "Method Not Allowed" });

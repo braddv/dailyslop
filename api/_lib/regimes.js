@@ -7,7 +7,7 @@ const BEARISH_SIGNALS = new Set([
   ...BEARISH_REVERSAL,
 ]);
 
-const REGIME_VERSION = 1;
+const REGIME_VERSION = 2;
 
 function finiteNumber(value) {
   const number = Number(value);
@@ -143,9 +143,18 @@ function applyHysteresis(candidate, previous) {
 function evidenceCutoff(outcomes) {
   const timestamps = outcomes
     .filter((row) => finiteNumber(row.ten_session_return) !== null)
-    .map((row) => new Date(row.snapshot_at).getTime())
+    .map((row) => new Date(row.outcome_10_at).getTime())
     .filter(Number.isFinite);
   return timestamps.length ? new Date(Math.max(...timestamps)).toISOString() : null;
+}
+
+export function outcomesAvailableAsOf(outcomes, snapshotAt) {
+  const cutoff = new Date(snapshotAt).getTime();
+  return outcomes.filter((row) => {
+    const completedAt = new Date(row.outcome_10_at).getTime();
+    return finiteNumber(row.ten_session_return) !== null &&
+      Number.isFinite(completedAt) && completedAt <= cutoff;
+  });
 }
 
 function buildScopeRecord({ scopeKey, sector, currentRows, outcomes, snapshotAt, previous }) {
@@ -178,8 +187,9 @@ function buildScopeRecord({ scopeKey, sector, currentRows, outcomes, snapshotAt,
 }
 
 export function buildRegimeRecords(currentRows, maturedOutcomes, snapshotAt, previousRows = []) {
+  const availableOutcomes = outcomesAvailableAsOf(maturedOutcomes, snapshotAt);
   const previousByScope = new Map(previousRows.map((row) => [row.scope_key, row]));
-  const stockOutcomes = maturedOutcomes.filter((row) => !row.is_sector);
+  const stockOutcomes = availableOutcomes.filter((row) => !row.is_sector);
   const sectors = [...new Set(
     currentRows.filter((row) => row.is_sector && row.sector).map((row) => row.sector)
   )].sort();
@@ -202,6 +212,57 @@ export function buildRegimeRecords(currentRows, maturedOutcomes, snapshotAt, pre
     }));
   });
   return records;
+}
+
+export function buildHistoricalRegimeBackfill({
+  missingSnapshotAts,
+  snapshotRows,
+  outcomeRows,
+  existingRegimes = [],
+}) {
+  const rowsBySnapshot = new Map();
+  snapshotRows.forEach((row) => {
+    const key = new Date(row.snapshot_at).toISOString();
+    if (!rowsBySnapshot.has(key)) rowsBySnapshot.set(key, []);
+    rowsBySnapshot.get(key).push(row);
+  });
+  const regimesBySnapshot = new Map();
+  existingRegimes.forEach((row) => {
+    const key = new Date(row.snapshot_at).toISOString();
+    if (!regimesBySnapshot.has(key)) regimesBySnapshot.set(key, []);
+    regimesBySnapshot.get(key).push(row);
+  });
+  const recordsToSave = [];
+  [...missingSnapshotAts]
+    .map((value) => new Date(value).toISOString())
+    .sort()
+    .forEach((snapshotAt) => {
+      const cutoff = new Date(snapshotAt).getTime();
+      const availableOutcomes = outcomesAvailableAsOf(outcomeRows, snapshotAt);
+      const recentSignalDates = new Set([...new Set(
+        availableOutcomes.map((outcome) => new Date(outcome.snapshot_at).toISOString())
+      )].sort().reverse().slice(0, 20));
+      const maturedOutcomes = availableOutcomes.filter((outcome) =>
+        recentSignalDates.has(new Date(outcome.snapshot_at).toISOString())
+      );
+      const previousSnapshot = [...regimesBySnapshot.keys()]
+        .filter((candidate) => new Date(candidate).getTime() < cutoff)
+        .sort()
+        .at(-1);
+      const previousRows = previousSnapshot ? regimesBySnapshot.get(previousSnapshot) : [];
+      const records = buildRegimeRecords(
+        rowsBySnapshot.get(snapshotAt) || [], maturedOutcomes, snapshotAt, previousRows
+      );
+      recordsToSave.push(...records);
+      regimesBySnapshot.set(snapshotAt, records.map((record) => ({
+        snapshot_at: record.snapshotAt,
+        scope_key: record.scopeKey,
+        regime: record.regime,
+        pending_label: record.pendingLabel,
+        pending_streak: record.pendingStreak,
+      })));
+    });
+  return recordsToSave;
 }
 
 export { REGIME_VERSION };
