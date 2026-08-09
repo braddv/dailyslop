@@ -397,7 +397,7 @@ export function buildSignalSnapshot(payload, cutoff, priorSnapshots = []) {
   };
 }
 
-export function historicalCutoffs(payload, count = 5) {
+export function historicalCutoffs(payload, count = 5, cutoffHour = 15) {
   const source = [...(payload.stocks || [])]
     .map((stock) => stock.replayDay15m || [])
     .sort((a, b) => b.length - a.length)[0] || [];
@@ -405,7 +405,7 @@ export function historicalCutoffs(payload, count = 5) {
   source.forEach((point) => {
     if (!Number.isFinite(point?.[0])) return;
     const parts = nyParts(point[0]);
-    if (parts.minutes < 9 * 60 + 30 || parts.minutes > 15 * 60) return;
+    if (parts.minutes < 9 * 60 + 30 || parts.minutes > cutoffHour * 60) return;
     byDate.set(parts.date, Math.max(byDate.get(parts.date) || 0, point[0]));
   });
   return [...byDate.values()].sort((a, b) => a - b).slice(-count);
