@@ -683,8 +683,7 @@ async function corruptedStockSnapshots() {
       COUNT(*) FILTER (WHERE s.is_sector = FALSE) >= 100
       AND COUNT(*) FILTER (
         WHERE s.is_sector = FALSE AND (
-          s.positive_short <> 0 OR s.positive_long <> 0 OR
-          s.negative_short <> 0 OR s.negative_long <> 0
+          s.positive_short <> 0 OR s.negative_short <> 0
         )
       ) = 0
     ORDER BY s.snapshot_at ASC
