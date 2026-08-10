@@ -520,15 +520,8 @@ function storedRows(rows) {
   }));
 }
 
-async function persistSnapshot(rows, sourceAsOf, kind) {
+async function persistSnapshotRows(rows) {
   if (!rows.length) return;
-  const snapshotAt = rows[0].snapshotAt;
-  await sql`
-    INSERT INTO signal_runs (snapshot_at, source_as_of, run_kind)
-    VALUES (${snapshotAt}, ${sourceAsOf}, ${kind})
-    ON CONFLICT (snapshot_at)
-    DO UPDATE SET source_as_of = EXCLUDED.source_as_of, run_kind = EXCLUDED.run_kind
-  `;
   const records = JSON.stringify(storedRows(rows));
   await sql`
     INSERT INTO signal_snapshots (
@@ -575,6 +568,18 @@ async function persistSnapshot(rows, sourceAsOf, kind) {
       distance_5d = EXCLUDED.distance_5d,
       distance_20d = EXCLUDED.distance_20d
   `;
+}
+
+async function persistSnapshot(rows, sourceAsOf, kind) {
+  if (!rows.length) return;
+  const snapshotAt = rows[0].snapshotAt;
+  await sql`
+    INSERT INTO signal_runs (snapshot_at, source_as_of, run_kind)
+    VALUES (${snapshotAt}, ${sourceAsOf}, ${kind})
+    ON CONFLICT (snapshot_at)
+    DO UPDATE SET source_as_of = EXCLUDED.source_as_of, run_kind = EXCLUDED.run_kind
+  `;
+  await persistSnapshotRows(rows);
 }
 
 function requestOrigin(req) {
@@ -637,6 +642,104 @@ async function priorSnapshots(limit = 5) {
     });
   });
   return [...grouped.values()];
+}
+
+async function priorSnapshotsBefore(snapshotAt, limit = 5) {
+  const rows = await sql`
+    WITH recent AS (
+      SELECT snapshot_at
+      FROM signal_runs
+      WHERE snapshot_at < ${snapshotAt}
+      ORDER BY snapshot_at DESC
+      LIMIT ${limit}
+    )
+    SELECT
+      s.snapshot_at, s.symbol, s.positive_short, s.positive_long,
+      s.negative_short, s.negative_long
+    FROM signal_snapshots s
+    JOIN recent r USING (snapshot_at)
+    ORDER BY s.snapshot_at ASC
+  `;
+  const grouped = new Map();
+  rows.forEach((row) => {
+    const key = new Date(row.snapshot_at).toISOString();
+    if (!grouped.has(key)) grouped.set(key, new Map());
+    grouped.get(key).set(row.symbol, {
+      positiveShort: Number(row.positive_short),
+      positiveLong: Number(row.positive_long),
+      negativeShort: Number(row.negative_short),
+      negativeLong: Number(row.negative_long),
+    });
+  });
+  return [...grouped.values()];
+}
+
+async function corruptedStockSnapshots() {
+  return sql`
+    SELECT s.snapshot_at
+    FROM signal_snapshots s
+    GROUP BY s.snapshot_at
+    HAVING
+      COUNT(*) FILTER (WHERE s.is_sector = FALSE) >= 100
+      AND COUNT(*) FILTER (
+        WHERE s.is_sector = FALSE AND (
+          s.positive_short <> 0 OR s.positive_long <> 0 OR
+          s.negative_short <> 0 OR s.negative_long <> 0
+        )
+      ) = 0
+    ORDER BY s.snapshot_at ASC
+  `;
+}
+
+async function repairStockSignals(req) {
+  if (!authorized(req)) return { status: 401, body: { error: "Unauthorized" } };
+  const payload = await fetchMarketPayload(req, true);
+  const targets = await corruptedStockSnapshots();
+  const repaired = [];
+  const skipped = [];
+  for (const target of targets) {
+    const snapshotAt = new Date(target.snapshot_at).toISOString();
+    const cutoff = new Date(snapshotAt).getTime() / 1000;
+    const prior = await priorSnapshotsBefore(snapshotAt);
+    const result = buildSignalSnapshot(payload, cutoff, prior);
+    const stockRows = result.rows.filter((row) => !row.isSector);
+    const scoredStocks = stockRows.filter((row) =>
+      row.positiveShort !== 0 || row.positiveLong !== 0 ||
+      row.negativeShort !== 0 || row.negativeLong !== 0
+    ).length;
+    const minimumCoverage = Math.max(100, Math.floor((payload.stocks?.length || 0) * 0.7));
+    if (stockRows.length < minimumCoverage || scoredStocks < minimumCoverage) {
+      skipped.push({
+        snapshotAt,
+        reason: "Insufficient point-in-time replay coverage",
+        stockRows: stockRows.length,
+        scoredStocks,
+        minimumCoverage,
+      });
+      continue;
+    }
+    await persistSnapshotRows(stockRows);
+    repaired.push({ snapshotAt, stockRows: stockRows.length, scoredStocks });
+  }
+  const outcomes = repaired.length
+    ? await refreshSignalOutcomes(true)
+    : { refreshed: false };
+  let regimeRecordsRefreshed = 0;
+  for (const repair of repaired) {
+    const records = await materializeRegimeSnapshot(repair.snapshotAt);
+    regimeRecordsRefreshed += records.length;
+  }
+  return {
+    status: 200,
+    body: {
+      success: true,
+      mode: "repair-stock-signals",
+      repaired,
+      skipped,
+      outcomesRefreshed: outcomes.refreshed,
+      regimeRecordsRefreshed,
+    },
+  };
 }
 
 async function capture(req) {
@@ -787,6 +890,10 @@ export default async function handler(req, res) {
     }
     if (mode === "backfill-regimes") {
       const result = await backfillRegimes(req);
+      return res.status(result.status).json(result.body);
+    }
+    if (mode === "repair-stock-signals") {
+      const result = await repairStockSignals(req);
       return res.status(result.status).json(result.body);
     }
     if (req.method !== "GET") return res.status(405).json({ error: "Method Not Allowed" });
