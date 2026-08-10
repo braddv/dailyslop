@@ -5,8 +5,10 @@ name: Capture daily market signals
 
 on:
   schedule:
-    # GitHub cron uses UTC. Schedule both possible 2 PM Eastern hours, then let the
-    # capture step run only when New York local time is actually in the 2 PM hour.
+    # GitHub cron uses UTC and scheduled runs may be delayed or occasionally missed.
+    # Schedule both possible 2 PM Eastern hours. The earlier winter companion skips
+    # before 2 PM; any run at or after 2 PM is allowed to capture. Writes are
+    # idempotent, so the later companion also acts as a retry when the first succeeds.
     - cron: "0 18 * * 1-5"
     - cron: "0 19 * * 1-5"
   workflow_dispatch:
@@ -50,8 +52,8 @@ jobs:
 
           if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
             eastern_hour="$(TZ=America/New_York date +%H)"
-            if [[ "${eastern_hour}" != "14" ]]; then
-              echo "Skipping the DST companion schedule; current Eastern hour is ${eastern_hour}."
+            if (( 10#${eastern_hour} < 14 )); then
+              echo "Skipping the pre-window DST companion; current Eastern hour is ${eastern_hour}."
               exit 0
             fi
           fi
