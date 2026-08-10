@@ -224,15 +224,28 @@ function calculatePeriodScores(universe, period, cutoff) {
     stock.symbol,
     replayPoints(stock, period, cutoff),
   ]));
-  let frames = [...new Set(
-    universe.flatMap((stock) => (pointsBySymbol.get(stock.symbol) || []).map((point) => point[0]))
-  )].sort((a, b) => a - b);
+  const pointCounts = universe
+    .map((stock) => (pointsBySymbol.get(stock.symbol) || []).length)
+    .filter((count) => count > 0)
+    .sort((a, b) => a - b);
+  const referenceCount = pointCounts.length
+    ? pointCounts[Math.min(pointCounts.length - 1, Math.floor(pointCounts.length * 0.9))]
+    : 0;
+  const minimumPoints = Math.max(8, Math.ceil(referenceCount * 0.7));
   const eligible = universe.filter((stock) =>
-    (pointsBySymbol.get(stock.symbol) || []).length >= Math.max(8, frames.length * 0.7)
+    (pointsBySymbol.get(stock.symbol) || []).length >= minimumPoints
   );
-  frames = [...new Set(
-    eligible.flatMap((stock) => (pointsBySymbol.get(stock.symbol) || []).map((point) => point[0]))
-  )].sort((a, b) => a - b);
+  const timestampCoverage = new Map();
+  eligible.forEach((stock) => {
+    new Set((pointsBySymbol.get(stock.symbol) || []).map((point) => point[0])).forEach((timestamp) => {
+      timestampCoverage.set(timestamp, (timestampCoverage.get(timestamp) || 0) + 1);
+    });
+  });
+  const minimumCoverage = Math.max(2, Math.ceil(eligible.length * 0.7));
+  const frames = [...timestampCoverage.entries()]
+    .filter(([, coverage]) => coverage >= minimumCoverage)
+    .map(([timestamp]) => timestamp)
+    .sort((a, b) => a - b);
   return calculateReplayScores(eligible, frames, pointsBySymbol);
 }
 
@@ -384,7 +397,16 @@ function buildRows(universe, cutoff, prior, sectorMode) {
 }
 
 export function buildSignalSnapshot(payload, cutoff, priorSnapshots = []) {
-  const stocks = buildRows(payload.stocks || [], cutoff, priorSnapshots, false);
+  const cutoffDate = nyParts(cutoff).date;
+  const activeStocks = (payload.stocks || []).filter((stock) =>
+    (stock.replayDay15m || []).some((point) =>
+      Number.isFinite(point?.[0]) &&
+      Number.isFinite(point?.[1]) &&
+      point[0] <= cutoff &&
+      nyParts(point[0]).date === cutoffDate
+    )
+  );
+  const stocks = buildRows(activeStocks, cutoff, priorSnapshots, false);
   const sectors = buildRows(
     (payload.benchmarks || []).filter((stock) => stock.symbol !== "SPY"),
     cutoff,
