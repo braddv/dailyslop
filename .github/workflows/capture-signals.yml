@@ -5,10 +5,9 @@ name: Capture daily market signals
 
 on:
   schedule:
-    # GitHub cron uses UTC. Schedule both possible 2 PM Eastern hours, then let the
-    # capture step run only when New York local time is actually in the 2 PM hour.
+    # GitHub cron uses UTC. This is 2 PM Eastern during daylight saving time.
+    # Update the UTC hour when standard time begins.
     - cron: "0 18 * * 1-5"
-    - cron: "0 19 * * 1-5"
   workflow_dispatch:
 
 permissions: {}
@@ -47,14 +46,6 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           set -euo pipefail
-
-          if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
-            eastern_hour="$(TZ=America/New_York date +%H)"
-            if [[ "${eastern_hour}" != "14" ]]; then
-              echo "Skipping the DST companion schedule; current Eastern hour is ${eastern_hour}."
-              exit 0
-            fi
-          fi
 
           response_file="$(mktemp)"
           status_code="$(curl \
