@@ -23,6 +23,14 @@
       "destination": "/public/smallcaps/:path*"
     },
     {
+      "source": "/intermarket",
+      "destination": "/public/intermarket/index.html"
+    },
+    {
+      "source": "/intermarket/:path*",
+      "destination": "/public/intermarket/:path*"
+    },
+    {
       "source": "/slop",
       "destination": "/public/slop.html"
     },

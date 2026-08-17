@@ -1,0 +1,79 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const {
+  buildDailyInstrument,
+  buildMacroState,
+  buildRelationships,
+  percentChange,
+  replayPoints,
+} = require('../api/_lib/intermarket.js');
+
+function spark(symbol, currentPrice, previousClose, closes = [90, 95, 100]) {
+  return {
+    symbol,
+    response: [{
+      meta: { regularMarketPrice: currentPrice, regularMarketPreviousClose: previousClose },
+      timestamp: [1_760_000_000, 1_770_000_000, 1_780_000_000],
+      close: closes,
+    }],
+  };
+}
+
+test('daily instrument preserves the instrument definition and calculates normalized returns', () => {
+  const row = buildDailyInstrument(
+    { symbol: 'SPY', name: 'S&P 500', group: 'Equities' },
+    spark('SPY', 110, 100),
+    1_780_000_000 * 1000
+  );
+  assert.equal(row.symbol, 'SPY');
+  assert.ok(Math.abs(row.changePercent - 10) < 1e-9);
+  assert.ok(Array.isArray(row.replayDaily));
+  assert.equal(row.replayDaily.at(-1)[1], 100);
+});
+
+test('relationship returns compare matched percentage horizons', () => {
+  const rows = [
+    { symbol: 'IWM', currentPrice: 220, changePercent: 2, perf1w: 5, perf1m: 8, perf3m: 10 },
+    { symbol: 'SPY', currentPrice: 550, changePercent: 1, perf1w: 2, perf1m: 4, perf3m: 5 },
+    { symbol: 'QQQ', currentPrice: 500, changePercent: 1, perf1w: 2, perf1m: 4, perf3m: 5 },
+    { symbol: 'HYG', currentPrice: 80, changePercent: 0, perf1w: 1, perf1m: 1, perf3m: 1 },
+    { symbol: 'LQD', currentPrice: 100, changePercent: 0, perf1w: 0, perf1m: 0, perf3m: 0 },
+    { symbol: 'HG=F', currentPrice: 4, changePercent: 0, perf1w: 1, perf1m: 1, perf3m: 1 },
+    { symbol: 'GC=F', currentPrice: 2000, changePercent: 0, perf1w: 0, perf1m: 0, perf3m: 0 },
+    { symbol: '^TNX', currentPrice: 4.2 },
+    { symbol: '^IRX', currentPrice: 3.8 },
+  ];
+  const relationships = buildRelationships(rows);
+  const smallCaps = relationships.find((row) => row.id === 'small-cap-risk');
+  assert.ok(smallCaps.changePercent > 0.98 && smallCaps.changePercent < 1);
+  assert.equal(Math.round(relationships.find((row) => row.id === 'yield-curve').currentSpreadBps), 40);
+});
+
+test('macro state uses equity, volatility, yield, dollar, and commodity inputs without forecasting', () => {
+  const rows = [
+    { symbol: 'SPY', changePercent: 1 },
+    { symbol: 'QQQ', changePercent: 1.2 },
+    { symbol: 'IWM', changePercent: 1.4 },
+    { symbol: 'EEM', changePercent: 0.8 },
+    { symbol: '^VIX', changePercent: -4 },
+    { symbol: '^TNX', change: 0.05 },
+    { symbol: 'DX-Y.NYB', changePercent: -0.3 },
+    { symbol: 'CL=F', changePercent: 1 },
+    { symbol: 'HG=F', changePercent: 0.8 },
+    { symbol: 'GC=F', changePercent: -0.1 },
+  ];
+  const result = buildMacroState(rows);
+  assert.match(result.summary, /Risk-on/);
+  assert.match(result.summary, /Yields rising/);
+  assert.match(result.summary, /Dollar weaker/);
+  assert.match(result.summary, /Commodity bid/);
+});
+
+test('replay points deduplicate timestamps and percent change rejects invalid bases', () => {
+  assert.deepEqual(replayPoints([100, 100, 200], [1, 2, 3]), [[100, 2], [200, 3]]);
+  assert.equal(percentChange(2, 0), null);
+  assert.ok(Math.abs(percentChange(110, 100) - 10) < 1e-9);
+});

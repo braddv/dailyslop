@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/intermarket/" />
+    <title>DailySlop Macro Radar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/intermarket/styles.css" />
+  </head>
+  <body>
+    <div class="glow glow-one"></div>
+    <div class="glow glow-two"></div>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <nav class="breadcrumb" aria-label="DailySlop pages">
+            <a href="/sp500ad">S&amp;P 500</a>
+            <span>/</span>
+            <strong>Macro Radar</strong>
+          </nav>
+          <p class="eyebrow">DailySlop cross-asset intelligence</p>
+          <h1>Macro Radar</h1>
+          <p class="subhead">See the rates, currencies, commodities and risk markets surrounding the equity tape.</p>
+        </div>
+        <div class="meta">
+          <div class="meta-card"><span>As of</span><strong id="asOf">Loading…</strong></div>
+          <div class="meta-card"><span>Cache</span><strong id="cacheState">--</strong></div>
+        </div>
+      </header>
+
+      <section class="state-panel" aria-labelledby="stateTitle">
+        <div class="section-heading compact">
+          <div>
+            <p class="section-kicker">Current cross-asset state</p>
+            <h2 id="stateTitle">What the macro tape is saying</h2>
+          </div>
+          <p class="state-summary" id="macroSummary">Loading the macro state…</p>
+        </div>
+        <div class="state-grid" id="stateGrid"></div>
+      </section>
+
+      <section class="radar-panel" aria-labelledby="radarTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Normalized performance</p>
+            <h2 id="radarTitle">Intermarket bubble replay</h2>
+            <p id="chartDescription">Daily percent change across the macro universe.</p>
+          </div>
+          <div class="metric-toggle" id="metricToggle" aria-label="Return timeframe">
+            <button class="active" type="button" data-metric="changePercent">1D</button>
+            <button type="button" data-metric="perf1w">1W</button>
+            <button type="button" data-metric="perf1m">1M</button>
+            <button type="button" data-metric="perf3m">3M</button>
+          </div>
+        </div>
+
+        <div class="chart-scroll" id="chartScroll">
+          <div class="chart" id="chart" aria-label="Intermarket return bubble chart"></div>
+        </div>
+
+        <div class="replay-panel">
+          <div class="replay-modes" id="replayModes" aria-label="Replay timeframe">
+            <button class="active" type="button" data-mode="live">Live</button>
+            <button type="button" data-mode="1d">1D Replay</button>
+            <button type="button" data-mode="1w">1W Replay</button>
+            <button type="button" data-mode="1m">1M Replay</button>
+            <button type="button" data-mode="3m">3M Replay</button>
+          </div>
+          <div class="replay-transport is-disabled" id="replayTransport">
+            <button class="play-button" id="playButton" type="button">▶ <span>Play</span></button>
+            <input id="scrubber" type="range" min="0" max="0" value="0" step="1" aria-label="Replay timeline" />
+            <strong id="replayTimestamp">Live market view</strong>
+            <label>Speed
+              <select id="speedSelect">
+                <option value="1100">0.5×</option>
+                <option value="650" selected>1×</option>
+                <option value="320">2×</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="group-legend" id="groupLegend"></div>
+      </section>
+
+      <section class="relationships-panel" aria-labelledby="relationshipsTitle">
+        <div class="section-heading compact">
+          <div>
+            <p class="section-kicker">Confirmation and divergence</p>
+            <h2 id="relationshipsTitle">Cross-asset relationships</h2>
+          </div>
+          <p>Ratios show which side is outperforming—not a forecast.</p>
+        </div>
+        <div class="relationship-grid" id="relationshipGrid"></div>
+      </section>
+
+      <section class="ranking-panel" aria-labelledby="rankingTitle">
+        <div class="section-heading compact">
+          <div>
+            <p class="section-kicker">Leadership map</p>
+            <h2 id="rankingTitle">Cross-asset ranking</h2>
+          </div>
+          <p id="rankingLabel">Ranked by 1D return.</p>
+        </div>
+        <div class="ranking-grid" id="rankingGrid"></div>
+      </section>
+
+      <footer>
+        <button id="refreshButton" type="button">Refresh</button>
+        <span id="statusText">Yahoo Finance cross-asset data</span>
+      </footer>
+    </main>
+
+    <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+    <aside class="drawer" id="instrumentDrawer" aria-label="Instrument details" aria-hidden="true">
+      <button class="drawer-close" id="drawerClose" type="button" aria-label="Close details">×</button>
+      <div id="drawerContent"></div>
+    </aside>
+
+    <script src="/intermarket/app.js"></script>
+  </body>
+</html>

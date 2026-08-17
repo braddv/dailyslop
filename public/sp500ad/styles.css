@@ -93,6 +93,22 @@ h1 {
   cursor: pointer;
 }
 
+.workspace-nav-link {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9px;
+  padding: 9px 15px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.workspace-nav-link:hover {
+  color: var(--text);
+  background: rgba(86, 194, 255, 0.12);
+}
+
 .workspace-nav-btn.active {
   color: var(--text);
   background: rgba(86, 194, 255, 0.17);

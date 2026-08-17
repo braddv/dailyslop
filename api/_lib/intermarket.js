@@ -1,0 +1,215 @@
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const INTERMARKET_INSTRUMENTS = [
+  { symbol: 'SPY', name: 'S&P 500', group: 'Equities', importance: 1.2 },
+  { symbol: 'QQQ', name: 'Nasdaq 100', group: 'Equities', importance: 1.1 },
+  { symbol: 'IWM', name: 'Russell 2000', group: 'Equities', importance: 1.05 },
+  { symbol: 'EEM', name: 'Emerging Markets', group: 'Equities' },
+  { symbol: '^VIX', name: 'CBOE Volatility Index', group: 'Risk & Credit', displaySymbol: 'VIX' },
+  { symbol: 'HYG', name: 'High Yield Credit', group: 'Risk & Credit' },
+  { symbol: 'LQD', name: 'Investment Grade Credit', group: 'Risk & Credit' },
+  { symbol: '^IRX', name: '13-Week Treasury Yield', group: 'Rates', displaySymbol: '3M', format: 'yield' },
+  { symbol: '^TNX', name: '10-Year Treasury Yield', group: 'Rates', displaySymbol: '10Y', format: 'yield', importance: 1.1 },
+  { symbol: '^TYX', name: '30-Year Treasury Yield', group: 'Rates', displaySymbol: '30Y', format: 'yield' },
+  { symbol: 'TLT', name: 'Long Treasury Bonds', group: 'Rates' },
+  { symbol: 'DX-Y.NYB', name: 'US Dollar Index', group: 'Currencies', displaySymbol: 'DXY', importance: 1.1 },
+  { symbol: 'EURUSD=X', name: 'Euro / US Dollar', group: 'Currencies', displaySymbol: 'EUR/USD' },
+  { symbol: 'JPY=X', name: 'US Dollar / Japanese Yen', group: 'Currencies', displaySymbol: 'USD/JPY' },
+  { symbol: 'CL=F', name: 'WTI Crude Oil', group: 'Commodities', displaySymbol: 'WTI', importance: 1.1 },
+  { symbol: 'BZ=F', name: 'Brent Crude Oil', group: 'Commodities', displaySymbol: 'BRENT' },
+  { symbol: 'NG=F', name: 'Natural Gas', group: 'Commodities', displaySymbol: 'NAT GAS' },
+  { symbol: 'GC=F', name: 'Gold', group: 'Commodities', displaySymbol: 'GOLD', importance: 1.1 },
+  { symbol: 'SI=F', name: 'Silver', group: 'Commodities', displaySymbol: 'SILVER' },
+  { symbol: 'HG=F', name: 'Copper', group: 'Commodities', displaySymbol: 'COPPER' },
+  { symbol: 'DBA', name: 'Agriculture Basket', group: 'Commodities' },
+  { symbol: 'XLE', name: 'US Energy Equities', group: 'Commodities' },
+];
+
+function getLastFinite(values, fromEndIndex = 0) {
+  let seen = 0;
+  for (let index = values.length - 1; index >= 0; index -= 1) {
+    if (!Number.isFinite(values[index])) continue;
+    if (seen === fromEndIndex) return values[index];
+    seen += 1;
+  }
+  return null;
+}
+
+function extractCloseSeries(series) {
+  if (Array.isArray(series?.close)) return series.close;
+  const nested = series?.indicators?.quote?.[0]?.close;
+  return Array.isArray(nested) ? nested : [];
+}
+
+function pickLastBefore(timestamps, closes, cutoffMs) {
+  let value = null;
+  for (let index = 0; index < timestamps.length; index += 1) {
+    const price = closes[index];
+    if (!Number.isFinite(price)) continue;
+    if (timestamps[index] * 1000 <= cutoffMs) value = price;
+    else break;
+  }
+  return value;
+}
+
+function percentChange(current, base) {
+  if (!Number.isFinite(current) || !Number.isFinite(base) || base === 0) return null;
+  return ((current / base) - 1) * 100;
+}
+
+function performance(current, timestamps, closes, days, nowMs = Date.now()) {
+  return percentChange(current, pickLastBefore(timestamps, closes, nowMs - days * DAY_MS));
+}
+
+function replayPoints(timestamps, closes, cutoffMs = 0, bucketSeconds = null, offsetSeconds = 0) {
+  const points = new Map();
+  for (let index = 0; index < timestamps.length; index += 1) {
+    const timestamp = timestamps[index];
+    const price = closes[index];
+    if (!Number.isFinite(timestamp) || !Number.isFinite(price) || timestamp * 1000 < cutoffMs) continue;
+    const key = Number.isFinite(bucketSeconds)
+      ? Math.floor((timestamp - offsetSeconds) / bucketSeconds) * bucketSeconds + offsetSeconds
+      : timestamp;
+    points.set(key, price);
+  }
+  return [...points.entries()].sort((left, right) => left[0] - right[0]);
+}
+
+function buildDailyInstrument(definition, spark, nowMs = Date.now()) {
+  const series = spark?.response?.[0];
+  if (!series) return null;
+  const meta = series.meta || {};
+  const timestamps = Array.isArray(series.timestamp) ? series.timestamp : [];
+  const closes = extractCloseSeries(series);
+  const currentPrice = Number.isFinite(meta.regularMarketPrice)
+    ? meta.regularMarketPrice
+    : getLastFinite(closes, 0);
+  const previousClose = Number.isFinite(meta.regularMarketPreviousClose)
+    ? meta.regularMarketPreviousClose
+    : Number.isFinite(meta.previousClose)
+      ? meta.previousClose
+      : getLastFinite(closes, 1);
+  if (!Number.isFinite(currentPrice)) return null;
+  const change = Number.isFinite(previousClose) ? currentPrice - previousClose : null;
+  return {
+    ...definition,
+    currentPrice,
+    previousClose,
+    change,
+    changePercent: percentChange(currentPrice, previousClose),
+    perf1w: performance(currentPrice, timestamps, closes, 7, nowMs),
+    perf1m: performance(currentPrice, timestamps, closes, 30, nowMs),
+    perf3m: performance(currentPrice, timestamps, closes, 90, nowMs),
+    replayDaily: replayPoints(timestamps, closes, nowMs - 190 * DAY_MS),
+  };
+}
+
+function relativeReturn(left, right, key) {
+  const leftReturn = left?.[key];
+  const rightReturn = right?.[key];
+  if (!Number.isFinite(leftReturn) || !Number.isFinite(rightReturn)) return null;
+  return (((1 + leftReturn / 100) / (1 + rightReturn / 100)) - 1) * 100;
+}
+
+function buildRelationships(instruments) {
+  const bySymbol = new Map(instruments.map((row) => [row.symbol, row]));
+  const ratio = (id, label, leftSymbol, rightSymbol, interpretation) => {
+    const left = bySymbol.get(leftSymbol);
+    const right = bySymbol.get(rightSymbol);
+    return {
+      id,
+      label,
+      leftSymbol,
+      rightSymbol,
+      interpretation,
+      currentRatio: Number.isFinite(left?.currentPrice) && Number.isFinite(right?.currentPrice)
+        ? left.currentPrice / right.currentPrice
+        : null,
+      changePercent: relativeReturn(left, right, 'changePercent'),
+      perf1w: relativeReturn(left, right, 'perf1w'),
+      perf1m: relativeReturn(left, right, 'perf1m'),
+      perf3m: relativeReturn(left, right, 'perf3m'),
+    };
+  };
+  const threeMonth = bySymbol.get('^IRX');
+  const tenYear = bySymbol.get('^TNX');
+  const curve = Number.isFinite(tenYear?.currentPrice) && Number.isFinite(threeMonth?.currentPrice)
+    ? (tenYear.currentPrice - threeMonth.currentPrice) * 100
+    : null;
+  return [
+    ratio('small-cap-risk', 'Small caps vs S&P 500', 'IWM', 'SPY', 'Rising favors broader risk appetite.'),
+    ratio('growth-leadership', 'Nasdaq 100 vs S&P 500', 'QQQ', 'SPY', 'Rising favors growth leadership.'),
+    ratio('credit-risk', 'High yield vs investment grade', 'HYG', 'LQD', 'Rising suggests improving credit risk appetite.'),
+    ratio('copper-gold', 'Copper vs gold', 'HG=F', 'GC=F', 'Rising favors cyclical growth over defensiveness.'),
+    {
+      id: 'yield-curve',
+      label: '10Y minus 3M yield curve',
+      leftSymbol: '^TNX',
+      rightSymbol: '^IRX',
+      interpretation: 'A more positive spread indicates a steeper curve.',
+      currentSpreadBps: curve,
+      changePercent: null,
+      perf1w: null,
+      perf1m: null,
+      perf3m: null,
+    },
+  ].filter((row) => row.currentRatio != null || row.currentSpreadBps != null);
+}
+
+function averageFinite(values) {
+  const finite = values.filter(Number.isFinite);
+  return finite.length ? finite.reduce((sum, value) => sum + value, 0) / finite.length : null;
+}
+
+function buildMacroState(instruments) {
+  const bySymbol = new Map(instruments.map((row) => [row.symbol, row]));
+  const change = (symbol) => bySymbol.get(symbol)?.changePercent;
+  const riskAverage = averageFinite(['SPY', 'QQQ', 'IWM', 'EEM'].map(change));
+  const vix = change('^VIX');
+  const riskAdjusted = Number.isFinite(riskAverage) && Number.isFinite(vix)
+    ? riskAverage - vix * 0.04
+    : riskAverage;
+  const riskLabel = !Number.isFinite(riskAdjusted)
+    ? 'Unavailable'
+    : riskAdjusted > 0.35 ? 'Risk-on' : riskAdjusted < -0.35 ? 'Risk-off' : 'Mixed';
+
+  const tenYear = bySymbol.get('^TNX');
+  const rateMoveBps = Number.isFinite(tenYear?.change) ? tenYear.change * 100 : null;
+  const ratesLabel = !Number.isFinite(rateMoveBps)
+    ? 'Unavailable'
+    : rateMoveBps > 3 ? 'Yields rising' : rateMoveBps < -3 ? 'Yields easing' : 'Yields stable';
+
+  const dollarMove = change('DX-Y.NYB');
+  const dollarLabel = !Number.isFinite(dollarMove)
+    ? 'Unavailable'
+    : dollarMove > 0.2 ? 'Dollar stronger' : dollarMove < -0.2 ? 'Dollar weaker' : 'Dollar steady';
+
+  const commodityMoves = [change('CL=F'), change('HG=F'), change('GC=F')].filter(Number.isFinite);
+  const positiveCommodities = commodityMoves.filter((value) => value > 0.2).length;
+  const negativeCommodities = commodityMoves.filter((value) => value < -0.2).length;
+  const commodityLabel = commodityMoves.length < 2
+    ? 'Unavailable'
+    : positiveCommodities >= 2 ? 'Commodity bid' : negativeCommodities >= 2 ? 'Commodity pressure' : 'Commodity split';
+
+  return {
+    cards: [
+      { id: 'risk', label: 'Risk tone', value: riskLabel, detail: Number.isFinite(riskAverage) ? `Equity proxy average ${riskAverage >= 0 ? '+' : ''}${riskAverage.toFixed(2)}%` : 'Waiting for equity proxies' },
+      { id: 'rates', label: 'Rates', value: ratesLabel, detail: Number.isFinite(rateMoveBps) ? `10Y move ${rateMoveBps >= 0 ? '+' : ''}${rateMoveBps.toFixed(1)} bp` : 'Waiting for 10Y yield' },
+      { id: 'dollar', label: 'US dollar', value: dollarLabel, detail: Number.isFinite(dollarMove) ? `DXY ${dollarMove >= 0 ? '+' : ''}${dollarMove.toFixed(2)}%` : 'Waiting for DXY' },
+      { id: 'commodities', label: 'Commodity pulse', value: commodityLabel, detail: `${positiveCommodities} rising / ${negativeCommodities} falling` },
+    ],
+    summary: `${riskLabel}. ${ratesLabel}. ${dollarLabel}. ${commodityLabel}.`,
+  };
+}
+
+module.exports = {
+  DAY_MS,
+  INTERMARKET_INSTRUMENTS,
+  buildDailyInstrument,
+  buildRelationships,
+  buildMacroState,
+  extractCloseSeries,
+  getLastFinite,
+  percentChange,
+  replayPoints,
+};
