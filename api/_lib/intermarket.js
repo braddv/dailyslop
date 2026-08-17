@@ -61,6 +61,87 @@ function performance(current, timestamps, closes, days, nowMs = Date.now()) {
   return percentChange(current, pickLastBefore(timestamps, closes, nowMs - days * DAY_MS));
 }
 
+function average(values) {
+  const finite = values.filter(Number.isFinite);
+  return finite.length ? finite.reduce((sum, value) => sum + value, 0) / finite.length : null;
+}
+
+function median(values) {
+  const finite = values.filter(Number.isFinite).sort((left, right) => left - right);
+  if (!finite.length) return null;
+  const middle = Math.floor(finite.length / 2);
+  return finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
+}
+
+function buildTrendContext({ currentPrice, previousClose, replayDaily = [], format }) {
+  const closes = replayDaily.map((point) => point[1]).filter(Number.isFinite);
+  if (!Number.isFinite(currentPrice) || closes.length < 50) return null;
+
+  const average20 = average(closes.slice(-20));
+  const average50 = average(closes.slice(-50));
+  const yieldInstrument = format === 'yield';
+  const distance = (movingAverage) => yieldInstrument
+    ? (currentPrice - movingAverage) * 100
+    : percentChange(currentPrice, movingAverage);
+  const distance20 = distance(average20);
+  const distance50 = distance(average50);
+  const above20 = currentPrice > average20;
+  const above50 = currentPrice > average50;
+  let label = 'Mixed trend';
+  let direction = 'mixed';
+  if (above20 && average20 > average50) {
+    label = 'Trending higher';
+    direction = 'higher';
+  } else if (!above20 && average20 < average50) {
+    label = 'Trending lower';
+    direction = 'lower';
+  } else if (above20 && above50) {
+    label = 'Turning higher';
+    direction = 'higher';
+  } else if (!above20 && !above50) {
+    label = 'Turning lower';
+    direction = 'lower';
+  }
+
+  const dailyMoves = [];
+  for (let index = Math.max(1, closes.length - 60); index < closes.length; index += 1) {
+    const move = yieldInstrument
+      ? (closes[index] - closes[index - 1]) * 100
+      : percentChange(closes[index], closes[index - 1]);
+    if (Number.isFinite(move)) dailyMoves.push(Math.abs(move));
+  }
+  const averageDailyMove = average(dailyMoves);
+  const medianDailyMove = median(dailyMoves);
+  const todayMove = yieldInstrument
+    ? Number.isFinite(previousClose) ? (currentPrice - previousClose) * 100 : null
+    : percentChange(currentPrice, previousClose);
+  const typicalMove = Number.isFinite(medianDailyMove) && medianDailyMove > 0
+    ? medianDailyMove
+    : averageDailyMove;
+  const moveRatio = Number.isFinite(todayMove) && Number.isFinite(typicalMove) && typicalMove > 0
+    ? Math.abs(todayMove) / typicalMove
+    : null;
+  const moveLabel = !Number.isFinite(moveRatio)
+    ? 'Unavailable'
+    : moveRatio < 0.5 ? 'Quiet'
+      : moveRatio < 1.5 ? 'Typical'
+        : moveRatio < 2.5 ? 'Large' : 'Outsized';
+
+  return {
+    label,
+    direction,
+    average20,
+    average50,
+    distance20,
+    distance50,
+    todayMove,
+    averageDailyMove,
+    medianDailyMove,
+    moveLabel,
+    moveUnit: yieldInstrument ? 'bp' : '%',
+  };
+}
+
 function replayPoints(timestamps, closes, cutoffMs = 0, bucketSeconds = null, offsetSeconds = 0) {
   const points = new Map();
   for (let index = 0; index < timestamps.length; index += 1) {
@@ -91,7 +172,8 @@ function buildDailyInstrument(definition, spark, nowMs = Date.now()) {
       : getLastFinite(closes, 1);
   if (!Number.isFinite(currentPrice)) return null;
   const change = Number.isFinite(previousClose) ? currentPrice - previousClose : null;
-  return {
+  const replayDaily = replayPoints(timestamps, closes, nowMs - 190 * DAY_MS);
+  const instrument = {
     ...definition,
     currentPrice,
     previousClose,
@@ -100,7 +182,11 @@ function buildDailyInstrument(definition, spark, nowMs = Date.now()) {
     perf1w: performance(currentPrice, timestamps, closes, 7, nowMs),
     perf1m: performance(currentPrice, timestamps, closes, 30, nowMs),
     perf3m: performance(currentPrice, timestamps, closes, 90, nowMs),
-    replayDaily: replayPoints(timestamps, closes, nowMs - 190 * DAY_MS),
+    replayDaily,
+  };
+  return {
+    ...instrument,
+    trend: buildTrendContext(instrument),
   };
 }
 
@@ -175,9 +261,22 @@ function buildMacroState(instruments) {
 
   const tenYear = bySymbol.get('^TNX');
   const rateMoveBps = Number.isFinite(tenYear?.change) ? tenYear.change * 100 : null;
-  const ratesLabel = !Number.isFinite(rateMoveBps)
+  const ratesLabel = tenYear?.trend?.label && tenYear.trend.label !== 'Mixed trend'
+    ? `Yields ${tenYear.trend.label.toLowerCase()}`
+    : !Number.isFinite(rateMoveBps)
     ? 'Unavailable'
     : rateMoveBps > 3 ? 'Yields rising' : rateMoveBps < -3 ? 'Yields easing' : 'Yields stable';
+  const ratesDetail = Number.isFinite(rateMoveBps)
+    ? [
+      `Today ${rateMoveBps >= 0 ? '+' : ''}${rateMoveBps.toFixed(1)} bp${tenYear?.trend?.moveLabel ? ` (${tenYear.trend.moveLabel.toLowerCase()})` : ''}`,
+      Number.isFinite(tenYear?.trend?.distance20)
+        ? `${tenYear.trend.distance20 >= 0 ? '+' : ''}${tenYear.trend.distance20.toFixed(1)} bp vs 20D`
+        : null,
+      Number.isFinite(tenYear?.trend?.distance50)
+        ? `${tenYear.trend.distance50 >= 0 ? '+' : ''}${tenYear.trend.distance50.toFixed(1)} bp vs 50D`
+        : null,
+    ].filter(Boolean).join(' · ')
+    : 'Waiting for 10Y yield';
 
   const dollarMove = change('DX-Y.NYB');
   const dollarLabel = !Number.isFinite(dollarMove)
@@ -194,7 +293,7 @@ function buildMacroState(instruments) {
   return {
     cards: [
       { id: 'risk', label: 'Risk tone', value: riskLabel, detail: Number.isFinite(riskAverage) ? `Equity proxy average ${riskAverage >= 0 ? '+' : ''}${riskAverage.toFixed(2)}%` : 'Waiting for equity proxies' },
-      { id: 'rates', label: 'Rates', value: ratesLabel, detail: Number.isFinite(rateMoveBps) ? `10Y move ${rateMoveBps >= 0 ? '+' : ''}${rateMoveBps.toFixed(1)} bp` : 'Waiting for 10Y yield' },
+      { id: 'rates', label: 'Rates', value: ratesLabel, detail: ratesDetail },
       { id: 'dollar', label: 'US dollar', value: dollarLabel, detail: Number.isFinite(dollarMove) ? `DXY ${dollarMove >= 0 ? '+' : ''}${dollarMove.toFixed(2)}%` : 'Waiting for DXY' },
       { id: 'commodities', label: 'Commodity pulse', value: commodityLabel, detail: `${positiveCommodities} rising / ${negativeCommodities} falling` },
     ],
@@ -206,6 +305,7 @@ module.exports = {
   DAY_MS,
   INTERMARKET_INSTRUMENTS,
   buildDailyInstrument,
+  buildTrendContext,
   buildRelationships,
   buildMacroState,
   extractCloseSeries,

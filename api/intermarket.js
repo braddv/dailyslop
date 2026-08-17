@@ -3,6 +3,7 @@ const {
   DAY_MS,
   INTERMARKET_INSTRUMENTS,
   buildDailyInstrument,
+  buildTrendContext,
   buildMacroState,
   buildRelationships,
   extractCloseSeries,
@@ -161,7 +162,7 @@ function mergeInstrument(daily, intraday = {}) {
     }
     return percentChange(currentPrice, base);
   };
-  return {
+  const instrument = {
     ...daily,
     currentPrice,
     change: Number.isFinite(daily.previousClose) ? currentPrice - daily.previousClose : daily.change,
@@ -171,6 +172,10 @@ function mergeInstrument(daily, intraday = {}) {
     perf3m: performance(90),
     replayDay15m: intraday.replayDay15m || [],
     replayWeekHourly: intraday.replayWeekHourly || [],
+  };
+  return {
+    ...instrument,
+    trend: buildTrendContext(instrument),
   };
 }
 

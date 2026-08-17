@@ -89,6 +89,19 @@ function formatPrice(row) {
   return row.currentPrice.toFixed(2);
 }
 
+function formatTrendValue(value, unit, digits = 1) {
+  if (!finite(value)) return '--';
+  return `${value >= 0 ? '+' : ''}${value.toFixed(digits)} ${unit}`;
+}
+
+function formatTrendLevel(row, value) {
+  if (!finite(value)) return '--';
+  if (row.format === 'yield') return `${value.toFixed(3)}%`;
+  if (value >= 1000) return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+  if (value < 10) return value.toFixed(3);
+  return value.toFixed(2);
+}
+
 function formatDate(value, includeTime = true) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return '--';
@@ -106,8 +119,8 @@ function toneFor(value) {
 
 function stateTone(card) {
   const text = `${card.value}`.toLowerCase();
-  if (text.includes('risk-on') || text.includes('easing') || text.includes('weaker') || text.includes('bid')) return 'positive';
-  if (text.includes('risk-off') || text.includes('rising') || text.includes('stronger') || text.includes('pressure')) return 'negative';
+  if (text.includes('risk-on') || text.includes('easing') || text.includes('lower') || text.includes('weaker') || text.includes('bid')) return 'positive';
+  if (text.includes('risk-off') || text.includes('rising') || text.includes('higher') || text.includes('stronger') || text.includes('pressure')) return 'negative';
   return 'neutral';
 }
 
@@ -278,7 +291,7 @@ function renderChart() {
     bubble.style.top = `${y}px`;
     bubble.style.width = `${size}px`;
     bubble.style.height = `${size}px`;
-    bubble.title = `${row.name}: ${formatPercent(row.displayReturn)}`;
+    bubble.title = `${row.name}: ${formatPercent(row.displayReturn)} · ${row.trend?.label || 'Trend unavailable'}`;
     bubble.innerHTML = `<span class="bubble-content"><strong>${row.displaySymbol || row.symbol}</strong><span>${formatPercent(row.displayReturn, 1)}</span></span>`;
     bubble.addEventListener('click', () => openDrawer(row.symbol));
     elements.chart.appendChild(bubble);
@@ -332,7 +345,7 @@ function renderRankings() {
       ${list.map((row, index) => `
         <button class="rank-row" type="button" data-drawer-symbol="${row.symbol}">
           <span class="rank-number">${index + 1}</span>
-          <span class="rank-name"><strong>${row.displaySymbol || row.symbol}</strong><span>${row.name}</span></span>
+          <span class="rank-name"><strong>${row.displaySymbol || row.symbol}</strong><span>${row.name}</span>${row.trend ? `<em data-direction="${row.trend.direction}">${row.trend.label} · ${formatTrendValue(row.trend.distance20, row.trend.moveUnit)} vs 20D</em>` : ''}</span>
           <strong class="${toneFor(row[metric])}">${formatPercent(row[metric])}</strong>
         </button>
       `).join('')}
@@ -464,6 +477,19 @@ function openDrawer(symbol) {
     <h2>${row.displaySymbol || row.symbol}</h2>
     <p class="drawer-subhead">${row.name}</p>
     <div class="drawer-price"><span>Current level</span><strong>${formatPrice(row)}</strong></div>
+    ${row.trend ? `
+      <section class="drawer-trend" data-direction="${row.trend.direction}">
+        <div class="drawer-trend-heading">
+          <div><span>Structural trend</span><strong>${row.trend.label}</strong></div>
+          <b>${row.trend.moveLabel} move today</b>
+        </div>
+        <p>Today ${formatTrendValue(row.trend.todayMove, row.trend.moveUnit)} · average daily move ${formatTrendValue(row.trend.averageDailyMove, row.trend.moveUnit).replace(/^\+/, '')}</p>
+        <div class="drawer-trend-grid">
+          <div><span>20D average</span><strong>${formatTrendLevel(row, row.trend.average20)}</strong><em data-direction="${row.trend.distance20 >= 0 ? 'higher' : 'lower'}">${formatTrendValue(row.trend.distance20, row.trend.moveUnit)} away</em></div>
+          <div><span>50D average</span><strong>${formatTrendLevel(row, row.trend.average50)}</strong><em data-direction="${row.trend.distance50 >= 0 ? 'higher' : 'lower'}">${formatTrendValue(row.trend.distance50, row.trend.moveUnit)} away</em></div>
+        </div>
+      </section>
+    ` : ''}
     <div class="drawer-metrics">
       ${Object.entries(METRIC_LABELS).map(([key, label]) => `
         <div class="drawer-metric"><span>${label} return</span><strong class="${toneFor(row[key])}">${formatPercent(row[key])}</strong></div>
