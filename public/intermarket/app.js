@@ -119,8 +119,20 @@ function toneFor(value) {
 
 function stateTone(card) {
   const text = `${card.value}`.toLowerCase();
-  if (text.includes('risk-on') || text.includes('easing') || text.includes('lower') || text.includes('weaker') || text.includes('bid')) return 'positive';
-  if (text.includes('risk-off') || text.includes('rising') || text.includes('higher') || text.includes('stronger') || text.includes('pressure')) return 'negative';
+  if (card.id === 'rates') {
+    if (text.includes('easing') || text.includes('lower')) return 'positive';
+    if (text.includes('rising') || text.includes('higher')) return 'negative';
+  }
+  if (card.id === 'dollar') {
+    if (text.includes('weaker') || text.includes('lower')) return 'positive';
+    if (text.includes('stronger') || text.includes('higher')) return 'negative';
+  }
+  if (card.id === 'commodities') {
+    if (text.includes('bid') || text.includes('higher')) return 'positive';
+    if (text.includes('pressure') || text.includes('lower')) return 'negative';
+  }
+  if (text.includes('risk-on')) return 'positive';
+  if (text.includes('risk-off')) return 'negative';
   return 'neutral';
 }
 

@@ -247,6 +247,27 @@ function averageFinite(values) {
   return finite.length ? finite.reduce((sum, value) => sum + value, 0) / finite.length : null;
 }
 
+function moveLabelForRatio(ratio) {
+  return !Number.isFinite(ratio)
+    ? 'Unavailable'
+    : ratio < 0.5 ? 'Quiet'
+      : ratio < 1.5 ? 'Typical'
+        : ratio < 2.5 ? 'Large' : 'Outsized';
+}
+
+function trendDetail(row, prefix = 'Today') {
+  if (!row?.trend) return null;
+  const trend = row.trend;
+  const signed = (value) => `${value >= 0 ? '+' : ''}${value.toFixed(1)}${trend.moveUnit === '%' ? '%' : ` ${trend.moveUnit}`}`;
+  return [
+    Number.isFinite(trend.todayMove)
+      ? `${prefix} ${signed(trend.todayMove)} (${trend.moveLabel.toLowerCase()})`
+      : null,
+    Number.isFinite(trend.distance20) ? `${signed(trend.distance20)} vs 20D` : null,
+    Number.isFinite(trend.distance50) ? `${signed(trend.distance50)} vs 50D` : null,
+  ].filter(Boolean).join(' · ');
+}
+
 function buildMacroState(instruments) {
   const bySymbol = new Map(instruments.map((row) => [row.symbol, row]));
   const change = (symbol) => bySymbol.get(symbol)?.changePercent;
@@ -267,35 +288,54 @@ function buildMacroState(instruments) {
     ? 'Unavailable'
     : rateMoveBps > 3 ? 'Yields rising' : rateMoveBps < -3 ? 'Yields easing' : 'Yields stable';
   const ratesDetail = Number.isFinite(rateMoveBps)
-    ? [
-      `Today ${rateMoveBps >= 0 ? '+' : ''}${rateMoveBps.toFixed(1)} bp${tenYear?.trend?.moveLabel ? ` (${tenYear.trend.moveLabel.toLowerCase()})` : ''}`,
-      Number.isFinite(tenYear?.trend?.distance20)
-        ? `${tenYear.trend.distance20 >= 0 ? '+' : ''}${tenYear.trend.distance20.toFixed(1)} bp vs 20D`
-        : null,
-      Number.isFinite(tenYear?.trend?.distance50)
-        ? `${tenYear.trend.distance50 >= 0 ? '+' : ''}${tenYear.trend.distance50.toFixed(1)} bp vs 50D`
-        : null,
-    ].filter(Boolean).join(' · ')
+    ? trendDetail(tenYear) || `10Y move ${rateMoveBps >= 0 ? '+' : ''}${rateMoveBps.toFixed(1)} bp`
     : 'Waiting for 10Y yield';
 
-  const dollarMove = change('DX-Y.NYB');
-  const dollarLabel = !Number.isFinite(dollarMove)
+  const dollar = bySymbol.get('DX-Y.NYB');
+  const dollarMove = dollar?.changePercent;
+  const dollarLabel = dollar?.trend?.label && dollar.trend.label !== 'Mixed trend'
+    ? `Dollar ${dollar.trend.label.toLowerCase()}`
+    : !Number.isFinite(dollarMove)
     ? 'Unavailable'
     : dollarMove > 0.2 ? 'Dollar stronger' : dollarMove < -0.2 ? 'Dollar weaker' : 'Dollar steady';
+  const dollarDetail = trendDetail(dollar)
+    || (Number.isFinite(dollarMove) ? `DXY ${dollarMove >= 0 ? '+' : ''}${dollarMove.toFixed(2)}%` : 'Waiting for DXY');
 
-  const commodityMoves = [change('CL=F'), change('HG=F'), change('GC=F')].filter(Number.isFinite);
+  const commodityRows = ['CL=F', 'HG=F', 'GC=F'].map((symbol) => bySymbol.get(symbol)).filter(Boolean);
+  const commodityMoves = commodityRows.map((row) => row.changePercent).filter(Number.isFinite);
   const positiveCommodities = commodityMoves.filter((value) => value > 0.2).length;
   const negativeCommodities = commodityMoves.filter((value) => value < -0.2).length;
-  const commodityLabel = commodityMoves.length < 2
+  const commodityTrends = commodityRows.map((row) => row.trend).filter(Boolean);
+  const higherCommodityTrends = commodityTrends.filter((trend) => trend.direction === 'higher').length;
+  const lowerCommodityTrends = commodityTrends.filter((trend) => trend.direction === 'lower').length;
+  const commodityLabel = commodityTrends.length >= 2
+    ? higherCommodityTrends >= 2 ? 'Commodities trending higher'
+      : lowerCommodityTrends >= 2 ? 'Commodities trending lower' : 'Commodity trends mixed'
+    : commodityMoves.length < 2
     ? 'Unavailable'
     : positiveCommodities >= 2 ? 'Commodity bid' : negativeCommodities >= 2 ? 'Commodity pressure' : 'Commodity split';
+  const averageCommodityMoveRatio = averageFinite(commodityTrends.map((trend) =>
+    Number.isFinite(trend.todayMove) && Number.isFinite(trend.medianDailyMove) && trend.medianDailyMove > 0
+      ? Math.abs(trend.todayMove) / trend.medianDailyMove
+      : null
+  ));
+  const commodityDistance20 = averageFinite(commodityTrends.map((trend) => trend.distance20));
+  const commodityDistance50 = averageFinite(commodityTrends.map((trend) => trend.distance50));
+  const commodityMoveLabel = moveLabelForRatio(averageCommodityMoveRatio);
+  const commodityDetail = commodityTrends.length >= 2
+    ? [
+      `Today's moves ${commodityMoveLabel.toLowerCase()}`,
+      Number.isFinite(commodityDistance20) ? `avg ${commodityDistance20 >= 0 ? '+' : ''}${commodityDistance20.toFixed(1)}% vs 20D` : null,
+      Number.isFinite(commodityDistance50) ? `avg ${commodityDistance50 >= 0 ? '+' : ''}${commodityDistance50.toFixed(1)}% vs 50D` : null,
+    ].filter(Boolean).join(' · ')
+    : `${positiveCommodities} rising / ${negativeCommodities} falling`;
 
   return {
     cards: [
       { id: 'risk', label: 'Risk tone', value: riskLabel, detail: Number.isFinite(riskAverage) ? `Equity proxy average ${riskAverage >= 0 ? '+' : ''}${riskAverage.toFixed(2)}%` : 'Waiting for equity proxies' },
       { id: 'rates', label: 'Rates', value: ratesLabel, detail: ratesDetail },
-      { id: 'dollar', label: 'US dollar', value: dollarLabel, detail: Number.isFinite(dollarMove) ? `DXY ${dollarMove >= 0 ? '+' : ''}${dollarMove.toFixed(2)}%` : 'Waiting for DXY' },
-      { id: 'commodities', label: 'Commodity pulse', value: commodityLabel, detail: `${positiveCommodities} rising / ${negativeCommodities} falling` },
+      { id: 'dollar', label: 'US dollar', value: dollarLabel, detail: dollarDetail },
+      { id: 'commodities', label: 'Commodity pulse', value: commodityLabel, detail: commodityDetail },
     ],
     summary: `${riskLabel}. ${ratesLabel}. ${dollarLabel}. ${commodityLabel}.`,
   };
