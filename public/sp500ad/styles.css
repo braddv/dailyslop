@@ -290,6 +290,95 @@ h1 {
   font-size: 0.82rem;
 }
 
+.market-context-strip {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(86, 194, 255, 0.22);
+  border-radius: 14px;
+  background:
+    linear-gradient(120deg, rgba(86, 194, 255, 0.09), transparent 46%),
+    rgba(13, 18, 28, 0.8);
+}
+
+.market-context-strip.risk-on {
+  border-color: rgba(101, 214, 166, 0.3);
+}
+
+.market-context-strip.risk-off {
+  border-color: rgba(255, 143, 156, 0.3);
+}
+
+.market-context-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.market-context-heading p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.market-context-heading .momentum-kicker {
+  margin: 0;
+  color: var(--accent);
+}
+
+.market-context-heading a {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.market-context-heading a:hover {
+  text-decoration: underline;
+}
+
+.market-context-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.market-context-metrics span {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 9px;
+  background: rgba(8, 12, 20, 0.42);
+}
+
+.market-context-metrics small,
+.market-context-metrics strong {
+  display: block;
+}
+
+.market-context-metrics small,
+.market-context-asof,
+.market-context-loading {
+  color: var(--muted);
+  font-size: 0.64rem;
+}
+
+.market-context-metrics strong {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.market-context-asof {
+  display: block;
+  margin-top: 8px;
+}
+
 .action-board-view .confluence-scanner {
   margin-left: 0;
 }
@@ -2477,6 +2566,19 @@ h1 {
   .action-board-title-row {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .market-context-heading {
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .market-context-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .market-context-metrics span:first-child {
+    grid-column: 1 / -1;
   }
 
   .ticker-search {
