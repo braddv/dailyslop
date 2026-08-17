@@ -10,6 +10,10 @@ import {
   buildBullishRegimeBacktest,
   regimeCoverage,
 } from "./_lib/backtests.js";
+import {
+  buildMarketContextSnapshot,
+  marketContextCoverage,
+} from "./_lib/market-context.js";
 
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 const OUTCOME_RESULT_LIMIT = 5000;
@@ -132,6 +136,40 @@ async function ensureSchema() {
   await sql`
     CREATE INDEX IF NOT EXISTS signal_regimes_scope_time_idx
     ON signal_regimes (scope_key, snapshot_at DESC)
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS signal_market_contexts (
+      snapshot_at TIMESTAMPTZ PRIMARY KEY REFERENCES signal_runs(snapshot_at) ON DELETE CASCADE,
+      source_as_of TIMESTAMPTZ,
+      evidence_through TIMESTAMPTZ NOT NULL,
+      methodology_version INTEGER NOT NULL,
+      availability TEXT NOT NULL,
+      overall_regime TEXT,
+      regime_confidence TEXT,
+      regime_evidence_through TIMESTAMPTZ,
+      risk_tone TEXT,
+      rates_tone TEXT,
+      dollar_tone TEXT,
+      commodity_tone TEXT,
+      breadth_advancers INTEGER,
+      breadth_decliners INTEGER,
+      breadth_unchanged INTEGER,
+      breadth_total INTEGER,
+      breadth_percent DOUBLE PRECISION,
+      leading_sectors JSONB NOT NULL DEFAULT '[]'::jsonb,
+      lagging_sectors JSONB NOT NULL DEFAULT '[]'::jsonb,
+      instruments JSONB NOT NULL DEFAULT '[]'::jsonb,
+      relationships JSONB NOT NULL DEFAULT '[]'::jsonb,
+      summary TEXT,
+      context JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CHECK (evidence_through <= snapshot_at)
+    )
+  `;
+  await sql`
+    ALTER TABLE signal_market_contexts
+    ADD COLUMN IF NOT EXISTS regime_evidence_through TIMESTAMPTZ
   `;
   await sql`
     DELETE FROM signal_runs r
@@ -582,6 +620,67 @@ async function persistSnapshot(rows, sourceAsOf, kind) {
   await persistSnapshotRows(rows);
 }
 
+async function persistMarketContext(record) {
+  if (!record) return;
+  if (new Date(record.evidenceThrough).getTime() > new Date(record.snapshotAt).getTime()) {
+    throw new Error("Market context cannot use evidence later than its signal snapshot");
+  }
+  await sql`
+    INSERT INTO signal_market_contexts (
+      snapshot_at, source_as_of, evidence_through, methodology_version, availability,
+      overall_regime, regime_confidence, regime_evidence_through, risk_tone, rates_tone, dollar_tone,
+      commodity_tone, breadth_advancers, breadth_decliners, breadth_unchanged,
+      breadth_total, breadth_percent, leading_sectors, lagging_sectors, instruments,
+      relationships, summary, context
+    )
+    VALUES (
+      ${record.snapshotAt}, ${record.sourceAsOf}, ${record.evidenceThrough},
+      ${record.methodologyVersion}, ${record.availability}, ${record.overallRegime},
+      ${record.regimeConfidence}, ${record.regimeEvidenceThrough}, ${record.riskTone}, ${record.ratesTone},
+      ${record.dollarTone}, ${record.commodityTone}, ${record.breadth.advancers},
+      ${record.breadth.decliners}, ${record.breadth.unchanged}, ${record.breadth.total},
+      ${record.breadth.percentAdvancing}, ${JSON.stringify(record.leadingSectors)}::jsonb,
+      ${JSON.stringify(record.laggingSectors)}::jsonb, ${JSON.stringify(record.instruments)}::jsonb,
+      ${JSON.stringify(record.relationships)}::jsonb, ${record.summary},
+      ${JSON.stringify(record)}::jsonb
+    )
+    ON CONFLICT (snapshot_at)
+    DO UPDATE SET
+      source_as_of = EXCLUDED.source_as_of,
+      evidence_through = EXCLUDED.evidence_through,
+      methodology_version = EXCLUDED.methodology_version,
+      availability = EXCLUDED.availability,
+      overall_regime = EXCLUDED.overall_regime,
+      regime_confidence = EXCLUDED.regime_confidence,
+      regime_evidence_through = EXCLUDED.regime_evidence_through,
+      risk_tone = EXCLUDED.risk_tone,
+      rates_tone = EXCLUDED.rates_tone,
+      dollar_tone = EXCLUDED.dollar_tone,
+      commodity_tone = EXCLUDED.commodity_tone,
+      breadth_advancers = EXCLUDED.breadth_advancers,
+      breadth_decliners = EXCLUDED.breadth_decliners,
+      breadth_unchanged = EXCLUDED.breadth_unchanged,
+      breadth_total = EXCLUDED.breadth_total,
+      breadth_percent = EXCLUDED.breadth_percent,
+      leading_sectors = EXCLUDED.leading_sectors,
+      lagging_sectors = EXCLUDED.lagging_sectors,
+      instruments = EXCLUDED.instruments,
+      relationships = EXCLUDED.relationships,
+      summary = EXCLUDED.summary,
+      context = EXCLUDED.context,
+      updated_at = NOW()
+  `;
+}
+
+async function marketRegimeAt(snapshotAt) {
+  const [row] = await sql`
+    SELECT regime, confidence, evidence_through
+    FROM signal_regimes
+    WHERE snapshot_at = ${snapshotAt} AND scope_key = 'market'
+  `;
+  return row || null;
+}
+
 function requestOrigin(req) {
   const host = req.headers["x-forwarded-host"] || req.headers.host;
   const protocol = req.headers["x-forwarded-proto"] || (String(host).includes("localhost") ? "http" : "https");
@@ -593,6 +692,14 @@ async function fetchMarketPayload(req, refresh) {
     headers: { accept: "application/json" },
   });
   if (!response.ok) throw new Error(`Market data refresh failed with ${response.status}`);
+  return response.json();
+}
+
+async function fetchIntermarketPayload(req) {
+  const response = await fetch(`${requestOrigin(req)}/api/intermarket`, {
+    headers: { accept: "application/json" },
+  });
+  if (!response.ok) throw new Error(`Intermarket data refresh failed with ${response.status}`);
   return response.json();
 }
 
@@ -747,20 +854,49 @@ async function capture(req) {
   if (["Sat", "Sun"].includes(ny.weekday) || ny.hour < 14) {
     return { status: 200, body: { skipped: true, reason: "Before the daily 2 PM snapshot window" } };
   }
-  const payload = await fetchMarketPayload(req, true);
+  const [payload, intermarketResult] = await Promise.all([
+    fetchMarketPayload(req, true),
+    fetchIntermarketPayload(req)
+      .then((value) => ({ value }))
+      .catch((error) => ({ error })),
+  ]);
   const cutoffs = historicalCutoffs(payload, 1, 14);
   if (!cutoffs.length) throw new Error("No eligible 2 PM market sessions found");
   const prior = await priorSnapshots();
   let saved = 0;
+  const captured = [];
   for (const cutoff of cutoffs) {
     const result = buildSignalSnapshot(payload, cutoff, prior);
     await persistSnapshot(result.rows, payload.asOf, "capture");
+    captured.push({ cutoff, rows: result.rows });
     prior.push(result.snapshot);
     if (prior.length > 5) prior.shift();
     saved += result.rows.length;
   }
   const outcomes = await refreshSignalOutcomes(true);
   const regimes = await refreshRegimes(true);
+  let contextsSaved = 0;
+  const contextWarnings = [];
+  if (intermarketResult.value) {
+    for (const snapshot of captured) {
+      const snapshotAt = new Date(snapshot.cutoff * 1000).toISOString();
+      try {
+        const regime = await marketRegimeAt(snapshotAt);
+        const context = buildMarketContextSnapshot({
+          snapshotAt,
+          signalRows: snapshot.rows,
+          intermarketPayload: intermarketResult.value,
+          regime,
+        });
+        await persistMarketContext(context);
+        contextsSaved += 1;
+      } catch (error) {
+        contextWarnings.push(`${snapshotAt}: ${error.message}`);
+      }
+    }
+  } else {
+    contextWarnings.push(intermarketResult.error?.message || "Intermarket data unavailable");
+  }
   return {
     status: 200,
     body: {
@@ -770,6 +906,8 @@ async function capture(req) {
       rowsSaved: saved,
       outcomesRefreshed: outcomes.refreshed,
       regimesRefreshed: regimes.refreshed,
+      marketContextsSaved: contextsSaved,
+      marketContextWarnings: contextWarnings,
     },
   };
 }
@@ -837,10 +975,31 @@ async function history(req) {
     WHERE snapshot_at = (SELECT MAX(snapshot_at) FROM signal_regimes)
     ORDER BY scope_key ASC
   `;
+  const marketContexts = await sql`
+    WITH recent AS (
+      SELECT snapshot_at
+      FROM signal_runs
+      ORDER BY snapshot_at DESC
+      LIMIT ${limit}
+    )
+    SELECT
+      c.snapshot_at, c.source_as_of, c.evidence_through, c.methodology_version,
+      c.availability, c.overall_regime, c.regime_confidence, c.regime_evidence_through, c.risk_tone,
+      c.rates_tone, c.dollar_tone, c.commodity_tone, c.breadth_advancers,
+      c.breadth_decliners, c.breadth_unchanged, c.breadth_total,
+      c.breadth_percent, c.leading_sectors, c.lagging_sectors, c.instruments,
+      c.relationships, c.summary, c.context
+    FROM signal_market_contexts c
+    JOIN recent r USING (snapshot_at)
+    ORDER BY c.snapshot_at DESC
+  `;
+  const sessions = [...new Set(rows.map((row) => new Date(row.snapshot_at).toISOString()))];
   const response = {
-    sessions: [...new Set(rows.map((row) => new Date(row.snapshot_at).toISOString()))],
+    sessions,
     rows,
     regimes,
+    marketContexts,
+    marketContextCoverage: marketContextCoverage(sessions, marketContexts),
   };
   if (!includeOutcomes) return response;
   const outcomeRows = await sql`

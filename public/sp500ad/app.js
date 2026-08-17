@@ -64,6 +64,7 @@ const longNegativeConfluenceList = document.getElementById("longNegativeConfluen
 const workspaceNavButtons = document.querySelectorAll(".workspace-nav-btn");
 const marketReplayView = document.getElementById("marketReplayView");
 const actionBoardView = document.getElementById("actionBoardView");
+const marketContextStrip = document.getElementById("marketContextStrip");
 const regimeMonitor = document.getElementById("regimeMonitor");
 const newAccelerationList = document.getElementById("newAccelerationList");
 const confirmedLeadersList = document.getElementById("confirmedLeadersList");
@@ -127,6 +128,8 @@ let activeActionDetail = null;
 let actionBoardSide = "bullish";
 let actionHistoryData = null;
 let actionHistoryLimit = 0;
+let liveMarketContext = null;
+let marketContextLoading = false;
 let drawerHistoryLoaded = false;
 let signalHistoryData = null;
 let selectedHistorySession = null;
@@ -2910,6 +2913,95 @@ function regimeAverage(value) {
   return `${number >= 0 ? "+" : ""}${number.toFixed(2)}%`;
 }
 
+function signedContextValue(value, suffix = "%", digits = 1) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "--";
+  return `${number >= 0 ? "+" : ""}${number.toFixed(digits)}${suffix}`;
+}
+
+function renderMarketContext() {
+  if (!marketContextStrip || appView !== "action") return;
+  const saved = actionHistoryData?.marketContexts?.[0]?.context || null;
+  if (!liveMarketContext && !saved) {
+    const message = marketContextLoading
+      ? "Loading live market context…"
+      : "Live macro context is temporarily unavailable.";
+    marketContextStrip.innerHTML = `<div class="market-context-loading">${message}</div>`;
+    return;
+  }
+  const regimes = actionHistoryData?.regimes || [];
+  const marketRegime = regimes.find((row) => row.scope_key === "market");
+  const liveCards = new Map(
+    (liveMarketContext?.macroState?.cards || []).map((card) => [card.id, card])
+  );
+  const breadthStocks = lastStocks.filter((stock) => Number.isFinite(Number(stock.changePercent)));
+  const advancers = breadthStocks.filter((stock) => Number(stock.changePercent) > 0).length;
+  const breadthPercent = breadthStocks.length ? (advancers / breadthStocks.length) * 100 : null;
+  const leadingSector = lastBenchmarks
+    .filter((row) => row.symbol !== APP_CONFIG.broadSymbol && Number.isFinite(Number(row.changePercent)))
+    .sort((left, right) => Number(right.changePercent) - Number(left.changePercent))[0];
+  const instruments = new Map(
+    (liveMarketContext?.instruments || saved?.instruments || []).map((row) => [row.symbol, row])
+  );
+  const vixMove = instruments.get("^VIX")?.changePercent;
+  const tenYearMove = Number(instruments.get("^TNX")?.change) * 100;
+  const riskTone = liveCards.get("risk")?.value || saved?.riskTone || "Unavailable";
+  const ratesTone = liveCards.get("rates")?.value || saved?.ratesTone || "Unavailable";
+  const breadthDisplay = Number.isFinite(breadthPercent)
+    ? `${Math.round(breadthPercent)}% advancing`
+    : Number.isFinite(saved?.breadth?.percentAdvancing)
+      ? `${Math.round(saved.breadth.percentAdvancing)}% advancing`
+      : "Unavailable";
+  const leaderLabel = leadingSector
+    ? `${leadingSector.sector} ${signedContextValue(leadingSector.changePercent)}`
+    : saved?.leadingSectors?.[0]
+      ? `${saved.leadingSectors[0].sector} ${signedContextValue(saved.leadingSectors[0].changePercent)}`
+      : "Unavailable";
+  const pressure = [
+    Number.isFinite(Number(vixMove)) ? `VIX ${signedContextValue(vixMove)}` : null,
+    Number.isFinite(tenYearMove) ? `10Y ${signedContextValue(tenYearMove, " bp")}` : null,
+  ].filter(Boolean).join(" · ") || ratesTone;
+  const contextTime = liveMarketContext?.asOf || saved?.snapshotAt || null;
+  marketContextStrip.className = `market-context-strip ${regimeClassName(riskTone)}`;
+  marketContextStrip.innerHTML = `
+    <div class="market-context-heading">
+      <div>
+        <p class="momentum-kicker">Live market context</p>
+        <p>${liveMarketContext?.macroState?.summary || saved?.summary || "Current cross-asset conditions"}</p>
+      </div>
+      <a href="/intermarket">View Macro Radar →</a>
+    </div>
+    <div class="market-context-metrics">
+      <span><small>Regime</small><strong>${marketRegime?.regime || saved?.overallRegime || "Awaiting snapshot"}</strong></span>
+      <span><small>Risk tone</small><strong>${riskTone}</strong></span>
+      <span><small>Breadth</small><strong>${breadthDisplay}</strong></span>
+      <span><small>Leading sector</small><strong>${leaderLabel}</strong></span>
+      <span><small>Pressure</small><strong>${pressure}</strong></span>
+    </div>
+    <small class="market-context-asof">${contextTime ? `Live data ${formatDate(contextTime)}` : "Saved point-in-time context"}</small>
+  `;
+}
+
+async function loadMarketContext() {
+  if (!marketContextStrip || liveMarketContext || marketContextLoading) {
+    renderMarketContext();
+    return;
+  }
+  marketContextLoading = true;
+  renderMarketContext();
+  try {
+    const response = await fetch("/api/intermarket");
+    const data = await readApiJson(response);
+    if (!response.ok) throw new Error(data.error || `Macro context unavailable (${response.status})`);
+    liveMarketContext = data;
+  } catch (error) {
+    console.warn("Market context unavailable:", error.message);
+  } finally {
+    marketContextLoading = false;
+    renderMarketContext();
+  }
+}
+
 function renderRegimeMonitor() {
   if (!regimeMonitor || appView !== "action") return;
   const regimes = actionHistoryData?.regimes || [];
@@ -3038,7 +3130,10 @@ async function loadSignalHistory(scope = appView === "action" ? "action" : "hist
 
 function renderConfluenceScanner(watchlistOnly = false) {
   if (!confluenceScanner || !negativeConfluenceScanner) return;
-  if (!watchlistOnly) renderRegimeMonitor();
+  if (!watchlistOnly) {
+    renderMarketContext();
+    renderRegimeMonitor();
+  }
   const visibleUniverse = watchlistOnly ? lastStocks : getBaseScanUniverse();
   const available = visibleUniverse.length >= 2;
   const actionBoardBullish = appView === "action" && actionBoardSide === "bullish";
@@ -3185,6 +3280,7 @@ function setAppView(view) {
   if (showActionBoard) {
     stopReplay();
     updateSubhead();
+    loadMarketContext();
     if (actionHistoryData) {
       renderConfluenceScanner();
     } else {
@@ -3588,6 +3684,7 @@ async function loadData(forceRefresh = false) {
     actionPeriodRowsCache.clear();
     populateTickerSearch();
     buildReplayTimeline();
+    if (appView === "action") renderMarketContext();
     if (appView === "watchlist") renderWatchlist();
     else buildChart(lastStocks);
 
