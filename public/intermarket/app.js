@@ -18,9 +18,21 @@ const METRIC_LABELS = {
   perf1m: '1M',
   perf3m: '3M',
 };
+const SECTOR_ORDER = [
+  'Information Technology', 'Communication Services', 'Consumer Discretionary',
+  'Consumer Staples', 'Energy', 'Financials', 'Health Care', 'Industrials',
+  'Materials', 'Real Estate', 'Utilities',
+];
+const SECTOR_SHORT_NAMES = {
+  'Information Technology': 'Technology',
+  'Communication Services': 'Communication',
+  'Consumer Discretionary': 'Discretionary',
+  'Consumer Staples': 'Staples',
+};
 
 const state = {
   data: null,
+  breadthData: null,
   metric: 'changePercent',
   mode: 'live',
   frames: [],
@@ -34,6 +46,10 @@ const elements = {
   cacheState: document.getElementById('cacheState'),
   macroSummary: document.getElementById('macroSummary'),
   stateGrid: document.getElementById('stateGrid'),
+  breadthSummary: document.getElementById('breadthSummary'),
+  breadthOverview: document.getElementById('breadthOverview'),
+  breadthAsOf: document.getElementById('breadthAsOf'),
+  sectorBreadthGrid: document.getElementById('sectorBreadthGrid'),
   chart: document.getElementById('chart'),
   chartScroll: document.getElementById('chartScroll'),
   chartDescription: document.getElementById('chartDescription'),
@@ -104,6 +120,97 @@ function renderMacroState() {
       <p>${card.detail}</p>
     </article>
   `).join('');
+}
+
+function breadthCounts(rows) {
+  return rows.reduce((counts, row) => {
+    if (!finite(row.changePercent)) return counts;
+    counts.total += 1;
+    if (row.changePercent > 0) counts.advancers += 1;
+    else if (row.changePercent < 0) counts.decliners += 1;
+    else counts.unchanged += 1;
+    return counts;
+  }, { advancers: 0, decliners: 0, unchanged: 0, total: 0 });
+}
+
+function breadthInterpretation(percentAdvancing, spyReturn) {
+  if (!finite(percentAdvancing)) return { label: 'Breadth unavailable', tone: 'neutral', detail: 'No valid constituent changes.' };
+  if (percentAdvancing >= 60) {
+    if (finite(spyReturn) && spyReturn < -0.2) {
+      return { label: 'Positive divergence', tone: 'positive', detail: 'Most stocks are advancing despite a lower index.' };
+    }
+    return { label: 'Broad participation', tone: 'positive', detail: 'Gains are supported by most S&P 500 stocks.' };
+  }
+  if (percentAdvancing <= 40) {
+    const label = finite(spyReturn) && spyReturn > 0.2 ? 'Narrow rally' : 'Broad selling';
+    const detail = label === 'Narrow rally'
+      ? 'The index is up despite weak participation beneath the surface.'
+      : 'Decliners dominate across the S&P 500.';
+    return { label, tone: 'negative', detail };
+  }
+  if (finite(spyReturn) && spyReturn > 0.2 && percentAdvancing < 50) {
+    return { label: 'Narrow rally', tone: 'negative', detail: 'Index gains are concentrated in fewer stocks.' };
+  }
+  return { label: 'Mixed breadth', tone: 'neutral', detail: 'Participation is balanced without a decisive internal trend.' };
+}
+
+function renderBreadth() {
+  const rows = state.breadthData?.stocks || [];
+  if (!rows.length) {
+    elements.breadthSummary.textContent = 'S&P 500 breadth is temporarily unavailable.';
+    elements.breadthOverview.innerHTML = '<div class="breadth-error">Macro prices are still available; breadth will retry on the next refresh.</div>';
+    elements.sectorBreadthGrid.innerHTML = '';
+    elements.breadthAsOf.textContent = '';
+    return;
+  }
+
+  const counts = breadthCounts(rows);
+  const percentAdvancing = counts.total ? (counts.advancers / counts.total) * 100 : null;
+  const netBreadth = counts.advancers - counts.decliners;
+  const adRatio = counts.decliners ? counts.advancers / counts.decliners : null;
+  const spy = (state.breadthData.benchmarks || []).find((row) => row.symbol === 'SPY');
+  const interpretation = breadthInterpretation(percentAdvancing, spy?.changePercent);
+
+  elements.breadthSummary.innerHTML = `<strong class="breadth-callout ${interpretation.tone}">${interpretation.label}</strong><span>${interpretation.detail}</span>`;
+  elements.breadthOverview.innerHTML = `
+    <article class="breadth-stat advancing"><span>Advancers</span><strong>${counts.advancers}</strong></article>
+    <article class="breadth-stat declining"><span>Decliners</span><strong>${counts.decliners}</strong></article>
+    <article class="breadth-stat"><span>Stocks advancing</span><strong>${finite(percentAdvancing) ? `${percentAdvancing.toFixed(0)}%` : '--'}</strong></article>
+    <article class="breadth-stat"><span>Net breadth</span><strong class="${toneFor(netBreadth)}">${netBreadth > 0 ? '+' : ''}${netBreadth}</strong></article>
+    <article class="breadth-stat"><span>A/D ratio</span><strong>${finite(adRatio) ? adRatio.toFixed(2) : '--'}</strong></article>
+  `;
+
+  const bySector = new Map();
+  rows.forEach((row) => {
+    if (!row.sector) return;
+    if (!bySector.has(row.sector)) bySector.set(row.sector, []);
+    bySector.get(row.sector).push(row);
+  });
+  const sectors = [...bySector.entries()].map(([sector, sectorRows]) => {
+    const sectorCounts = breadthCounts(sectorRows);
+    return {
+      sector,
+      ...sectorCounts,
+      percentAdvancing: sectorCounts.total ? (sectorCounts.advancers / sectorCounts.total) * 100 : null,
+    };
+  }).sort((left, right) => {
+    const leftIndex = SECTOR_ORDER.indexOf(left.sector);
+    const rightIndex = SECTOR_ORDER.indexOf(right.sector);
+    return (leftIndex < 0 ? 99 : leftIndex) - (rightIndex < 0 ? 99 : rightIndex);
+  });
+
+  elements.breadthAsOf.textContent = `As of ${formatDate(state.breadthData.asOf)}`;
+  elements.sectorBreadthGrid.innerHTML = sectors.map((sector) => {
+    const percent = finite(sector.percentAdvancing) ? sector.percentAdvancing : 0;
+    const tone = percent >= 55 ? 'positive' : percent <= 45 ? 'negative' : 'neutral';
+    return `
+      <article class="sector-breadth-card" data-tone="${tone}">
+        <div><strong>${SECTOR_SHORT_NAMES[sector.sector] || sector.sector}</strong><span>${sector.advancers} up · ${sector.decliners} down</span></div>
+        <b>${percent.toFixed(0)}%</b>
+        <div class="breadth-bar" aria-label="${percent.toFixed(0)} percent of ${sector.sector} stocks advancing"><i style="width:${percent}%"></i></div>
+      </article>
+    `;
+  }).join('');
 }
 
 function symlog(value) {
@@ -385,6 +492,7 @@ function renderAll() {
     ? `${state.data.failures.length} instruments or intervals unavailable`
     : `${state.data.instruments.length} instruments · ${state.data.source}`;
   renderMacroState();
+  renderBreadth();
   renderLegend();
   renderRelationships();
   updateReplayUi();
@@ -397,10 +505,20 @@ async function loadData(refresh = false) {
   elements.refreshButton.disabled = true;
   elements.refreshButton.textContent = 'Loading…';
   try {
-    const response = await fetch(`/api/intermarket${refresh ? '?refresh=true' : ''}`, { cache: 'no-store' });
+    const [response, breadthResult] = await Promise.all([
+      fetch(`/api/intermarket${refresh ? '?refresh=true' : ''}`, { cache: 'no-store' }),
+      fetch('/api/sector-ad', { cache: 'no-store' })
+        .then(async (breadthResponse) => {
+          const payload = await breadthResponse.json();
+          if (!breadthResponse.ok || !Array.isArray(payload.stocks)) throw new Error(payload.error || `HTTP ${breadthResponse.status}`);
+          return payload;
+        })
+        .catch(() => null),
+    ]);
     const payload = await response.json();
     if (!response.ok || payload.success !== true) throw new Error(payload.error || `HTTP ${response.status}`);
     state.data = payload;
+    state.breadthData = breadthResult;
     state.mode = 'live';
     state.frames = [];
     state.frameIndex = 0;
