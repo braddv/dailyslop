@@ -104,6 +104,41 @@ test('macro state uses equity, volatility, yield, dollar, and commodity inputs w
   assert.match(result.summary, /Commodity bid/);
 });
 
+test('macro state exposes structural dollar and aggregate commodity trend context', () => {
+  const trend = (direction, distance20, distance50, todayMove = 1, medianDailyMove = 1) => ({
+    label: `Trending ${direction}`,
+    direction,
+    distance20,
+    distance50,
+    todayMove,
+    medianDailyMove,
+    moveLabel: 'Typical',
+    moveUnit: '%',
+  });
+  const rows = [
+    { symbol: 'SPY', changePercent: 0 },
+    { symbol: 'QQQ', changePercent: 0 },
+    { symbol: 'IWM', changePercent: 0 },
+    { symbol: 'EEM', changePercent: 0 },
+    { symbol: '^VIX', changePercent: 0 },
+    { symbol: '^TNX', change: 0.02 },
+    { symbol: 'DX-Y.NYB', changePercent: -0.2, trend: trend('lower', -1.2, -2.4, -0.2, 0.2) },
+    { symbol: 'CL=F', changePercent: 1, trend: trend('higher', 3, 5) },
+    { symbol: 'HG=F', changePercent: 0.5, trend: trend('higher', 2, 4) },
+    { symbol: 'GC=F', changePercent: -0.2, trend: trend('mixed', -1, 0) },
+  ];
+  const result = buildMacroState(rows);
+  const dollar = result.cards.find((card) => card.id === 'dollar');
+  const commodities = result.cards.find((card) => card.id === 'commodities');
+  assert.equal(dollar.value, 'Dollar trending lower');
+  assert.match(dollar.detail, /typical/);
+  assert.match(dollar.detail, /vs 20D/);
+  assert.equal(commodities.value, 'Commodities trending higher');
+  assert.match(commodities.detail, /moves typical/);
+  assert.match(commodities.detail, /avg \+1\.3% vs 20D/);
+  assert.match(commodities.detail, /avg \+3\.0% vs 50D/);
+});
+
 test('replay points deduplicate timestamps and percent change rejects invalid bases', () => {
   assert.deepEqual(replayPoints([100, 100, 200], [1, 2, 3]), [[100, 2], [200, 3]]);
   assert.equal(percentChange(2, 0), null);
