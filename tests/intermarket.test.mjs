@@ -7,6 +7,7 @@ const {
   buildDailyInstrument,
   buildMacroState,
   buildRelationships,
+  buildTrendContext,
   percentChange,
   replayPoints,
 } = require('../api/_lib/intermarket.js');
@@ -32,6 +33,37 @@ test('daily instrument preserves the instrument definition and calculates normal
   assert.ok(Math.abs(row.changePercent - 10) < 1e-9);
   assert.ok(Array.isArray(row.replayDaily));
   assert.equal(row.replayDaily.at(-1)[1], 100);
+});
+
+test('trend context separates daily move size from 20D and 50D structure', () => {
+  const replayDaily = Array.from({ length: 60 }, (_, index) => [index, 4 + index * 0.01]);
+  const trend = buildTrendContext({
+    currentPrice: 4.62,
+    previousClose: 4.60,
+    replayDaily,
+    format: 'yield',
+  });
+  assert.equal(trend.label, 'Trending higher');
+  assert.equal(trend.direction, 'higher');
+  assert.equal(trend.moveUnit, 'bp');
+  assert.ok(Math.abs(trend.todayMove - 2) < 1e-9);
+  assert.ok(trend.distance20 > 0);
+  assert.ok(trend.distance50 > trend.distance20);
+  assert.equal(trend.moveLabel, 'Large');
+});
+
+test('trend context uses percentage distances for non-yield assets', () => {
+  const replayDaily = Array.from({ length: 60 }, (_, index) => [index, 160 - index]);
+  const trend = buildTrendContext({
+    currentPrice: 99,
+    previousClose: 100,
+    replayDaily,
+  });
+  assert.equal(trend.label, 'Trending lower');
+  assert.equal(trend.direction, 'lower');
+  assert.equal(trend.moveUnit, '%');
+  assert.ok(trend.distance20 < 0);
+  assert.ok(trend.distance50 < 0);
 });
 
 test('relationship returns compare matched percentage horizons', () => {
