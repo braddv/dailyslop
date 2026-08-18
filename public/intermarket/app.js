@@ -184,13 +184,30 @@ function renderSystematicTrend() {
 
 function breadthCounts(rows) {
   return rows.reduce((counts, row) => {
-    if (!finite(row.changePercent)) return counts;
+    if (!finite(row.breadthReturn)) return counts;
     counts.total += 1;
-    if (row.changePercent > 0) counts.advancers += 1;
-    else if (row.changePercent < 0) counts.decliners += 1;
+    if (row.breadthReturn > 0) counts.advancers += 1;
+    else if (row.breadthReturn < 0) counts.decliners += 1;
     else counts.unchanged += 1;
     return counts;
   }, { advancers: 0, decliners: 0, unchanged: 0, total: 0 });
+}
+
+function breadthReturn(row) {
+  if (!row) return null;
+  if (state.mode === 'live') return row?.[state.metric];
+  const timestamp = state.frames[state.frameIndex]?.timestamp;
+  const baselineTimestamp = state.frames[0]?.timestamp;
+  if (!finite(timestamp) || !finite(baselineTimestamp)) return null;
+  const points = sourceForMode(row, state.mode);
+  const base = lowerBoundPoint(points, baselineTimestamp)?.[1];
+  const current = lowerBoundPoint(points, timestamp)?.[1];
+  if (!finite(base) || !finite(current) || base === 0) return null;
+  return ((current / base) - 1) * 100;
+}
+
+function breadthContextLabel() {
+  return state.mode === 'live' ? METRIC_LABELS[state.metric] : `${state.mode.toUpperCase()} replay`;
 }
 
 function breadthInterpretation(percentAdvancing, spyReturn) {
@@ -215,7 +232,10 @@ function breadthInterpretation(percentAdvancing, spyReturn) {
 }
 
 function renderBreadth() {
-  const rows = state.breadthData?.stocks || [];
+  const rows = (state.breadthData?.stocks || []).map((row) => ({
+    ...row,
+    breadthReturn: breadthReturn(row),
+  }));
   if (!rows.length) {
     elements.breadthSummary.textContent = 'S&P 500 breadth is temporarily unavailable.';
     elements.breadthOverview.innerHTML = '<div class="breadth-error">Macro prices are still available; breadth will retry on the next refresh.</div>';
@@ -229,9 +249,13 @@ function renderBreadth() {
   const netBreadth = counts.advancers - counts.decliners;
   const adRatio = counts.decliners ? counts.advancers / counts.decliners : null;
   const spy = (state.breadthData.benchmarks || []).find((row) => row.symbol === 'SPY');
-  const interpretation = breadthInterpretation(percentAdvancing, spy?.changePercent);
+  const spyReturn = breadthReturn(spy);
+  const interpretation = state.mode !== 'live' && state.frameIndex === 0
+    ? { label: 'Replay baseline', tone: 'neutral', detail: 'All stocks are measured from this shared starting frame.' }
+    : breadthInterpretation(percentAdvancing, spyReturn);
+  const contextLabel = breadthContextLabel();
 
-  elements.breadthSummary.innerHTML = `<strong class="breadth-callout ${interpretation.tone}">${interpretation.label}</strong><span>${interpretation.detail}</span>`;
+  elements.breadthSummary.innerHTML = `<strong class="breadth-callout ${interpretation.tone}">${interpretation.label} · ${contextLabel}</strong><span>${interpretation.detail}</span>`;
   elements.breadthOverview.innerHTML = `
     <article class="breadth-stat advancing"><span>Advancers</span><strong>${counts.advancers}</strong></article>
     <article class="breadth-stat declining"><span>Decliners</span><strong>${counts.decliners}</strong></article>
@@ -259,10 +283,15 @@ function renderBreadth() {
     return (leftIndex < 0 ? 99 : leftIndex) - (rightIndex < 0 ? 99 : rightIndex);
   });
 
-  elements.breadthAsOf.textContent = `As of ${formatDate(state.breadthData.asOf)}`;
+  const breadthTimestamp = state.mode === 'live'
+    ? state.breadthData.asOf
+    : state.frames[state.frameIndex]?.timestamp * 1000;
+  elements.breadthAsOf.textContent = `${contextLabel} · ${formatDate(breadthTimestamp)}`;
   elements.sectorBreadthGrid.innerHTML = sectors.map((sector) => {
     const percent = finite(sector.percentAdvancing) ? sector.percentAdvancing : 0;
-    const tone = percent >= 55 ? 'positive' : percent <= 45 ? 'negative' : 'neutral';
+    const tone = sector.advancers === 0 && sector.decliners === 0
+      ? 'neutral'
+      : percent >= 55 ? 'positive' : percent <= 45 ? 'negative' : 'neutral';
     return `
       <article class="sector-breadth-card" data-tone="${tone}">
         <div><strong>${SECTOR_SHORT_NAMES[sector.sector] || sector.sector}</strong><span>${sector.advancers} up · ${sector.decliners} down</span></div>
@@ -511,6 +540,7 @@ function setMode(mode) {
   updateReplayUi();
   renderChart();
   renderRankings();
+  renderBreadth();
 }
 
 function togglePlayback() {
@@ -529,6 +559,7 @@ function togglePlayback() {
     updateReplayUi();
     renderChart();
     renderRankings();
+    renderBreadth();
   }, Number(elements.speedSelect.value));
 }
 
@@ -656,6 +687,7 @@ elements.metricToggle.addEventListener('click', (event) => {
   elements.metricToggle.querySelectorAll('button').forEach((item) => item.classList.toggle('active', item === button));
   renderChart();
   renderRankings();
+  renderBreadth();
   updateReplayUi();
 });
 elements.rankingToggle.addEventListener('click', (event) => {
@@ -676,6 +708,7 @@ elements.scrubber.addEventListener('input', () => {
   updateReplayUi();
   renderChart();
   renderRankings();
+  renderBreadth();
 });
 elements.refreshButton.addEventListener('click', () => loadData(true));
 elements.drawerClose.addEventListener('click', closeDrawer);
