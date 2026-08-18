@@ -3,6 +3,8 @@ const {
   DAY_MS,
   INTERMARKET_INSTRUMENTS,
   buildDailyInstrument,
+  buildSystematicTrend,
+  buildSystematicTrendSummary,
   buildTrendContext,
   buildMacroState,
   buildRelationships,
@@ -12,7 +14,7 @@ const {
   replayPoints,
 } = require('./_lib/intermarket');
 
-const DAILY_CACHE_KEY = 'intermarket_yahoo_daily_v1';
+const DAILY_CACHE_KEY = 'intermarket_yahoo_daily_v2';
 const INTRADAY_CACHE_KEY = 'intermarket_yahoo_intraday_v1';
 const DAILY_TTL_MS = 12 * 60 * 60 * 1000;
 const INTRADAY_MARKET_TTL_MS = 10 * 60 * 1000;
@@ -74,7 +76,7 @@ async function fetchYahoo(symbols, range, interval) {
 
 async function buildDailyResponse() {
   const symbols = INTERMARKET_INSTRUMENTS.map((row) => row.symbol);
-  const result = await fetchYahoo(symbols, '1y', '1d');
+  const result = await fetchYahoo(symbols, '2y', '1d');
   const instruments = INTERMARKET_INSTRUMENTS
     .map((definition) => buildDailyInstrument(definition, result.sparkMap.get(definition.symbol.toUpperCase())))
     .filter(Boolean);
@@ -176,6 +178,7 @@ function mergeInstrument(daily, intraday = {}) {
   return {
     ...instrument,
     trend: buildTrendContext(instrument),
+    systematicTrend: buildSystematicTrend(instrument),
   };
 }
 
@@ -239,6 +242,7 @@ module.exports = async function handler(req, res) {
     },
     failures: [...(daily.failures || []), ...(intraday.failures || [])],
     macroState: buildMacroState(instruments),
+    systematicTrend: buildSystematicTrendSummary(instruments),
     relationships: buildRelationships(instruments),
     instruments,
   });

@@ -73,6 +73,214 @@ function median(values) {
   return finite.length % 2 ? finite[middle] : (finite[middle - 1] + finite[middle]) / 2;
 }
 
+function standardDeviation(values) {
+  const finite = values.filter(Number.isFinite);
+  if (finite.length < 2) return null;
+  const mean = average(finite);
+  const variance = finite.reduce((sum, value) => sum + ((value - mean) ** 2), 0) / finite.length;
+  return Math.sqrt(variance);
+}
+
+function nyDateKey(timestampMs) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(timestampMs));
+}
+
+function priceSeriesWithCurrent(replayDaily, currentPrice, nowMs) {
+  const points = replayDaily
+    .filter((point) => Number.isFinite(point?.[0]) && Number.isFinite(point?.[1]))
+    .sort((left, right) => left[0] - right[0]);
+  const values = points.map((point) => point[1]);
+  if (!Number.isFinite(currentPrice)) return values;
+  if (!points.length) return [currentPrice];
+  const latestTimestampMs = points.at(-1)[0] * 1000;
+  const latestPrice = values.at(-1);
+  if (nyDateKey(latestTimestampMs) === nyDateKey(nowMs)) values[values.length - 1] = currentPrice;
+  else if (Math.abs(currentPrice - latestPrice) > Math.max(1e-8, Math.abs(latestPrice) * 1e-8)) values.push(currentPrice);
+  return values;
+}
+
+function normalizedDailyChanges(values, yieldInstrument) {
+  const changes = [];
+  for (let index = 1; index < values.length; index += 1) {
+    const current = values[index];
+    const previous = values[index - 1];
+    if (!Number.isFinite(current) || !Number.isFinite(previous)) continue;
+    const change = yieldInstrument
+      ? (current - previous) * 100
+      : current > 0 && previous > 0 ? Math.log(current / previous) * 100 : null;
+    if (Number.isFinite(change)) changes.push(change);
+  }
+  return changes;
+}
+
+function volatilityPercentile(dailyChanges) {
+  if (dailyChanges.length < 40) return null;
+  const windows = [];
+  for (let index = 19; index < dailyChanges.length; index += 1) {
+    const volatility = standardDeviation(dailyChanges.slice(index - 19, index + 1));
+    if (Number.isFinite(volatility)) windows.push(volatility);
+  }
+  const current = windows.at(-1);
+  if (!Number.isFinite(current) || !windows.length) return null;
+  return (windows.filter((value) => value <= current).length / windows.length) * 100;
+}
+
+function buildSystematicTrend({ currentPrice, replayDaily = [], format, nowMs = Date.now() }) {
+  const values = priceSeriesWithCurrent(replayDaily, currentPrice, nowMs);
+  if (values.length < 64) return null;
+  const yieldInstrument = format === 'yield';
+  const dailyChanges = normalizedDailyChanges(values, yieldInstrument);
+  const dailyVolatility = standardDeviation(dailyChanges.slice(-60));
+  if (!Number.isFinite(dailyVolatility) || dailyVolatility === 0) return null;
+
+  const definitions = [
+    { key: '1m', label: '1M', sessions: 21, weight: 0.15 },
+    { key: '3m', label: '3M', sessions: 63, weight: 0.25 },
+    { key: '6m', label: '6M', sessions: 126, weight: 0.3 },
+    { key: '12m', label: '12M', sessions: 252, weight: 0.3 },
+  ];
+  const horizons = definitions.map((definition) => {
+    const base = values[values.length - 1 - definition.sessions];
+    if (!Number.isFinite(base) || base === 0) return { ...definition, return: null, normalizedScore: null };
+    const rawMove = yieldInstrument
+      ? (currentPrice - base) * 100
+      : Math.log(currentPrice / base) * 100;
+    const normalizedMove = rawMove / (dailyVolatility * Math.sqrt(definition.sessions));
+    return {
+      ...definition,
+      return: yieldInstrument ? rawMove : percentChange(currentPrice, base),
+      normalizedScore: Math.tanh(normalizedMove / 1.5) * 100,
+    };
+  });
+  const available = horizons.filter((horizon) => Number.isFinite(horizon.normalizedScore));
+  const weightTotal = available.reduce((sum, horizon) => sum + horizon.weight, 0);
+  const score = weightTotal
+    ? available.reduce((sum, horizon) => sum + horizon.normalizedScore * horizon.weight, 0) / weightTotal
+    : null;
+  if (!Number.isFinite(score)) return null;
+  const direction = Math.abs(score) < 20 ? 'mixed' : score > 0 ? 'higher' : 'lower';
+  const sign = score >= 0 ? 1 : -1;
+  const agreementPercent = available.length
+    ? (available.filter((horizon) => Math.sign(horizon.normalizedScore) === sign).length / available.length) * 100
+    : null;
+
+  const sides = [];
+  for (let index = Math.max(49, values.length - 60); index < values.length; index += 1) {
+    const movingAverage = average(values.slice(index - 49, index + 1));
+    sides.push(values[index] >= movingAverage ? 1 : -1);
+  }
+  const persistencePercent = sides.length
+    ? (sides.filter((side) => side === sign).length / sides.length) * 100
+    : null;
+  let flipCount = 0;
+  for (let index = 1; index < sides.length; index += 1) {
+    if (sides[index] !== sides[index - 1]) flipCount += 1;
+  }
+  let sessionsInTrend = 0;
+  if (direction !== 'mixed' && sides.at(-1) === sign) {
+    for (let index = sides.length - 1; index >= 0 && sides[index] === sign; index -= 1) sessionsInTrend += 1;
+  }
+
+  const efficiencyValues = values.slice(-61);
+  let travelled = 0;
+  for (let index = 1; index < efficiencyValues.length; index += 1) {
+    travelled += Math.abs(efficiencyValues[index] - efficiencyValues[index - 1]);
+  }
+  const efficiency = travelled > 0
+    ? Math.abs(efficiencyValues.at(-1) - efficiencyValues[0]) / travelled
+    : null;
+  const absScore = Math.abs(score);
+  const clean = (persistencePercent || 0) >= 70 && (efficiency || 0) >= 0.2 && flipCount <= 3;
+  const directionWord = score >= 0 ? 'uptrend' : 'downtrend';
+  const label = absScore < 20
+    ? 'No clear trend'
+    : absScore < 45 ? `Developing ${directionWord}`
+      : clean ? `Strong clean ${directionWord}` : `Strong but noisy ${directionWord}`;
+  const whipsawRisk = flipCount >= 6 || (Number.isFinite(persistencePercent) && persistencePercent < 52)
+    ? 'High'
+    : flipCount >= 3 || (Number.isFinite(efficiency) && efficiency < 0.18) ? 'Elevated' : 'Low';
+
+  return {
+    score,
+    label,
+    direction,
+    agreementPercent,
+    persistencePercent,
+    flipCount,
+    sessionsInTrend,
+    efficiency,
+    dailyVolatility,
+    volatilityPercentile: volatilityPercentile(dailyChanges),
+    moveUnit: yieldInstrument ? 'bp' : '%',
+    horizons: horizons.map(({ key, label: horizonLabel, sessions, return: horizonReturn, normalizedScore }) => ({
+      key,
+      label: horizonLabel,
+      sessions,
+      return: horizonReturn,
+      normalizedScore,
+    })),
+  };
+}
+
+function buildSystematicTrendSummary(instruments) {
+  const rows = instruments.filter((row) => row.systematicTrend);
+  const trending = rows.filter((row) => Math.abs(row.systematicTrend.score) >= 30);
+  const aligned = rows.filter((row) => row.systematicTrend.agreementPercent >= 75);
+  const noisy = rows.filter((row) => ['Elevated', 'High'].includes(row.systematicTrend.whipsawRisk));
+  const strongest = [...rows].sort((left, right) =>
+    Math.abs(right.systematicTrend.score) - Math.abs(left.systematicTrend.score)
+  )[0];
+  const whipsawRatio = rows.length ? noisy.length / rows.length : null;
+  const whipsawRisk = !Number.isFinite(whipsawRatio)
+    ? 'Unavailable'
+    : whipsawRatio >= 0.6 ? 'High' : whipsawRatio >= 0.35 ? 'Elevated' : 'Low';
+  const bySymbol = new Map(rows.map((row) => [row.symbol, row]));
+  const directionalVote = (symbol, invert = false) => {
+    const score = bySymbol.get(symbol)?.systematicTrend?.score;
+    if (!Number.isFinite(score) || Math.abs(score) < 20) return 0;
+    return Math.sign(score) * (invert ? -1 : 1);
+  };
+  const riskVotes = [
+    directionalVote('SPY'),
+    directionalVote('IWM'),
+    directionalVote('HYG'),
+    directionalVote('^VIX', true),
+  ];
+  const bullishVotes = riskVotes.filter((vote) => vote > 0).length;
+  const bearishVotes = riskVotes.filter((vote) => vote < 0).length;
+  const alerts = [];
+  if (bullishVotes >= 3) alerts.push({ tone: 'positive', title: 'Risk-on trend confirmed', detail: `${bullishVotes} of 4 equity, small-cap, credit and volatility signals agree.` });
+  else if (bearishVotes >= 3) alerts.push({ tone: 'negative', title: 'Risk-off trend confirmed', detail: `${bearishVotes} of 4 equity, small-cap, credit and volatility signals agree.` });
+  else alerts.push({ tone: 'neutral', title: 'Risk signals diverge', detail: 'Equity, small-cap, credit and volatility trends do not yet agree.' });
+  const participation = rows.length ? trending.length / rows.length : 0;
+  alerts.push(participation >= 0.65
+    ? { tone: 'positive', title: 'Broad trend participation', detail: `${trending.length} of ${rows.length} markets have a meaningful directional trend.` }
+    : participation <= 0.35
+      ? { tone: 'neutral', title: 'Trend concentration', detail: `Only ${trending.length} of ${rows.length} markets have a meaningful directional trend.` }
+      : { tone: 'neutral', title: 'Selective trend environment', detail: `${trending.length} of ${rows.length} markets are trending; selection still matters.` });
+  if (whipsawRisk !== 'Low') alerts.push({ tone: 'warning', title: `${whipsawRisk} whipsaw risk`, detail: `${noisy.length} of ${rows.length} markets have unstable or inefficient trends.` });
+
+  return {
+    trendCount: trending.length,
+    instrumentCount: rows.length,
+    alignedCount: aligned.length,
+    averageAgreementPercent: average(rows.map((row) => row.systematicTrend.agreementPercent)),
+    whipsawRisk,
+    strongest: strongest ? {
+      symbol: strongest.displaySymbol || strongest.symbol,
+      name: strongest.name,
+      score: strongest.systematicTrend.score,
+      direction: strongest.systematicTrend.direction,
+    } : null,
+    alerts: alerts.slice(0, 3),
+  };
+}
+
 function buildTrendContext({ currentPrice, previousClose, replayDaily = [], format }) {
   const closes = replayDaily.map((point) => point[1]).filter(Number.isFinite);
   if (!Number.isFinite(currentPrice) || closes.length < 50) return null;
@@ -172,7 +380,7 @@ function buildDailyInstrument(definition, spark, nowMs = Date.now()) {
       : getLastFinite(closes, 1);
   if (!Number.isFinite(currentPrice)) return null;
   const change = Number.isFinite(previousClose) ? currentPrice - previousClose : null;
-  const replayDaily = replayPoints(timestamps, closes, nowMs - 190 * DAY_MS);
+  const replayDaily = replayPoints(timestamps, closes, nowMs - 400 * DAY_MS);
   const instrument = {
     ...definition,
     currentPrice,
@@ -187,6 +395,7 @@ function buildDailyInstrument(definition, spark, nowMs = Date.now()) {
   return {
     ...instrument,
     trend: buildTrendContext(instrument),
+    systematicTrend: buildSystematicTrend({ ...instrument, nowMs }),
   };
 }
 
@@ -345,6 +554,8 @@ module.exports = {
   DAY_MS,
   INTERMARKET_INSTRUMENTS,
   buildDailyInstrument,
+  buildSystematicTrend,
+  buildSystematicTrendSummary,
   buildTrendContext,
   buildRelationships,
   buildMacroState,

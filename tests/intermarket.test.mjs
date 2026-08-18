@@ -7,6 +7,8 @@ const {
   buildDailyInstrument,
   buildMacroState,
   buildRelationships,
+  buildSystematicTrend,
+  buildSystematicTrendSummary,
   buildTrendContext,
   percentChange,
   replayPoints,
@@ -64,6 +66,61 @@ test('trend context uses percentage distances for non-yield assets', () => {
   assert.equal(trend.moveUnit, '%');
   assert.ok(trend.distance20 < 0);
   assert.ok(trend.distance50 < 0);
+});
+
+test('systematic trend combines volatility-adjusted horizons and keeps cleanliness separate', () => {
+  const replayDaily = Array.from({ length: 320 }, (_, index) => {
+    const price = 100 * Math.exp(index * 0.0015 + Math.sin(index * 0.47) * 0.006);
+    return [1_700_000_000 + index * 86_400, price];
+  });
+  const trend = buildSystematicTrend({
+    currentPrice: replayDaily.at(-1)[1],
+    replayDaily,
+    nowMs: replayDaily.at(-1)[0] * 1000,
+  });
+  assert.ok(trend.score > 45);
+  assert.equal(trend.direction, 'higher');
+  assert.equal(trend.horizons.length, 4);
+  assert.ok(trend.horizons.every((horizon) => Number.isFinite(horizon.normalizedScore)));
+  assert.ok(trend.agreementPercent >= 75);
+  assert.ok(Number.isFinite(trend.efficiency));
+  assert.ok(Number.isFinite(trend.volatilityPercentile));
+});
+
+test('systematic trend expresses yield moves and volatility in basis points', () => {
+  const replayDaily = Array.from({ length: 280 }, (_, index) => [
+    1_700_000_000 + index * 86_400,
+    3.5 + index * 0.002 + Math.sin(index * 0.35) * 0.02,
+  ]);
+  const trend = buildSystematicTrend({
+    currentPrice: replayDaily.at(-1)[1],
+    replayDaily,
+    format: 'yield',
+    nowMs: replayDaily.at(-1)[0] * 1000,
+  });
+  assert.equal(trend.moveUnit, 'bp');
+  assert.ok(trend.horizons.find((horizon) => horizon.key === '12m').return > 0);
+  assert.ok(trend.dailyVolatility > 0);
+});
+
+test('systematic summary reports breadth and deterministic cross-asset confirmation', () => {
+  const trend = (score) => ({
+    score,
+    agreementPercent: 100,
+    whipsawRisk: 'Low',
+    direction: score > 0 ? 'higher' : 'lower',
+  });
+  const summary = buildSystematicTrendSummary([
+    { symbol: 'SPY', name: 'S&P 500', systematicTrend: trend(60) },
+    { symbol: 'IWM', name: 'Russell 2000', systematicTrend: trend(45) },
+    { symbol: 'HYG', name: 'High Yield', systematicTrend: trend(35) },
+    { symbol: '^VIX', name: 'VIX', displaySymbol: 'VIX', systematicTrend: trend(-50) },
+  ]);
+  assert.equal(summary.trendCount, 4);
+  assert.equal(summary.alignedCount, 4);
+  assert.equal(summary.whipsawRisk, 'Low');
+  assert.equal(summary.strongest.symbol, 'SPY');
+  assert.match(summary.alerts[0].title, /Risk-on trend confirmed/);
 });
 
 test('relationship returns compare matched percentage horizons', () => {
