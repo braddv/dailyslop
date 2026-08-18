@@ -47,8 +47,6 @@ const elements = {
   cacheState: document.getElementById('cacheState'),
   macroSummary: document.getElementById('macroSummary'),
   stateGrid: document.getElementById('stateGrid'),
-  systematicSummary: document.getElementById('systematicSummary'),
-  systematicAlerts: document.getElementById('systematicAlerts'),
   breadthSummary: document.getElementById('breadthSummary'),
   breadthOverview: document.getElementById('breadthOverview'),
   breadthAsOf: document.getElementById('breadthAsOf'),
@@ -159,27 +157,6 @@ function trendScore(value) {
 function trendDirectionClass(value) {
   if (!finite(value) || Math.abs(value) < 20) return '';
   return value > 0 ? 'return-positive' : 'return-negative';
-}
-
-function renderSystematicTrend() {
-  const summary = state.data.systematicTrend;
-  if (!summary || !summary.instrumentCount) {
-    elements.systematicSummary.innerHTML = '<div class="systematic-empty">Not enough daily history for independent trend scores.</div>';
-    elements.systematicAlerts.innerHTML = '';
-    return;
-  }
-  const strongestDirection = summary.strongest?.score >= 0 ? '↑' : '↓';
-  elements.systematicSummary.innerHTML = `
-    <article class="systematic-stat"><span>Markets with a trend</span><strong>${summary.trendCount}/${summary.instrumentCount}</strong><em>either direction, scored separately</em></article>
-    <article class="systematic-stat"><span>Within-market agreement</span><strong>${finite(summary.averageAgreementPercent) ? `${Math.round(summary.averageAgreementPercent)}%` : '--'}</strong><em>${summary.alignedCount} markets align across 3–4 horizons</em></article>
-    <article class="systematic-stat"><span>Individual whipsaw risk</span><strong data-risk="${String(summary.whipsawRisk).toLowerCase()}">${summary.whipsawRisk}</strong><em>persistence and flip rate within each market</em></article>
-    <article class="systematic-stat"><span>Strongest individual trend</span><strong class="${trendDirectionClass(summary.strongest?.score)}">${summary.strongest?.symbol || '--'} ${summary.strongest ? strongestDirection : ''}</strong><em>${summary.strongest ? `${trendScore(summary.strongest.score)} score` : 'unavailable'}</em></article>
-  `;
-  elements.systematicAlerts.innerHTML = (summary.alerts || []).map((alert) => `
-    <article class="systematic-alert" data-tone="${alert.tone}">
-      <i></i><div><strong>${alert.title}</strong><span>${alert.detail}</span></div>
-    </article>
-  `).join('');
 }
 
 function breadthCounts(rows) {
@@ -639,7 +616,6 @@ function renderAll() {
     ? `${state.data.failures.length} instruments or intervals unavailable`
     : `${state.data.instruments.length} instruments · ${state.data.source}`;
   renderMacroState();
-  renderSystematicTrend();
   renderBreadth();
   renderLegend();
   renderRelationships();
