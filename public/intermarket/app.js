@@ -34,6 +34,7 @@ const state = {
   data: null,
   breadthData: null,
   metric: 'changePercent',
+  rankingMode: 'return',
   mode: 'live',
   frames: [],
   frameIndex: 0,
@@ -46,6 +47,8 @@ const elements = {
   cacheState: document.getElementById('cacheState'),
   macroSummary: document.getElementById('macroSummary'),
   stateGrid: document.getElementById('stateGrid'),
+  systematicSummary: document.getElementById('systematicSummary'),
+  systematicAlerts: document.getElementById('systematicAlerts'),
   breadthSummary: document.getElementById('breadthSummary'),
   breadthOverview: document.getElementById('breadthOverview'),
   breadthAsOf: document.getElementById('breadthAsOf'),
@@ -64,6 +67,7 @@ const elements = {
   relationshipGrid: document.getElementById('relationshipGrid'),
   rankingGrid: document.getElementById('rankingGrid'),
   rankingLabel: document.getElementById('rankingLabel'),
+  rankingToggle: document.getElementById('rankingToggle'),
   refreshButton: document.getElementById('refreshButton'),
   statusText: document.getElementById('statusText'),
   drawer: document.getElementById('instrumentDrawer'),
@@ -143,6 +147,37 @@ function renderMacroState() {
       <span>${card.label}</span>
       <strong>${card.value}</strong>
       <p>${card.detail}</p>
+    </article>
+  `).join('');
+}
+
+function trendScore(value) {
+  if (!finite(value)) return '--';
+  return `${value >= 0 ? '+' : ''}${Math.round(value)}`;
+}
+
+function trendDirectionClass(value) {
+  if (!finite(value) || Math.abs(value) < 20) return '';
+  return value > 0 ? 'return-positive' : 'return-negative';
+}
+
+function renderSystematicTrend() {
+  const summary = state.data.systematicTrend;
+  if (!summary || !summary.instrumentCount) {
+    elements.systematicSummary.innerHTML = '<div class="systematic-empty">Not enough daily history for systematic trend scores.</div>';
+    elements.systematicAlerts.innerHTML = '';
+    return;
+  }
+  const strongestDirection = summary.strongest?.score >= 0 ? '↑' : '↓';
+  elements.systematicSummary.innerHTML = `
+    <article class="systematic-stat"><span>Trend breadth</span><strong>${summary.trendCount}/${summary.instrumentCount}</strong><em>markets trending</em></article>
+    <article class="systematic-stat"><span>Horizon agreement</span><strong>${finite(summary.averageAgreementPercent) ? `${Math.round(summary.averageAgreementPercent)}%` : '--'}</strong><em>${summary.alignedCount} with 3–4 aligned</em></article>
+    <article class="systematic-stat"><span>Whipsaw risk</span><strong data-risk="${String(summary.whipsawRisk).toLowerCase()}">${summary.whipsawRisk}</strong><em>persistence and flip rate</em></article>
+    <article class="systematic-stat"><span>Strongest trend</span><strong class="${trendDirectionClass(summary.strongest?.score)}">${summary.strongest?.symbol || '--'} ${summary.strongest ? strongestDirection : ''}</strong><em>${summary.strongest ? `${trendScore(summary.strongest.score)} score` : 'unavailable'}</em></article>
+  `;
+  elements.systematicAlerts.innerHTML = (summary.alerts || []).map((alert) => `
+    <article class="systematic-alert" data-tone="${alert.tone}">
+      <i></i><div><strong>${alert.title}</strong><span>${alert.detail}</span></div>
     </article>
   `).join('');
 }
@@ -347,26 +382,43 @@ function rankingMetric() {
 }
 
 function renderRankings() {
-  const rows = displayRows().filter((row) => finite(row[rankingMetric()]));
+  const trendMode = state.rankingMode === 'trend';
+  const rows = displayRows().filter((row) => trendMode
+    ? finite(row.systematicTrend?.score)
+    : finite(row[rankingMetric()]));
   const metric = rankingMetric();
-  const leaders = [...rows].sort((left, right) => right[metric] - left[metric]).slice(0, 8);
-  const laggards = [...rows].sort((left, right) => left[metric] - right[metric]).slice(0, 8);
+  const value = (row) => trendMode ? row.systematicTrend.score : row[metric];
+  const leaders = [...rows]
+    .filter((row) => !trendMode || value(row) > 0)
+    .sort((left, right) => value(right) - value(left))
+    .slice(0, 8);
+  const laggards = [...rows]
+    .filter((row) => !trendMode || value(row) < 0)
+    .sort((left, right) => value(left) - value(right))
+    .slice(0, 8);
+  const horizonDots = (row) => (row.systematicTrend?.horizons || []).map((horizon) => {
+    const direction = !finite(horizon.normalizedScore) ? 'missing' : horizon.normalizedScore >= 0 ? 'higher' : 'lower';
+    return `<i data-direction="${direction}" title="${horizon.label} ${finite(horizon.return) ? formatTrendValue(horizon.return, row.systematicTrend.moveUnit) : 'unavailable'}"></i>`;
+  }).join('');
   const column = (title, list) => `
     <div class="ranking-column">
       <h3>${title}</h3>
       ${list.map((row, index) => `
-        <button class="rank-row" type="button" data-drawer-symbol="${row.symbol}">
+        <button class="rank-row${trendMode ? ' trend-rank-row' : ''}" type="button" data-drawer-symbol="${row.symbol}">
           <span class="rank-number">${index + 1}</span>
-          <span class="rank-name"><strong>${row.displaySymbol || row.symbol}</strong><span>${row.name}</span>${row.trend ? `<em data-direction="${row.trend.direction}">${row.trend.label} · ${formatTrendValue(row.trend.distance20, row.trend.moveUnit)} vs 20D</em>` : ''}</span>
-          <strong class="${toneFor(row[metric])}">${formatPercent(row[metric])}</strong>
+          <span class="rank-name"><strong>${row.displaySymbol || row.symbol}</strong><span>${row.name}</span>${trendMode
+            ? `<em data-direction="${row.systematicTrend.direction}">${row.systematicTrend.label} · ${row.systematicTrend.sessionsInTrend} aligned sessions</em><span class="horizon-dots" aria-label="1, 3, 6 and 12 month trend directions">${horizonDots(row)}</span>`
+            : row.trend ? `<em data-direction="${row.trend.direction}">${row.trend.label} · ${formatTrendValue(row.trend.distance20, row.trend.moveUnit)} vs 20D</em>` : ''}</span>
+          <strong class="${trendMode ? trendDirectionClass(value(row)) : toneFor(value(row))}">${trendMode ? trendScore(value(row)) : formatPercent(value(row))}</strong>
         </button>
       `).join('')}
     </div>
   `;
-  elements.rankingGrid.innerHTML = column('Leaders', leaders) + column('Laggards', laggards);
-  elements.rankingLabel.textContent = state.mode === 'live'
-    ? `Ranked by ${METRIC_LABELS[state.metric]} return.`
-    : `Ranked at ${formatDate(state.frames[state.frameIndex]?.timestamp * 1000)}.`;
+  elements.rankingGrid.innerHTML = column(trendMode ? 'Uptrends' : 'Leaders', leaders) + column(trendMode ? 'Downtrends' : 'Laggards', laggards);
+  elements.rankingLabel.textContent = trendMode
+    ? 'Current volatility-adjusted 1M–12M trend score.'
+    : state.mode === 'live' ? `Ranked by ${METRIC_LABELS[state.metric]} return.`
+      : `Ranked at ${formatDate(state.frames[state.frameIndex]?.timestamp * 1000)}.`;
   elements.rankingGrid.querySelectorAll('[data-drawer-symbol]').forEach((button) => {
     button.addEventListener('click', () => openDrawer(button.dataset.drawerSymbol));
   });
@@ -502,6 +554,32 @@ function openDrawer(symbol) {
         </div>
       </section>
     ` : ''}
+    ${row.systematicTrend ? `
+      <section class="drawer-systematic" data-direction="${row.systematicTrend.direction}">
+        <div class="drawer-systematic-heading">
+          <div><span>Systematic trend quality</span><strong>${row.systematicTrend.label}</strong></div>
+          <b class="${trendDirectionClass(row.systematicTrend.score)}">${trendScore(row.systematicTrend.score)}</b>
+        </div>
+        <div class="drawer-horizons">
+          ${row.systematicTrend.horizons.map((horizon) => `
+            <div data-direction="${!finite(horizon.normalizedScore) ? 'missing' : horizon.normalizedScore >= 0 ? 'higher' : 'lower'}">
+              <span>${horizon.label}</span>
+              <strong>${finite(horizon.return) ? formatTrendValue(horizon.return, row.systematicTrend.moveUnit) : '--'}</strong>
+              <em>${finite(horizon.normalizedScore) ? `${trendScore(horizon.normalizedScore)} vol-adjusted` : 'not enough history'}</em>
+            </div>
+          `).join('')}
+        </div>
+        <div class="drawer-quality-grid">
+          <div><span>Horizon agreement</span><strong>${finite(row.systematicTrend.agreementPercent) ? `${Math.round(row.systematicTrend.agreementPercent)}%` : '--'}</strong></div>
+          <div><span>Trend persistence</span><strong>${finite(row.systematicTrend.persistencePercent) ? `${Math.round(row.systematicTrend.persistencePercent)}%` : '--'}</strong></div>
+          <div><span>Aligned 50D streak</span><strong>${row.systematicTrend.sessionsInTrend} sessions</strong></div>
+          <div><span>60-session flips</span><strong>${row.systematicTrend.flipCount}</strong></div>
+          <div><span>Movement efficiency</span><strong>${finite(row.systematicTrend.efficiency) ? `${Math.round(row.systematicTrend.efficiency * 100)}%` : '--'}</strong></div>
+          <div><span>Volatility percentile</span><strong>${finite(row.systematicTrend.volatilityPercentile) ? `${Math.round(row.systematicTrend.volatilityPercentile)}th` : '--'}</strong></div>
+        </div>
+        <p>Direction and strength come from volatility-adjusted 1M, 3M, 6M and 12M moves. Cleanliness is measured separately using persistence, flips and movement efficiency.</p>
+      </section>
+    ` : ''}
     <div class="drawer-metrics">
       ${Object.entries(METRIC_LABELS).map(([key, label]) => `
         <div class="drawer-metric"><span>${label} return</span><strong class="${toneFor(row[key])}">${formatPercent(row[key])}</strong></div>
@@ -530,6 +608,7 @@ function renderAll() {
     ? `${state.data.failures.length} instruments or intervals unavailable`
     : `${state.data.instruments.length} instruments · ${state.data.source}`;
   renderMacroState();
+  renderSystematicTrend();
   renderBreadth();
   renderLegend();
   renderRelationships();
@@ -578,6 +657,13 @@ elements.metricToggle.addEventListener('click', (event) => {
   renderChart();
   renderRankings();
   updateReplayUi();
+});
+elements.rankingToggle.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-ranking-mode]');
+  if (!button) return;
+  state.rankingMode = button.dataset.rankingMode;
+  elements.rankingToggle.querySelectorAll('button').forEach((item) => item.classList.toggle('active', item === button));
+  renderRankings();
 });
 elements.replayModes.addEventListener('click', (event) => {
   const button = event.target.closest('[data-mode]');

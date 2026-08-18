@@ -42,6 +42,18 @@
         <div class="state-grid" id="stateGrid"></div>
       </section>
 
+      <section class="systematic-panel" aria-labelledby="systematicTitle">
+        <div class="section-heading compact">
+          <div>
+            <p class="section-kicker">Systematic trend</p>
+            <h2 id="systematicTitle">Trend quality across markets</h2>
+          </div>
+          <p>Volatility-adjusted direction, horizon agreement and persistence—not a forecast.</p>
+        </div>
+        <div class="systematic-summary" id="systematicSummary"></div>
+        <div class="systematic-alerts" id="systematicAlerts"></div>
+      </section>
+
       <section class="breadth-panel" aria-labelledby="breadthTitle">
         <div class="section-heading compact">
           <div>
@@ -118,7 +130,13 @@
             <p class="section-kicker">Leadership map</p>
             <h2 id="rankingTitle">Cross-asset ranking</h2>
           </div>
-          <p id="rankingLabel">Ranked by 1D return.</p>
+          <div class="ranking-heading-controls">
+            <div class="ranking-toggle" id="rankingToggle" aria-label="Ranking method">
+              <button class="active" type="button" data-ranking-mode="return">Return</button>
+              <button type="button" data-ranking-mode="trend">Trend</button>
+            </div>
+            <p id="rankingLabel">Ranked by 1D return.</p>
+          </div>
         </div>
         <div class="ranking-grid" id="rankingGrid"></div>
       </section>
