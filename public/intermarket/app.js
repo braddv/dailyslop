@@ -379,6 +379,14 @@ function renderRelationships() {
         <span>1M<br><b class="${toneFor(row.perf1m)}">${formatPercent(row.perf1m, 1)}</b></span>
         <span>3M<br><b class="${toneFor(row.perf3m)}">${formatPercent(row.perf3m, 1)}</b></span>
       </div>` : ''}
+      ${[row.corr1m, row.corr3m, row.corr6m].some(finite) ? `<div class="relationship-correlation-block">
+        <small>Daily-return correlation between the pair</small>
+        <div class="relationship-correlations">
+          <span>1M<br><b>${finite(row.corr1m) ? row.corr1m.toFixed(2) : '--'}</b></span>
+          <span>3M<br><b>${finite(row.corr3m) ? row.corr3m.toFixed(2) : '--'}</b></span>
+          <span>6M<br><b>${finite(row.corr6m) ? row.corr6m.toFixed(2) : '--'}</b></span>
+        </div>
+      </div>` : ''}
     </article>
   `).join('');
 }
