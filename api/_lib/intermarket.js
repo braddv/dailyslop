@@ -259,10 +259,10 @@ function buildSystematicTrendSummary(instruments) {
   else alerts.push({ tone: 'neutral', title: 'Risk signals diverge', detail: 'Equity, small-cap, credit and volatility trends do not yet agree.' });
   const participation = rows.length ? trending.length / rows.length : 0;
   alerts.push(participation >= 0.65
-    ? { tone: 'positive', title: 'Broad trend participation', detail: `${trending.length} of ${rows.length} markets have a meaningful directional trend.` }
+    ? { tone: 'neutral', title: 'Many independent trends', detail: `${trending.length} of ${rows.length} markets are trending in either direction; they need not agree.` }
     : participation <= 0.35
-      ? { tone: 'neutral', title: 'Trend concentration', detail: `Only ${trending.length} of ${rows.length} markets have a meaningful directional trend.` }
-      : { tone: 'neutral', title: 'Selective trend environment', detail: `${trending.length} of ${rows.length} markets are trending; selection still matters.` });
+      ? { tone: 'neutral', title: 'Few independent trends', detail: `Only ${trending.length} of ${rows.length} markets have a meaningful trend in either direction.` }
+      : { tone: 'neutral', title: 'Selective trend environment', detail: `${trending.length} of ${rows.length} markets are independently trending; selection still matters.` });
   if (whipsawRisk !== 'Low') alerts.push({ tone: 'warning', title: `${whipsawRisk} whipsaw risk`, detail: `${noisy.length} of ${rows.length} markets have unstable or inefficient trends.` });
 
   return {
