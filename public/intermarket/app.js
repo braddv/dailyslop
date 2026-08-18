@@ -164,16 +164,16 @@ function trendDirectionClass(value) {
 function renderSystematicTrend() {
   const summary = state.data.systematicTrend;
   if (!summary || !summary.instrumentCount) {
-    elements.systematicSummary.innerHTML = '<div class="systematic-empty">Not enough daily history for systematic trend scores.</div>';
+    elements.systematicSummary.innerHTML = '<div class="systematic-empty">Not enough daily history for independent trend scores.</div>';
     elements.systematicAlerts.innerHTML = '';
     return;
   }
   const strongestDirection = summary.strongest?.score >= 0 ? '↑' : '↓';
   elements.systematicSummary.innerHTML = `
-    <article class="systematic-stat"><span>Trend breadth</span><strong>${summary.trendCount}/${summary.instrumentCount}</strong><em>markets trending</em></article>
-    <article class="systematic-stat"><span>Horizon agreement</span><strong>${finite(summary.averageAgreementPercent) ? `${Math.round(summary.averageAgreementPercent)}%` : '--'}</strong><em>${summary.alignedCount} with 3–4 aligned</em></article>
-    <article class="systematic-stat"><span>Whipsaw risk</span><strong data-risk="${String(summary.whipsawRisk).toLowerCase()}">${summary.whipsawRisk}</strong><em>persistence and flip rate</em></article>
-    <article class="systematic-stat"><span>Strongest trend</span><strong class="${trendDirectionClass(summary.strongest?.score)}">${summary.strongest?.symbol || '--'} ${summary.strongest ? strongestDirection : ''}</strong><em>${summary.strongest ? `${trendScore(summary.strongest.score)} score` : 'unavailable'}</em></article>
+    <article class="systematic-stat"><span>Markets with a trend</span><strong>${summary.trendCount}/${summary.instrumentCount}</strong><em>either direction, scored separately</em></article>
+    <article class="systematic-stat"><span>Within-market agreement</span><strong>${finite(summary.averageAgreementPercent) ? `${Math.round(summary.averageAgreementPercent)}%` : '--'}</strong><em>${summary.alignedCount} markets align across 3–4 horizons</em></article>
+    <article class="systematic-stat"><span>Individual whipsaw risk</span><strong data-risk="${String(summary.whipsawRisk).toLowerCase()}">${summary.whipsawRisk}</strong><em>persistence and flip rate within each market</em></article>
+    <article class="systematic-stat"><span>Strongest individual trend</span><strong class="${trendDirectionClass(summary.strongest?.score)}">${summary.strongest?.symbol || '--'} ${summary.strongest ? strongestDirection : ''}</strong><em>${summary.strongest ? `${trendScore(summary.strongest.score)} score` : 'unavailable'}</em></article>
   `;
   elements.systematicAlerts.innerHTML = (summary.alerts || []).map((alert) => `
     <article class="systematic-alert" data-tone="${alert.tone}">
