@@ -406,6 +406,45 @@ function relativeReturn(left, right, key) {
   return (((1 + leftReturn / 100) / (1 + rightReturn / 100)) - 1) * 100;
 }
 
+function sessionDate(timestamp) {
+  if (!Number.isFinite(timestamp)) return null;
+  return new Date(timestamp * 1000).toISOString().slice(0, 10);
+}
+
+function dailyReturnCorrelation(left, right, sessions) {
+  if (!Array.isArray(left?.replayDaily) || !Array.isArray(right?.replayDaily)) return null;
+  const rightByDate = new Map(right.replayDaily
+    .filter(([timestamp, close]) => Number.isFinite(timestamp) && Number.isFinite(close) && close > 0)
+    .map(([timestamp, close]) => [sessionDate(timestamp), close]));
+  const matched = left.replayDaily
+    .filter(([timestamp, close]) => Number.isFinite(timestamp) && Number.isFinite(close) && close > 0)
+    .map(([timestamp, close]) => [close, rightByDate.get(sessionDate(timestamp))])
+    .filter(([, rightClose]) => Number.isFinite(rightClose) && rightClose > 0)
+    .slice(-(sessions + 1));
+  if (matched.length < sessions + 1) return null;
+
+  const leftReturns = [];
+  const rightReturns = [];
+  for (let index = 1; index < matched.length; index += 1) {
+    leftReturns.push(Math.log(matched[index][0] / matched[index - 1][0]));
+    rightReturns.push(Math.log(matched[index][1] / matched[index - 1][1]));
+  }
+  const leftMean = average(leftReturns);
+  const rightMean = average(rightReturns);
+  let covariance = 0;
+  let leftVariance = 0;
+  let rightVariance = 0;
+  for (let index = 0; index < sessions; index += 1) {
+    const leftDelta = leftReturns[index] - leftMean;
+    const rightDelta = rightReturns[index] - rightMean;
+    covariance += leftDelta * rightDelta;
+    leftVariance += leftDelta ** 2;
+    rightVariance += rightDelta ** 2;
+  }
+  const denominator = Math.sqrt(leftVariance * rightVariance);
+  return denominator > 0 ? covariance / denominator : null;
+}
+
 function buildRelationships(instruments) {
   const bySymbol = new Map(instruments.map((row) => [row.symbol, row]));
   const ratio = (id, label, leftSymbol, rightSymbol, interpretation) => {
@@ -424,6 +463,9 @@ function buildRelationships(instruments) {
       perf1w: relativeReturn(left, right, 'perf1w'),
       perf1m: relativeReturn(left, right, 'perf1m'),
       perf3m: relativeReturn(left, right, 'perf3m'),
+      corr1m: dailyReturnCorrelation(left, right, 21),
+      corr3m: dailyReturnCorrelation(left, right, 63),
+      corr6m: dailyReturnCorrelation(left, right, 126),
     };
   };
   const threeMonth = bySymbol.get('^IRX');
@@ -433,6 +475,7 @@ function buildRelationships(instruments) {
     : null;
   return [
     ratio('small-cap-risk', 'Small caps vs S&P 500', 'IWM', 'SPY', 'Rising favors broader risk appetite.'),
+    ratio('emerging-market-leadership', 'Emerging markets vs S&P 500', 'EEM', 'SPY', 'Rising favors emerging-market leadership over U.S. large caps.'),
     ratio('growth-leadership', 'Nasdaq 100 vs S&P 500', 'QQQ', 'SPY', 'Rising favors growth leadership.'),
     ratio('credit-risk', 'High yield vs investment grade', 'HYG', 'LQD', 'Rising suggests improving credit risk appetite.'),
     ratio('copper-gold', 'Copper vs gold', 'HG=F', 'GC=F', 'Rising favors cyclical growth over defensiveness.'),
@@ -447,6 +490,9 @@ function buildRelationships(instruments) {
       perf1w: null,
       perf1m: null,
       perf3m: null,
+      corr1m: null,
+      corr3m: null,
+      corr6m: null,
     },
   ].filter((row) => row.currentRatio != null || row.currentSpreadBps != null);
 }

@@ -126,6 +126,7 @@ test('systematic summary reports breadth and deterministic cross-asset confirmat
 test('relationship returns compare matched percentage horizons', () => {
   const rows = [
     { symbol: 'IWM', currentPrice: 220, changePercent: 2, perf1w: 5, perf1m: 8, perf3m: 10 },
+    { symbol: 'EEM', currentPrice: 50, changePercent: 1.5, perf1w: 4, perf1m: 7, perf3m: 9 },
     { symbol: 'SPY', currentPrice: 550, changePercent: 1, perf1w: 2, perf1m: 4, perf3m: 5 },
     { symbol: 'QQQ', currentPrice: 500, changePercent: 1, perf1w: 2, perf1m: 4, perf3m: 5 },
     { symbol: 'HYG', currentPrice: 80, changePercent: 0, perf1w: 1, perf1m: 1, perf3m: 1 },
@@ -137,8 +138,47 @@ test('relationship returns compare matched percentage horizons', () => {
   ];
   const relationships = buildRelationships(rows);
   const smallCaps = relationships.find((row) => row.id === 'small-cap-risk');
+  const emergingMarkets = relationships.find((row) => row.id === 'emerging-market-leadership');
   assert.ok(smallCaps.changePercent > 0.98 && smallCaps.changePercent < 1);
+  assert.ok(emergingMarkets.changePercent > 0);
+  assert.equal(emergingMarkets.leftSymbol, 'EEM');
+  assert.equal(emergingMarkets.rightSymbol, 'SPY');
   assert.equal(Math.round(relationships.find((row) => row.id === 'yield-curve').currentSpreadBps), 40);
+});
+
+test('relationship correlations use full matched daily-return windows', () => {
+  const start = 1_760_000_000;
+  const points = Array.from({ length: 127 }, (_, index) => {
+    const sharedMove = Math.sin(index * 0.73) * 0.012 + Math.cos(index * 0.19) * 0.006;
+    return [start + index * 86_400, sharedMove];
+  });
+  const series = (startPrice, multiplier = 1) => {
+    let price = startPrice;
+    return points.map(([timestamp, move]) => {
+      price *= Math.exp(move * multiplier);
+      return [timestamp, price];
+    });
+  };
+  const relationships = buildRelationships([
+    { symbol: 'IWM', currentPrice: 220, replayDaily: series(180) },
+    { symbol: 'SPY', currentPrice: 550, replayDaily: series(400, 0.8) },
+  ]);
+  const smallCaps = relationships.find((row) => row.id === 'small-cap-risk');
+  assert.ok(smallCaps.corr1m > 0.99);
+  assert.ok(smallCaps.corr3m > 0.99);
+  assert.ok(smallCaps.corr6m > 0.99);
+});
+
+test('relationship correlations stay unavailable until a full horizon exists', () => {
+  const replayDaily = Array.from({ length: 21 }, (_, index) => [1_760_000_000 + index * 86_400, 100 + index]);
+  const relationships = buildRelationships([
+    { symbol: 'IWM', currentPrice: 120, replayDaily },
+    { symbol: 'SPY', currentPrice: 130, replayDaily },
+  ]);
+  const smallCaps = relationships.find((row) => row.id === 'small-cap-risk');
+  assert.equal(smallCaps.corr1m, null);
+  assert.equal(smallCaps.corr3m, null);
+  assert.equal(smallCaps.corr6m, null);
 });
 
 test('macro state uses equity, volatility, yield, dollar, and commodity inputs without forecasting', () => {
