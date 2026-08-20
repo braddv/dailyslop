@@ -3684,8 +3684,12 @@ async function loadData(forceRefresh = false) {
     actionPeriodRowsCache.clear();
     populateTickerSearch();
     buildReplayTimeline();
-    if (appView === "action") renderMarketContext();
-    if (appView === "watchlist") renderWatchlist();
+    // Signal history and market data load independently. If history wins the
+    // race, the Action Board renders before a stock universe exists and exits
+    // early. Re-render the complete scanner when market data becomes ready so
+    // the board cannot remain blank because of request timing.
+    if (appView === "action") renderConfluenceScanner();
+    else if (appView === "watchlist") renderWatchlist();
     else buildChart(lastStocks);
 
     if (data.failures && data.failures.length) {
