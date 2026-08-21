@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="An interactive visual atlas of the stock-flow consistent models in Godley and Lavoie's Monetary Economics." />
+    <title>Godley + Lavoie Model Atlas · DailySlop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/godley/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="/">DAILY<span>SLOP</span></a>
+      <p>Model Atlas <i>·</i> Vol. 01</p>
+      <a class="home-link" href="/">Back to the slop <span>↗</span></a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="overline">Monetary Economics · Wynne Godley + Marc Lavoie</p>
+          <h1>The economy,<br /><em>with no loose ends.</em></h1>
+          <p class="intro">Follow every payment, stock and feedback loop through the first four chapters of the stock-flow consistent framework.</p>
+        </div>
+        <aside class="hero-note">
+          <span>THE RULE</span>
+          <p>Every asset is someone else’s liability. Every flow comes from somewhere and goes somewhere.</p>
+          <div class="zero-sum"><b>Σ</b><strong>0</strong></div>
+        </aside>
+      </section>
+
+      <nav class="chapter-nav" id="chapterNav" aria-label="Book chapters"></nav>
+
+      <section class="workspace" aria-live="polite">
+        <div class="workspace-heading">
+          <div>
+            <p class="chapter-label" id="chapterLabel"></p>
+            <h2 id="chapterTitle"></h2>
+          </div>
+          <p class="chapter-summary" id="chapterSummary"></p>
+        </div>
+
+        <div class="model-layout">
+          <section class="graph-panel" aria-labelledby="graphTitle">
+            <div class="panel-bar">
+              <div>
+                <span class="status-dot"></span>
+                <strong id="graphTitle">Directed model</strong>
+                <small id="graphMeta"></small>
+              </div>
+              <div class="graph-actions">
+                <button type="button" id="flowToggle" class="active" aria-pressed="true">Trace flow</button>
+                <button type="button" id="resetGraph" aria-label="Reset graph selection">Reset</button>
+              </div>
+            </div>
+            <div class="graph-wrap">
+              <svg id="modelGraph" viewBox="0 0 920 520" role="img" aria-label="Directed graph of the selected chapter model">
+                <defs>
+                  <marker id="arrow-flow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>
+                  <marker id="arrow-identity" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>
+                  <filter id="nodeShadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-opacity=".13" /></filter>
+                </defs>
+                <g id="edgeLayer"></g>
+                <g id="nodeLayer"></g>
+              </svg>
+              <div class="graph-legend" aria-label="Graph legend">
+                <span><i class="flow"></i> Flow</span>
+                <span><i class="stock"></i> Stock</span>
+                <span><i class="actor"></i> Sector</span>
+                <span><i class="external"></i> Exogenous</span>
+              </div>
+            </div>
+          </section>
+
+          <aside class="inspector" id="inspector" aria-labelledby="inspectorTitle">
+            <p class="inspector-kicker">Selected node</p>
+            <div class="node-symbol" id="nodeSymbol"></div>
+            <h3 id="inspectorTitle"></h3>
+            <p id="nodeDescription"></p>
+            <div class="equation-card">
+              <span>DEFINITION / EQUATION</span>
+              <code id="nodeEquation"></code>
+            </div>
+            <div class="connection-block">
+              <span>DIRECT CONNECTIONS</span>
+              <div id="connections"></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="lab" id="lab" aria-labelledby="labTitle">
+        <div class="lab-heading">
+          <div>
+            <p class="chapter-label">Run the system</p>
+            <h2 id="labTitle">A small experiment</h2>
+          </div>
+          <p id="labDescription"></p>
+        </div>
+        <div class="lab-grid">
+          <div class="controls" id="controls"></div>
+          <div class="chart-card">
+            <div class="chart-heading">
+              <div>
+                <span>MODEL OUTPUT</span>
+                <strong id="chartTitle"></strong>
+              </div>
+              <div class="series-legend" id="seriesLegend"></div>
+            </div>
+            <svg id="simulationChart" viewBox="0 0 760 300" role="img" aria-label="Model simulation over forty periods"></svg>
+            <div class="chart-readout" id="chartReadout"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="reading-notes">
+        <p>READING THE MAP</p>
+        <div>
+          <article><span>01</span><h3>Arrows show causality</h3><p>An arrow points from an input to the variable or sector it directly affects.</p></article>
+          <article><span>02</span><h3>Loops are the point</h3><p>Income creates spending; spending creates income. The model solves the loop together.</p></article>
+          <article><span>03</span><h3>Stocks remember</h3><p>Last period’s money and wealth carry the system’s history into the next period.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>DailySlop Model Atlas</p>
+      <p>Built as a study companion to <cite>Monetary Economics</cite>.</p>
+      <p>Chapters 01—04 · More models to come</p>
+    </footer>
+
+    <script src="/godley/app.js"></script>
+  </body>
+</html>

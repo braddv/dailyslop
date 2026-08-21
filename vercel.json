@@ -31,6 +31,14 @@
       "destination": "/public/intermarket/:path*"
     },
     {
+      "source": "/godley",
+      "destination": "/public/godley/index.html"
+    },
+    {
+      "source": "/godley/:path*",
+      "destination": "/public/godley/:path*"
+    },
+    {
       "source": "/slop",
       "destination": "/public/slop.html"
     },
