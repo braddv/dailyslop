@@ -1,0 +1,336 @@
+const NS = "http://www.w3.org/2000/svg";
+
+const chapters = [
+  {
+    number: "01", short: "The SFC method", title: "A map with no black holes",
+    label: "Chapter 01 · Introduction", meta: "6 nodes · 8 connections",
+    summary: "Godley and Lavoie begin with a discipline, not a forecast: connect flows to stocks, keep every sector's books complete, then add behavioral equations to make the accounting move through time.",
+    lab: "This chapter establishes the model-building sequence. Select a node to see why accounting comes before behavioral assumptions.",
+    nodes: [
+      { id:"opening", symbol:"S₋₁", label:"Opening stocks", type:"stock", x:95, y:210, description:"The inherited balance sheets at the start of a period: the compact record of everything that happened before.", equation:"Sₜ₋₁ = closing stocks from t−1" },
+      { id:"behavior", symbol:"ƒ", label:"Behavior", type:"external", x:285, y:90, description:"Rules for consumption, portfolio choice and other decisions provide the model's causal closure.", equation:"decisionsₜ = ƒ(incomeₜ, wealthₜ₋₁, parameters)" },
+      { id:"flows", symbol:"Fₜ", label:"Transaction flows", type:"flow", x:465, y:210, description:"Payments during the period—wages, consumption, taxes, interest and asset purchases—link every sector.", equation:"Σ sector inflowsₜ − Σ outflowsₜ = savingₜ" },
+      { id:"matrix", symbol:"Σ=0", label:"Accounting matrix", type:"actor", x:650, y:90, description:"Each transaction appears twice with opposite signs. Every row and every sector column must sum to zero.", equation:"∀ rows, columns: Σ entries = 0" },
+      { id:"closing", symbol:"Sₜ", label:"Closing stocks", type:"stock", x:820, y:210, description:"Flows update the opening balance sheet. Revaluation and capital gains may also change the closing stock.", equation:"Sₜ = Sₜ₋₁ + ΔSₜ + capital gainsₜ" },
+      { id:"closure", symbol:"✓", label:"Hidden equation", type:"external", x:465, y:400, description:"One equation is implied by the others. Leaving it out of the solver and checking it afterward tests whether the system is watertight.", equation:"residual identity = 0 (verification only)" }
+    ],
+    edges: [
+      ["opening","behavior","conditions"], ["behavior","flows","decisions"], ["opening","flows","availability"], ["flows","matrix","record"],
+      ["matrix","closing","reconcile"], ["flows","closing","accumulate"], ["matrix","closure","implies","identity"], ["closure","closing","checks","identity"]
+    ]
+  },
+  {
+    number:"02", short:"The monetary circuit", title:"Every payment has a counterparty",
+    label:"Chapter 02 · Balance sheets, transactions + the monetary circuit", meta:"5 sectors · 9 transactions",
+    summary:"The transactions-flow matrix becomes a network. Households, firms, banks, government and the central bank exchange income and financial claims; each arrow creates an equal and opposite entry.",
+    lab:"Chapter 2 is an accounting circuit rather than a closed behavioral model. Trace a sector to isolate both sides of its transactions.",
+    nodes: [
+      { id:"households", symbol:"HH", label:"Households", type:"actor", x:120, y:250, description:"Households receive wages and distributed profits, consume, pay taxes, and allocate saving across money and securities.", equation:"ΔNWₕ = income − consumption − taxes + gains" },
+      { id:"firms", symbol:"F", label:"Production firms", type:"actor", x:360, y:100, description:"Firms produce goods, pay wages, receive consumption and government spending, invest and borrow.", equation:"sales + Δloans + equity issues = wages + investment + distributions" },
+      { id:"banks", symbol:"B", label:"Banks", type:"actor", x:360, y:400, description:"Banks create deposits and loans as matching balance-sheet entries and hold government bills or cash to close their position.", equation:"loans + cash + bills = deposits + bank net worth" },
+      { id:"government", symbol:"G", label:"Government", type:"actor", x:650, y:100, description:"Government purchases goods and services, collects taxes and issues cash or securities to finance a deficit.", equation:"deficit = G − T = Δcash + Δbills" },
+      { id:"centralbank", symbol:"CB", label:"Central bank", type:"actor", x:760, y:400, description:"The central bank supplies state money and can hold government bills, completing the hierarchy of financial claims.", equation:"assets (bills) = liabilities (state money) + net worth" }
+    ],
+    edges: [
+      ["firms","households","wages"], ["households","firms","consumption"], ["government","firms","spending"], ["households","government","taxes"],
+      ["banks","firms","loans"], ["firms","households","profits"], ["banks","households","deposits"], ["government","banks","bills"], ["centralbank","banks","reserves"]
+    ]
+  },
+  {
+    number:"03", short:"Model SIM", title:"The simplest economy that remembers",
+    label:"Chapter 03 · The simplest model with government money", meta:"8 variables · Model SIM",
+    summary:"SIM compresses the economy to households, firms and government. Government spending creates income; taxes withdraw it; saving accumulates as money and feeds next period's consumption.",
+    lab:"Move the fiscal and household parameters. The chart resolves the circular income–consumption loop in each period, then carries money forward as a stock.",
+    model:"SIM",
+    nodes: [
+      { id:"G", symbol:"G", label:"Govt spending", type:"external", x:95, y:120, description:"Government demand is fixed outside the model and directly adds to output.", equation:"G = exogenous" },
+      { id:"Y", symbol:"Y", label:"National income", type:"flow", x:300, y:120, description:"With no investment, output equals household consumption plus government spending.", equation:"Y = C + G" },
+      { id:"T", symbol:"T", label:"Taxes", type:"flow", x:510, y:80, description:"A proportional tax on income is the government's current receipt.", equation:"T = θY" },
+      { id:"YD", symbol:"YD", label:"Disposable income", type:"flow", x:690, y:170, description:"Income available to households after tax payments.", equation:"YD = Y − T" },
+      { id:"C", symbol:"C", label:"Consumption", type:"flow", x:500, y:360, description:"Households consume from current disposable income and from money inherited from the prior period.", equation:"C = α₁YD + α₂H₋₁" },
+      { id:"Hlag", symbol:"H₋₁", label:"Opening money", type:"stock", x:250, y:400, description:"Last period's closing money stock enters the current consumption decision.", equation:"H₋₁ = H from the previous period" },
+      { id:"dH", symbol:"ΔH", label:"Household saving", type:"flow", x:820, y:360, description:"Disposable income not consumed is saved as government money.", equation:"ΔH = YD − C" },
+      { id:"H", symbol:"H", label:"Closing money", type:"stock", x:690, y:480, description:"The closing stock of household money is also the government's outstanding money liability.", equation:"H = H₋₁ + ΔH" }
+    ],
+    edges: [
+      ["G","Y","demand"], ["C","Y","demand"], ["Y","T","tax base"], ["Y","YD","income"], ["T","YD","subtract"],
+      ["YD","C","propensity"], ["Hlag","C","wealth effect"], ["YD","dH","income"], ["C","dH","subtract"], ["dH","H","accumulate"], ["Hlag","H","carry"], ["H","Hlag","next period","identity"]
+    ],
+    controls: [
+      { id:"G", label:"Government spending · G", min:10, max:40, step:1, value:20 },
+      { id:"theta", label:"Tax rate · θ", min:.1, max:.4, step:.01, value:.2 },
+      { id:"alpha1", label:"Income propensity · α₁", min:.4, max:.85, step:.01, value:.6 },
+      { id:"alpha2", label:"Wealth propensity · α₂", min:.1, max:.6, step:.01, value:.4 }
+    ]
+  },
+  {
+    number:"04", short:"Model PC", title:"Money meets portfolio choice",
+    label:"Chapter 04 · Government money with portfolio choice", meta:"11 variables · Model PC",
+    summary:"PC adds interest-bearing Treasury bills. Household saving now becomes wealth that must be allocated between liquid money and bills, linking fiscal policy, interest income and portfolio preferences.",
+    lab:"Change the bill rate or portfolio preference. Higher interest income lifts disposable income while the desired asset mix reallocates wealth between money and bills.",
+    model:"PC",
+    nodes: [
+      { id:"G", symbol:"G", label:"Govt spending", type:"external", x:75, y:90, description:"Government purchases are an exogenous source of aggregate demand.", equation:"G = exogenous" },
+      { id:"r", symbol:"r", label:"Bill rate", type:"external", x:75, y:330, description:"The interest rate paid on Treasury bills is set outside the basic PC model.", equation:"r = exogenous" },
+      { id:"Blag", symbol:"Bh₋₁", label:"Opening bills", type:"stock", x:235, y:430, description:"Bills carried from last period generate interest income in the current period.", equation:"interest income = r₋₁Bh₋₁" },
+      { id:"Y", symbol:"Y", label:"National income", type:"flow", x:280, y:90, description:"Output is determined by household consumption and government demand.", equation:"Y = C + G" },
+      { id:"TX", symbol:"TX", label:"Taxes", type:"flow", x:455, y:70, description:"Taxes apply to production income plus interest received on bills.", equation:"TX = θ(Y + r₋₁Bh₋₁)" },
+      { id:"YD", symbol:"YD", label:"Disposable income", type:"flow", x:625, y:145, description:"Household disposable income includes interest on last period's bill holdings and subtracts tax.", equation:"YD = Y − TX + r₋₁Bh₋₁" },
+      { id:"C", symbol:"C", label:"Consumption", type:"flow", x:455, y:300, description:"Consumption responds to current disposable income and opening wealth.", equation:"C = α₁YD + α₂V₋₁" },
+      { id:"Vlag", symbol:"V₋₁", label:"Opening wealth", type:"stock", x:260, y:280, description:"Money plus bills inherited from the previous period supports current consumption.", equation:"V₋₁ = Hh₋₁ + Bh₋₁" },
+      { id:"V", symbol:"V", label:"Closing wealth", type:"stock", x:790, y:230, description:"Unconsumed disposable income accumulates into household wealth.", equation:"V = V₋₁ + YD − C" },
+      { id:"Bh", symbol:"Bh", label:"Bill demand", type:"stock", x:680, y:400, description:"Households allocate a share of wealth to bills; the share rises with the bill rate and falls with the income-to-wealth ratio.", equation:"Bh = V(λ₀ + λ₁r − λ₂YD/V)" },
+      { id:"Hh", symbol:"Hh", label:"Money demand", type:"stock", x:855, y:420, description:"The residual of household wealth not allocated to bills is held as money.", equation:"Hh = V − Bh" }
+    ],
+    edges: [
+      ["G","Y","demand"], ["C","Y","demand"], ["Y","TX","tax base"], ["Y","YD","income"], ["TX","YD","subtract"],
+      ["r","YD","interest"], ["Blag","YD","interest"], ["YD","C","propensity"], ["Vlag","C","wealth effect"], ["YD","V","saving"], ["C","V","subtract"], ["Vlag","V","carry"],
+      ["V","Bh","allocate"], ["r","Bh","yield"], ["YD","Bh","liquidity"], ["V","Hh","residual"], ["Bh","Hh","subtract"], ["Bh","Blag","next period","identity"]
+    ],
+    controls: [
+      { id:"G", label:"Government spending · G", min:10, max:40, step:1, value:20 },
+      { id:"r", label:"Bill rate · r", min:0, max:.08, step:.005, value:.025 },
+      { id:"theta", label:"Tax rate · θ", min:.1, max:.4, step:.01, value:.2 },
+      { id:"lambda0", label:"Base bill share · λ₀", min:.35, max:.8, step:.01, value:.635 }
+    ]
+  }
+];
+
+let currentChapter = 2;
+let selectedNode = null;
+let flowOn = true;
+
+const el = id => document.getElementById(id);
+const chapterNav = el("chapterNav");
+
+chapters.forEach((chapter, index) => {
+  const button = document.createElement("button");
+  button.className = "chapter-tab";
+  button.type = "button";
+  button.dataset.chapter = index;
+  button.innerHTML = `<small>CH. ${chapter.number}</small><strong>${chapter.short}</strong>`;
+  button.addEventListener("click", () => renderChapter(index));
+  chapterNav.appendChild(button);
+});
+
+function svgElement(name, attributes = {}) {
+  const node = document.createElementNS(NS, name);
+  Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, value));
+  return node;
+}
+
+function nodeCenter(chapter, id) {
+  const node = chapter.nodes.find(item => item.id === id);
+  return { x: node.x, y: node.y };
+}
+
+function edgePath(from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.hypot(dx, dy) || 1;
+  const ux = dx / distance;
+  const uy = dy / distance;
+  const start = { x: from.x + ux * 65, y: from.y + uy * 31 };
+  const end = { x: to.x - ux * 69, y: to.y - uy * 35 };
+  const bend = Math.min(42, distance * .12) * (Math.abs(dy) < 30 ? 1 : 0);
+  const mx = (start.x + end.x) / 2;
+  const my = (start.y + end.y) / 2 - bend;
+  return { d:`M ${start.x} ${start.y} Q ${mx} ${my} ${end.x} ${end.y}`, label:{ x:mx, y:my - 7 } };
+}
+
+function renderGraph(chapter) {
+  const edgeLayer = el("edgeLayer");
+  const nodeLayer = el("nodeLayer");
+  edgeLayer.replaceChildren();
+  nodeLayer.replaceChildren();
+
+  chapter.edges.forEach((edge, index) => {
+    const [fromId, toId, label, kind] = edge;
+    const route = edgePath(nodeCenter(chapter, fromId), nodeCenter(chapter, toId));
+    const path = svgElement("path", { d:route.d, class:`edge ${kind || ""} ${flowOn ? "flowing" : ""}`, "data-from":fromId, "data-to":toId });
+    path.style.animationDelay = `${index * -90}ms`;
+    edgeLayer.appendChild(path);
+    const text = svgElement("text", { x:route.label.x, y:route.label.y, class:"edge-label", "text-anchor":"middle", "data-from":fromId, "data-to":toId });
+    text.textContent = label;
+    edgeLayer.appendChild(text);
+  });
+
+  chapter.nodes.forEach(node => {
+    const group = svgElement("g", { class:"node", transform:`translate(${node.x - 66} ${node.y - 34})`, tabindex:"0", role:"button", "aria-label":`${node.label}: ${node.description}`, "data-id":node.id, "data-type":node.type });
+    group.appendChild(svgElement("rect", { width:132, height:68, rx:3 }));
+    group.appendChild(svgElement("rect", { class:"node-accent", width:5, height:68, rx:2 }));
+    const symbol = svgElement("text", { x:16, y:28, class:"symbol" }); symbol.textContent = node.symbol;
+    const label = svgElement("text", { x:16, y:49, class:"label" }); label.textContent = node.label;
+    group.append(symbol, label);
+    const select = () => selectNode(chapter, node.id);
+    group.addEventListener("click", select);
+    group.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(); } });
+    nodeLayer.appendChild(group);
+  });
+}
+
+function selectNode(chapter, id) {
+  selectedNode = id;
+  const node = chapter.nodes.find(item => item.id === id);
+  const connectedIds = new Set([id]);
+  chapter.edges.forEach(([from, to]) => { if (from === id || to === id) { connectedIds.add(from); connectedIds.add(to); } });
+  document.querySelectorAll(".node").forEach(item => {
+    item.classList.toggle("selected", item.dataset.id === id);
+    item.classList.toggle("dim", !connectedIds.has(item.dataset.id));
+  });
+  document.querySelectorAll(".edge, .edge-label").forEach(item => {
+    const active = item.dataset.from === id || item.dataset.to === id;
+    item.classList.toggle("active", active);
+    item.classList.toggle("dim", !active);
+  });
+  el("nodeSymbol").textContent = node.symbol;
+  el("nodeSymbol").className = `node-symbol ${node.type}`;
+  el("inspectorTitle").textContent = node.label;
+  el("nodeDescription").textContent = node.description;
+  el("nodeEquation").textContent = node.equation;
+  const connections = chapter.edges.filter(([from, to]) => from === id || to === id).map(([from, to, label]) => {
+    const other = chapter.nodes.find(item => item.id === (from === id ? to : from));
+    return `<span class="connection-chip">${from === id ? "→" : "←"} ${other.symbol} · ${label}</span>`;
+  });
+  el("connections").innerHTML = connections.join("") || '<span class="connection-chip">No direct links</span>';
+}
+
+function renderControls(chapter) {
+  const controls = el("controls");
+  controls.replaceChildren();
+  if (!chapter.controls) {
+    controls.innerHTML = `<div class="foundation-note"><p>${chapter.number === "01" ? "Accounting → behavior → simulation" : "Select a sector above to reveal its counterparties."}</p></div>`;
+    renderFoundationChart(chapter.number);
+    return;
+  }
+  chapter.controls.forEach(control => {
+    const wrap = document.createElement("div");
+    wrap.className = "control";
+    wrap.innerHTML = `<label for="control-${control.id}"><span>${control.label}</span><output>${formatControl(control.value, control)}</output></label><input id="control-${control.id}" data-key="${control.id}" type="range" min="${control.min}" max="${control.max}" step="${control.step}" value="${control.value}" /><div class="control-scale"><span>${formatControl(control.min, control)}</span><span>${formatControl(control.max, control)}</span></div>`;
+    wrap.querySelector("input").addEventListener("input", event => {
+      wrap.querySelector("output").textContent = formatControl(Number(event.target.value), control);
+      renderSimulation(chapter);
+    });
+    controls.appendChild(wrap);
+  });
+  renderSimulation(chapter);
+}
+
+function formatControl(value, control) {
+  if (["theta","alpha1","alpha2","lambda0"].includes(control.id)) return Number(value).toFixed(2);
+  if (control.id === "r") return `${(Number(value) * 100).toFixed(1)}%`;
+  return Number(value).toFixed(0);
+}
+
+function currentParams(chapter) {
+  return Object.fromEntries(chapter.controls.map(control => [control.id, Number(el(`control-${control.id}`).value)]));
+}
+
+function simulateSIM(p) {
+  const rows = []; let H = 0; let C = 0;
+  for (let t = 0; t <= 40; t += 1) {
+    for (let k = 0; k < 100; k += 1) {
+      const Y = C + p.G; const T = p.theta * Y; const YD = Y - T;
+      const nextC = p.alpha1 * YD + p.alpha2 * H;
+      if (Math.abs(nextC - C) < 1e-8) { C = nextC; break; }
+      C = nextC;
+    }
+    const Y = C + p.G; const YD = Y * (1 - p.theta);
+    H += YD - C;
+    rows.push({ Y, C, H });
+  }
+  return { rows, series:[{key:"Y",label:"Income",color:"#ff8b61"},{key:"C",label:"Consumption",color:"#62c6b9"},{key:"H",label:"Money",color:"#e6c36b"}] };
+}
+
+function simulatePC(p) {
+  const rows = []; let V = 0; let Bh = 0; let C = 0;
+  const alpha1 = .6, alpha2 = .4, lambda1 = .05, lambda2 = .01;
+  for (let t = 0; t <= 40; t += 1) {
+    const Vlag = V, Blag = Bh, interest = p.r * Blag;
+    for (let k = 0; k < 100; k += 1) {
+      const Y = C + p.G; const TX = p.theta * (Y + interest); const YD = Y - TX + interest;
+      const nextC = alpha1 * YD + alpha2 * Vlag;
+      if (Math.abs(nextC - C) < 1e-8) { C = nextC; break; }
+      C = nextC;
+    }
+    const Y = C + p.G; const TX = p.theta * (Y + interest); const YD = Y - TX + interest;
+    V = Vlag + YD - C;
+    const share = Math.max(0, Math.min(1, p.lambda0 + lambda1 * p.r - lambda2 * (V ? YD / V : 0)));
+    Bh = V * share;
+    rows.push({ Y, V, Bh, Hh:V - Bh });
+  }
+  return { rows, series:[{key:"Y",label:"Income",color:"#ff8b61"},{key:"Bh",label:"Bills",color:"#62c6b9"},{key:"Hh",label:"Money",color:"#e6c36b"}] };
+}
+
+function renderSimulation(chapter) {
+  const result = chapter.model === "SIM" ? simulateSIM(currentParams(chapter)) : simulatePC(currentParams(chapter));
+  el("chartTitle").textContent = chapter.model === "SIM" ? "Income, consumption + money" : "Income + the household portfolio";
+  drawChart(result.rows, result.series);
+}
+
+function drawChart(rows, series) {
+  const svg = el("simulationChart");
+  svg.replaceChildren();
+  const bounds = { left:46, right:742, top:18, bottom:264 };
+  const allValues = rows.flatMap(row => series.map(item => row[item.key])).filter(Number.isFinite);
+  const max = Math.max(...allValues, 1) * 1.08;
+  const x = index => bounds.left + (index / (rows.length - 1)) * (bounds.right - bounds.left);
+  const y = value => bounds.bottom - (value / max) * (bounds.bottom - bounds.top);
+  for (let i = 0; i <= 4; i += 1) {
+    const value = max * i / 4; const yy = y(value);
+    svg.appendChild(svgElement("line", { x1:bounds.left, x2:bounds.right, y1:yy, y2:yy, class:"chart-grid" }));
+    const label = svgElement("text", { x:bounds.left - 8, y:yy + 3, class:"chart-axis-label", "text-anchor":"end" }); label.textContent = value.toFixed(0); svg.appendChild(label);
+  }
+  [0,10,20,30,40].forEach(period => { const label = svgElement("text", { x:x(period), y:286, class:"chart-axis-label", "text-anchor":"middle" }); label.textContent = `t${period}`; svg.appendChild(label); });
+  series.forEach(item => {
+    const points = rows.map((row, index) => `${x(index)},${y(row[item.key])}`).join(" ");
+    svg.appendChild(svgElement("polyline", { points, class:"chart-line", stroke:item.color }));
+  });
+  el("seriesLegend").innerHTML = series.map(item => `<span><i style="background:${item.color}"></i>${item.label}</span>`).join("");
+  const last = rows.at(-1);
+  el("chartReadout").innerHTML = series.map(item => `<div class="readout-item"><span>t40 · ${item.label}</span><strong style="color:${item.color}">${last[item.key].toFixed(2)}</strong></div>`).join("");
+}
+
+function renderFoundationChart(number) {
+  el("chartTitle").textContent = number === "01" ? "The stock–flow sequence" : "A transaction recorded twice";
+  el("seriesLegend").innerHTML = "";
+  el("chartReadout").innerHTML = number === "01"
+    ? '<div class="readout-item"><span>OPEN</span><strong>Stocks t−1</strong></div><div class="readout-item"><span>MOVE</span><strong>Flows t</strong></div><div class="readout-item"><span>CLOSE</span><strong>Stocks t</strong></div>'
+    : '<div class="readout-item"><span>PAYER</span><strong>− transaction</strong></div><div class="readout-item"><span>PAYEE</span><strong>+ transaction</strong></div><div class="readout-item"><span>ROW SUM</span><strong>0</strong></div>';
+  const svg = el("simulationChart"); svg.replaceChildren();
+  const labels = number === "01" ? ["OPENING STOCKS","TRANSACTIONS","CLOSING STOCKS"] : ["SECTOR A","ONE PAYMENT","SECTOR B"];
+  labels.forEach((label, i) => {
+    const x = 80 + i * 290;
+    svg.appendChild(svgElement("rect", { x, y:95, width:150, height:78, fill:i === 1 ? "#e75d2a" : "#f3efe5", stroke:"#e7e0d2" }));
+    const text = svgElement("text", { x:x + 75, y:140, class:"chart-axis-label", "text-anchor":"middle" }); text.textContent = label; text.setAttribute("fill", i === 1 ? "#fff" : "#152721"); svg.appendChild(text);
+    if (i < 2) { svg.appendChild(svgElement("line", { x1:x + 158, x2:x + 276, y1:134, y2:134, stroke:"#62c6b9", "stroke-width":"2" })); const arrow = svgElement("text", { x:x + 218, y:125, class:"chart-axis-label", "text-anchor":"middle" }); arrow.textContent = "→"; svg.appendChild(arrow); }
+  });
+}
+
+function renderChapter(index) {
+  currentChapter = index;
+  const chapter = chapters[index];
+  document.querySelectorAll(".chapter-tab").forEach((button, buttonIndex) => { button.classList.toggle("active", buttonIndex === index); button.setAttribute("aria-current", buttonIndex === index ? "page" : "false"); });
+  el("chapterLabel").textContent = chapter.label;
+  el("chapterTitle").textContent = chapter.title;
+  el("chapterSummary").textContent = chapter.summary;
+  el("graphMeta").textContent = chapter.meta;
+  el("labDescription").textContent = chapter.lab;
+  renderGraph(chapter);
+  renderControls(chapter);
+  selectNode(chapter, chapter.nodes[0].id);
+}
+
+el("flowToggle").addEventListener("click", () => {
+  flowOn = !flowOn;
+  el("flowToggle").classList.toggle("active", flowOn);
+  el("flowToggle").setAttribute("aria-pressed", String(flowOn));
+  document.querySelectorAll(".edge").forEach(edge => edge.classList.toggle("flowing", flowOn));
+});
+
+el("resetGraph").addEventListener("click", () => {
+  const chapter = chapters[currentChapter];
+  selectNode(chapter, chapter.nodes[0].id);
+});
+
+renderChapter(currentChapter);
