@@ -7,6 +7,7 @@ const {
   buildSystematicTrendSummary,
   buildTrendContext,
   buildMacroState,
+  buildMacroRegime,
   buildRelationships,
   extractCloseSeries,
   getLastFinite,
@@ -230,6 +231,11 @@ module.exports = async function handler(req, res) {
 
   const intradayBySymbol = new Map(intraday.instruments.map((row) => [row.symbol, row]));
   const instruments = daily.instruments.map((row) => mergeInstrument(row, intradayBySymbol.get(row.symbol)));
+  const relationships = buildRelationships(instruments);
+  const macroRegime = {
+    ...buildMacroRegime(instruments, relationships),
+    evidenceThrough: intraday.asOf || daily.asOf,
+  };
   return res.status(200).json({
     success: true,
     asOf: intraday.asOf || daily.asOf,
@@ -242,8 +248,9 @@ module.exports = async function handler(req, res) {
     },
     failures: [...(daily.failures || []), ...(intraday.failures || [])],
     macroState: buildMacroState(instruments),
+    macroRegime,
     systematicTrend: buildSystematicTrendSummary(instruments),
-    relationships: buildRelationships(instruments),
+    relationships,
     instruments,
   });
 };

@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   buildDailyInstrument,
+  buildMacroRegime,
   buildMacroState,
   buildRelationships,
   buildSystematicTrend,
@@ -234,6 +235,71 @@ test('macro state exposes structural dollar and aggregate commodity trend contex
   assert.match(commodities.detail, /moves typical/);
   assert.match(commodities.detail, /avg \+1\.3% vs 20D/);
   assert.match(commodities.detail, /avg \+3\.0% vs 50D/);
+});
+
+function regimeRow(symbol, score, returns = {}) {
+  return {
+    symbol,
+    currentPrice: 100,
+    changePercent: 0,
+    perf1w: 0,
+    perf1m: 0,
+    perf3m: 0,
+    systematicTrend: { score, direction: score >= 0 ? 'higher' : 'lower' },
+    ...returns,
+  };
+}
+
+test('macro regime classifies reflation from contemporaneous growth and inflation evidence', () => {
+  const rows = [
+    regimeRow('SPY', 55), regimeRow('^VIX', -45),
+    regimeRow('IWM', 50, { perf1m: 7, perf3m: 10 }),
+    regimeRow('EEM', 45, { perf1m: 6, perf3m: 8 }),
+    regimeRow('HYG', 40, { perf1m: 3, perf3m: 4 }),
+    regimeRow('LQD', 5),
+    regimeRow('HG=F', 55, { perf1m: 8, perf3m: 11 }),
+    regimeRow('GC=F', 20),
+    regimeRow('CL=F', 60), regimeRow('BZ=F', 55),
+    regimeRow('DBA', 40), regimeRow('^TNX', 45), regimeRow('^TYX', 40),
+    regimeRow('DX-Y.NYB', -30),
+  ];
+  const result = buildMacroRegime(rows);
+  assert.equal(result.key, 'reflation');
+  assert.equal(result.label, 'Reflation');
+  assert.ok(result.growthScore >= 15);
+  assert.ok(result.inflationScore >= 15);
+  assert.ok(result.supportingEvidence.length > 0);
+  assert.equal(result.methodologyVersion, 1);
+});
+
+test('macro regime classifies stagflation when growth falls while inflation rises', () => {
+  const rows = [
+    regimeRow('SPY', -55), regimeRow('^VIX', 50),
+    regimeRow('IWM', -50, { perf1m: -7, perf3m: -10 }),
+    regimeRow('EEM', -35, { perf1m: -4, perf3m: -7 }),
+    regimeRow('HYG', -40, { perf1m: -3, perf3m: -5 }),
+    regimeRow('LQD', 10),
+    regimeRow('HG=F', 50, { perf1m: 2, perf3m: 3 }),
+    regimeRow('GC=F', 45), regimeRow('CL=F', 60), regimeRow('BZ=F', 55),
+    regimeRow('DBA', 45), regimeRow('^TNX', 50), regimeRow('^TYX', 45),
+    regimeRow('DX-Y.NYB', -30),
+  ];
+  const result = buildMacroRegime(rows);
+  assert.equal(result.key, 'stagflation');
+  assert.ok(result.growthScore <= -15);
+  assert.ok(result.inflationScore >= 15);
+});
+
+test('macro regime does not force a quadrant when an axis is inside the neutral band', () => {
+  const result = buildMacroRegime([
+    regimeRow('SPY', 5), regimeRow('^VIX', 0),
+    regimeRow('CL=F', 50), regimeRow('BZ=F', 45), regimeRow('HG=F', 40),
+    regimeRow('DBA', 35), regimeRow('^TNX', 35), regimeRow('^TYX', 30),
+    regimeRow('DX-Y.NYB', -20), regimeRow('GC=F', 25),
+  ]);
+  assert.equal(result.key, 'mixed-transitioning');
+  assert.equal(result.status, 'Unclear');
+  assert.equal(result.confidence, 'Low');
 });
 
 test('replay points deduplicate timestamps and percent change rejects invalid bases', () => {

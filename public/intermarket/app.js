@@ -47,6 +47,7 @@ const elements = {
   cacheState: document.getElementById('cacheState'),
   macroSummary: document.getElementById('macroSummary'),
   stateGrid: document.getElementById('stateGrid'),
+  regimePanel: document.getElementById('regimePanel'),
   breadthSummary: document.getElementById('breadthSummary'),
   breadthOverview: document.getElementById('breadthOverview'),
   breadthAsOf: document.getElementById('breadthAsOf'),
@@ -147,6 +148,49 @@ function renderMacroState() {
       <p>${card.detail}</p>
     </article>
   `).join('');
+  renderMacroRegime();
+}
+
+function renderMacroRegime() {
+  const regime = state.data.macroRegime;
+  if (!regime) {
+    elements.regimePanel.hidden = true;
+    return;
+  }
+  const growthPosition = finite(regime.growthScore) ? 50 + regime.growthScore * 0.45 : 50;
+  const inflationPosition = finite(regime.inflationScore) ? 50 - regime.inflationScore * 0.45 : 50;
+  const evidenceList = (rows, emptyText) => rows?.length
+    ? `<ul>${rows.map((row) => `<li><strong>${row.axis === 'growth' ? 'Growth' : 'Inflation'}</strong><span>${row.detail}</span></li>`).join('')}</ul>`
+    : `<p class="regime-empty">${emptyText}</p>`;
+  elements.regimePanel.hidden = false;
+  elements.regimePanel.innerHTML = `
+    <div class="regime-copy">
+      <p class="section-kicker">Growth × inflation map</p>
+      <div class="regime-title-row">
+        <h3>${regime.label}</h3>
+        <span class="regime-status">${regime.status} · ${regime.confidence} confidence</span>
+      </div>
+      <p>${regime.note}</p>
+      <div class="regime-score-grid">
+        <div><span>Growth pulse</span><strong>${trendScore(regime.growthScore)}</strong><small>${regime.growthDirection}</small></div>
+        <div><span>Inflation pressure</span><strong>${trendScore(regime.inflationScore)}</strong><small>${regime.inflationDirection}</small></div>
+        <div><span>Input coverage</span><strong>${regime.coveragePercent}%</strong><small>available evidence</small></div>
+      </div>
+    </div>
+    <div class="regime-quadrant" style="--regime-x:${growthPosition}%;--regime-y:${inflationPosition}%" aria-label="Growth and inflation regime quadrant">
+      <div class="quadrant-label top-left"><strong>Stagflation</strong><span>Growth ↓ · Inflation ↑</span></div>
+      <div class="quadrant-label top-right"><strong>Reflation</strong><span>Growth ↑ · Inflation ↑</span></div>
+      <div class="quadrant-label bottom-left"><strong>Disinflationary slowdown</strong><span>Growth ↓ · Inflation ↓</span></div>
+      <div class="quadrant-label bottom-right"><strong>Goldilocks</strong><span>Growth ↑ · Inflation ↓</span></div>
+      <span class="axis-label axis-growth">Growth pulse →</span>
+      <span class="axis-label axis-inflation">Inflation pressure →</span>
+      <span class="regime-marker"><i></i><b>${regime.label}</b></span>
+    </div>
+    <div class="regime-evidence">
+      <div><h4>Supporting evidence</h4>${evidenceList(regime.supportingEvidence, 'No decisive supporting evidence.')}</div>
+      <div><h4>Contradicting evidence</h4>${evidenceList(regime.contradictingEvidence, 'No material contradictions in the available inputs.')}</div>
+    </div>
+  `;
 }
 
 function trendScore(value) {
