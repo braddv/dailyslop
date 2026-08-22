@@ -40,6 +40,16 @@ h2,h3,p { margin-top:0; }
 .playback-dot { flex:none; width:10px; height:10px; border:2px solid #fff; border-radius:50%; background:var(--accent); box-shadow:0 0 0 5px rgba(87,195,255,.12); animation:playbackPulse 1.4s ease-in-out infinite; }
 .playback-progress { grid-column:1 / -1; height:3px; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.06); }
 .playback-progress i { display:block; width:2%; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--mixed),var(--accent)); transition:width .55s linear; }
+.trajectory-transport { display:grid; grid-template-columns:auto minmax(160px,1fr) auto; align-items:center; gap:12px; margin:0 0 14px; padding:10px 12px; border:1px solid var(--border); border-radius:13px; background:rgba(8,12,19,.55); }
+.trajectory-transport.is-disabled { opacity:.45; pointer-events:none; }
+.trajectory-play { display:flex; align-items:center; justify-content:center; gap:7px; min-width:90px; padding:9px 14px; border:1px solid rgba(87,195,255,.3); border-radius:10px; color:var(--text); background:rgba(87,195,255,.14); font-weight:700; }
+.trajectory-play:hover { background:rgba(87,195,255,.22); }
+.trajectory-play:disabled { cursor:not-allowed; }
+.trajectory-scrubber { width:100%; accent-color:var(--accent); cursor:grab; }
+.trajectory-scrubber:active { cursor:grabbing; }
+.trajectory-speed { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:.66rem; }
+.trajectory-speed select { border:1px solid var(--border); border-radius:8px; padding:7px; color:var(--text); background:#101623; }
+.playback-dot.paused { animation:none; opacity:.6; box-shadow:none; }
 @keyframes playbackPulse { 50% { box-shadow:0 0 0 8px rgba(87,195,255,.04); } }
 .quadrant-wrap { overflow:hidden; border:1px solid var(--border); border-radius:18px; background:rgba(7,11,18,.75); }
 #quadrant { display:block; width:100%; height:auto; min-height:470px; }
@@ -70,4 +80,4 @@ footer button { padding:10px 17px; border:0; border-radius:999px; color:#07111b;
 footer button:disabled { opacity:.55; }
 @media (max-width:900px) { .current-panel { grid-template-columns:1fr; }.current-stats { grid-template-columns:repeat(2,1fr); }.transition-list { grid-template-columns:repeat(2,1fr); } }
 @media (prefers-reduced-motion:reduce) { .playback-dot { animation:none; }.trajectory-cursor,.trajectory-cursor-halo,.playback-progress i { transition:none; } }
-@media (max-width:640px) { .shell { width:min(94vw,620px); padding-top:24px; }.hero,.section-heading,.section-heading.compact,.detail-heading { align-items:flex-start; flex-direction:column; }.meta { width:100%; justify-content:flex-start; }.meta-card { flex:1; min-width:135px; }.current-panel,.history-panel,.detail-panel,.timeline-panel,.method-panel { padding:17px; border-radius:19px; }.current-stats,.evidence-grid,.transition-list { grid-template-columns:1fr; }.range-toggle { width:100%; }.range-toggle button { flex:1; min-width:0; padding:9px 7px; }.trajectory-readout { grid-template-columns:1fr 1fr; }.playback-status { grid-column:1 / -1; }.trajectory-readout>p { justify-self:end; }.quadrant-wrap { overflow-x:auto; }#quadrant { width:720px; min-height:468px; }.detail-scores { width:100%; }.detail-scores .stat { flex:1; min-width:0; }.chart-legend { gap:9px; }.timeline { height:40px; } }
+@media (max-width:640px) { .shell { width:min(94vw,620px); padding-top:24px; }.hero,.section-heading,.section-heading.compact,.detail-heading { align-items:flex-start; flex-direction:column; }.meta { width:100%; justify-content:flex-start; }.meta-card { flex:1; min-width:135px; }.current-panel,.history-panel,.detail-panel,.timeline-panel,.method-panel { padding:17px; border-radius:19px; }.current-stats,.evidence-grid,.transition-list { grid-template-columns:1fr; }.range-toggle { width:100%; }.range-toggle button { flex:1; min-width:0; padding:9px 7px; }.trajectory-readout { grid-template-columns:1fr 1fr; }.playback-status { grid-column:1 / -1; }.trajectory-readout>p { justify-self:end; }.trajectory-transport { grid-template-columns:auto minmax(100px,1fr); }.trajectory-speed { grid-column:1 / -1; justify-self:end; }.quadrant-wrap { overflow-x:auto; }#quadrant { width:720px; min-height:468px; }.detail-scores { width:100%; }.detail-scores .stat { flex:1; min-width:0; }.chart-legend { gap:9px; }.timeline { height:40px; } }
