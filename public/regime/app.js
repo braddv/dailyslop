@@ -12,7 +12,7 @@ const elements = {
   asOf: document.getElementById('asOf'), historyCount: document.getElementById('historyCount'),
   currentTitle: document.getElementById('currentTitle'), currentDescription: document.getElementById('currentDescription'),
   currentStats: document.getElementById('currentStats'), rangeToggle: document.getElementById('rangeToggle'),
-  quadrant: document.getElementById('quadrant'), detailTitle: document.getElementById('detailTitle'),
+  quadrant: document.getElementById('quadrant'), trajectoryReadout: document.getElementById('trajectoryReadout'), detailTitle: document.getElementById('detailTitle'),
   detailMeta: document.getElementById('detailMeta'), detailScores: document.getElementById('detailScores'),
   supportingEvidence: document.getElementById('supportingEvidence'), contradictingEvidence: document.getElementById('contradictingEvidence'),
   timeline: document.getElementById('timeline'), timelineSummary: document.getElementById('timelineSummary'),
@@ -51,26 +51,64 @@ function renderQuadrant() {
   if (!rows.length) return;
   if (state.selectedIndex == null || state.selectedIndex >= rows.length) state.selectedIndex = rows.length - 1;
   const selected = rows[state.selectedIndex];
-  const path = rows.map((row) => `${pointX(row.growthScore)},${pointY(row.inflationScore)}`).join(' ');
-  const markerStep = ['6m', '1y'].includes(state.range) ? 5 : state.range === '3m' ? 2 : 1;
-  const markers = rows.map((row, index) => {
-    if (index % markerStep && index !== rows.length - 1 && index !== state.selectedIndex) return '';
-    const selectedClass = index === state.selectedIndex ? ' selected' : '';
-    return `<circle class="history-point${selectedClass}" data-index="${index}" cx="${pointX(row.growthScore)}" cy="${pointY(row.inflationScore)}" r="${index === state.selectedIndex ? 8 : 4.5}" fill="${COLORS[row.key]}" tabindex="0"><title>${formatDate(row.snapshotAt, true)} · ${row.label}</title></circle>`;
+  const sampleStep = ['6m', '1y'].includes(state.range) ? 5 : state.range === '3m' ? 2 : 1;
+  const pathRows = rows.map((row, index) => ({ row, index }))
+    .filter(({ index }) => index % sampleStep === 0 || index === rows.length - 1);
+  const arrowEvery = Math.max(3, Math.round((pathRows.length - 1) / 6));
+  const segments = pathRows.slice(1).map(({ row, index }, segmentIndex) => {
+    const previous = pathRows[segmentIndex].row;
+    const progress = (segmentIndex + 1) / Math.max(1, pathRows.length - 1);
+    const opacity = (0.14 + progress * 0.76).toFixed(2);
+    const width = (1.4 + progress * 1.8).toFixed(2);
+    const arrow = (segmentIndex + 1) % arrowEvery === 0 || index === rows.length - 1 ? ' marker-end="url(#trajectoryArrow)"' : '';
+    return `<line x1="${pointX(previous.growthScore)}" y1="${pointY(previous.inflationScore)}" x2="${pointX(row.growthScore)}" y2="${pointY(row.inflationScore)}" stroke="rgba(233,237,246,${opacity})" stroke-width="${width}" stroke-linecap="round"${arrow}/>`;
   }).join('');
+  const markers = pathRows.map(({ row, index }, pathIndex) => {
+    const selectedClass = index === state.selectedIndex ? ' selected' : '';
+    const progress = pathIndex / Math.max(1, pathRows.length - 1);
+    const opacity = (0.22 + progress * 0.78).toFixed(2);
+    return `<circle class="history-point${selectedClass}" data-index="${index}" cx="${pointX(row.growthScore)}" cy="${pointY(row.inflationScore)}" r="${index === state.selectedIndex ? 8 : 4.5}" fill="${COLORS[row.key]}" opacity="${opacity}" tabindex="0"><title>${formatDate(row.snapshotAt, true)} · ${row.label}</title></circle>`;
+  }).join('');
+  const selectedMarker = pathRows.some(({ index }) => index === state.selectedIndex) ? ''
+    : `<circle class="history-point selected" data-index="${state.selectedIndex}" cx="${pointX(selected.growthScore)}" cy="${pointY(selected.inflationScore)}" r="8" fill="${COLORS[selected.key]}" tabindex="0"><title>${formatDate(selected.snapshotAt, true)} · ${selected.label}</title></circle>`;
+  const start = rows[0];
+  const latest = rows.at(-1);
+  const scoreDelta = (value) => `${value >= 0 ? '+' : ''}${Math.round(value)}`;
+  elements.trajectoryReadout.innerHTML = `
+    <div><span class="route-dot start"></span><small>Start · ${formatDate(start.snapshotAt, true)}</small><strong>${start.label}</strong></div>
+    <b>→</b>
+    <div><span class="route-dot latest"></span><small>Latest close · ${formatDate(latest.snapshotAt, true)}</small><strong>${latest.label}</strong></div>
+    <p>Net move: growth ${scoreDelta(latest.growthScore - start.growthScore)} · inflation ${scoreDelta(latest.inflationScore - start.inflationScore)}</p>`;
+  const svgLabel = (row, title, below) => {
+    const x = pointX(row.growthScore);
+    const y = pointY(row.inflationScore);
+    const labelWidth = 116;
+    const labelX = Math.max(55, Math.min(745 - labelWidth, x - labelWidth / 2));
+    const labelY = below ? Math.min(438, y + 18) : Math.max(54, y - 45);
+    return `<g class="route-label" transform="translate(${labelX} ${labelY})"><rect width="${labelWidth}" height="32" rx="8"/><text x="8" y="13">${title}</text><text x="8" y="25">${formatDate(row.snapshotAt, state.range === '1y')}</text></g>`;
+  };
   elements.quadrant.innerHTML = `
+    <defs><marker id="trajectoryArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e9edf6"/></marker></defs>
     <rect x="50" y="50" width="350" height="210" fill="rgba(255,127,150,.055)"/><rect x="400" y="50" width="350" height="210" fill="rgba(241,182,103,.055)"/>
     <rect x="50" y="260" width="350" height="210" fill="rgba(143,157,181,.055)"/><rect x="400" y="260" width="350" height="210" fill="rgba(100,217,177,.055)"/>
     <rect x="347.5" y="50" width="105" height="420" fill="rgba(193,140,255,.035)"/><rect x="50" y="228.5" width="700" height="63" fill="rgba(193,140,255,.035)"/>
     <g stroke="rgba(255,255,255,.14)" stroke-width="1"><line x1="400" y1="50" x2="400" y2="470"/><line x1="50" y1="260" x2="750" y2="260"/></g>
     <g class="quadrant-labels" fill="#9aa6b9" font-size="13"><text x="70" y="80">STAGFLATION</text><text x="730" y="80" text-anchor="end">REFLATION</text><text x="70" y="445">DISINFLATIONARY SLOWDOWN</text><text x="730" y="445" text-anchor="end">GOLDILOCKS</text></g>
     <text x="746" y="282" text-anchor="end" fill="#748197" font-size="11">GROWTH PULSE →</text><text x="414" y="67" fill="#748197" font-size="11">INFLATION PRESSURE ↑</text>
-    <polyline points="${path}" fill="none" stroke="rgba(233,237,246,.48)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    ${markers}
-    <g transform="translate(${Math.min(650, pointX(selected.growthScore) + 14)} ${Math.max(72, pointY(selected.inflationScore) - 13)})"><rect width="${Math.min(150, selected.label.length * 7 + 24)}" height="28" rx="8" fill="rgba(5,9,15,.9)" stroke="${COLORS[selected.key]}"/><text x="10" y="18" fill="#e9edf6" font-size="11">${selected.label}</text></g>`;
+    <g class="trajectory-segments">${segments}</g>
+    ${markers}${selectedMarker}
+    <circle cx="${pointX(start.growthScore)}" cy="${pointY(start.inflationScore)}" r="10" fill="none" stroke="#9aa6b9" stroke-width="2" stroke-dasharray="3 3"/>
+    <circle cx="${pointX(latest.growthScore)}" cy="${pointY(latest.inflationScore)}" r="11" fill="none" stroke="#fff" stroke-width="2.5"/>
+    ${svgLabel(start, 'START', true)}${svgLabel(latest, 'LATEST', false)}`;
   elements.quadrant.querySelectorAll('[data-index]').forEach((marker) => marker.addEventListener('click', () => {
     state.selectedIndex = Number(marker.dataset.index); renderHistory();
   }));
+  requestAnimationFrame(() => {
+    const scroller = elements.quadrant.closest('.quadrant-wrap');
+    if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return;
+    const selectedPixel = (pointX(selected.growthScore) / 800) * elements.quadrant.clientWidth;
+    scroller.scrollLeft = Math.max(0, Math.min(scroller.scrollWidth - scroller.clientWidth, selectedPixel - scroller.clientWidth / 2));
+  });
 }
 
 function evidenceHtml(rows, emptyText, supporting) {
