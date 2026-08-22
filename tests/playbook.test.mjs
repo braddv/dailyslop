@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { buildPlaybook, latestSessionRows, regimeScore } = require('../public/playbook/ranking.js');
+const { buildPlaybook, latestSessionRows, regimeScore, macroFitScore, diversifiedCandidates } = require('../public/playbook/ranking.js');
 
 const recent = '2026-08-21T19:00:00.000Z';
 const older = '2026-08-20T19:00:00.000Z';
@@ -111,5 +111,24 @@ test('candidate output is capped at five and includes transparent explanations',
   assert.equal(playbook.bullish.length, 5);
   assert.equal(playbook.bullish[0].symbol, 'S0');
   assert.match(playbook.bullish[0].explanation.why, /Confirmed leader/);
-  assert.match(playbook.methodology, /Signal 45%/);
+  assert.match(playbook.methodology, /Signal 40%/);
+});
+
+test('macro fit modestly favors aligned sectors without becoming a hard filter', () => {
+  const reflation = { label: 'Reflation', confidence: 'high' };
+  assert.ok(macroFitScore(reflation, 'Energy', 'bullish') > macroFitScore(reflation, 'Health Care', 'bullish'));
+  assert.ok(macroFitScore(reflation, 'Utilities', 'bullish') < macroFitScore(reflation, 'Health Care', 'bullish'));
+  assert.equal(macroFitScore(reflation, 'Health Care', 'bullish'), 50);
+  assert.ok(macroFitScore({ ...reflation, confidence: 'low' }, 'Energy', 'bullish') < macroFitScore(reflation, 'Energy', 'bullish'));
+});
+
+test('diversified shortlist caps each sector at two names', () => {
+  const candidates = [
+    ...Array.from({ length: 4 }, (_, index) => ({ symbol: `H${index}`, sectorName: 'Health Care', score: 100 - index })),
+    ...Array.from({ length: 2 }, (_, index) => ({ symbol: `T${index}`, sectorName: 'Technology', score: 90 - index })),
+    { symbol: 'E0', sectorName: 'Energy', score: 80 },
+  ];
+  const result = diversifiedCandidates(candidates);
+  assert.equal(result.length, 5);
+  assert.equal(result.filter((candidate) => candidate.sectorName === 'Health Care').length, 2);
 });

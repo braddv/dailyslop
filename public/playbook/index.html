@@ -38,9 +38,17 @@
       </section>
 
       <section class="method-strip" aria-label="Ranking methodology">
-        <div><strong>Transparent composite</strong><span id="methodology">Signal 45% · sector regime 25% · sector confirmation 18% · price confirmation 12%</span></div>
+        <div><strong>Transparent composite</strong><span id="methodology">Signal 40% · sector regime 20% · sector confirmation 15% · price confirmation 15% · macro fit 10%</span></div>
         <p>This is an evidence ranking, not a trade instruction. Weak candidates are not added merely to fill five slots.</p>
       </section>
+
+      <div class="shortlist-toolbar">
+        <div><strong>Shortlist construction</strong><span id="shortlistDescription">The five highest evidence scores, including sector concentration.</span></div>
+        <div class="shortlist-toggle" id="shortlistToggle" aria-label="Shortlist construction">
+          <button class="active" type="button" data-shortlist="strongest">Strongest evidence</button>
+          <button type="button" data-shortlist="diversified">Diversified</button>
+        </div>
+      </div>
 
       <div class="side-grid">
         <section class="ideas-panel bullish-panel" aria-labelledby="bullishTitle">
@@ -48,6 +56,7 @@
             <div><p class="section-kicker">Potential long setups</p><h2 id="bullishTitle">Top bullish ideas</h2></div>
             <span class="idea-count" id="bullishCount">--</span>
           </div>
+          <div class="concentration-note" id="bullishConcentration" hidden></div>
           <div class="idea-list" id="bullishList"><div class="loading-card">Ranking bullish evidence…</div></div>
         </section>
 
@@ -56,6 +65,7 @@
             <div><p class="section-kicker bearish-kicker">Potential short / risk setups</p><h2 id="bearishTitle">Top bearish ideas</h2></div>
             <span class="idea-count" id="bearishCount">--</span>
           </div>
+          <div class="concentration-note bearish-note" id="bearishConcentration" hidden></div>
           <div class="idea-list" id="bearishList"><div class="loading-card">Ranking bearish evidence…</div></div>
         </section>
       </div>
