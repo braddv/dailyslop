@@ -3683,6 +3683,12 @@ async function loadData(forceRefresh = false) {
     lastSubIndustries = buildSubIndustryStocks(lastStocks);
     actionPeriodRowsCache.clear();
     populateTickerSearch();
+    const requestedPin = new URLSearchParams(window.location.search).get("pin")?.trim().toUpperCase();
+    if (requestedPin && lastStocks.some((stock) => stock.symbol === requestedPin)) {
+      pinnedSymbols.add(requestedPin);
+      tickerSearchInput.value = requestedPin;
+      tickerSearchStatus.textContent = `Pinned ${requestedPin} from Market Playbook.`;
+    }
     buildReplayTimeline();
     // Signal history and market data load independently. If history wins the
     // race, the Action Board renders before a stock universe exists and exits

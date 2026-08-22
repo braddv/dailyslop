@@ -39,6 +39,14 @@
       "destination": "/public/regime/:path*"
     },
     {
+      "source": "/playbook",
+      "destination": "/public/playbook/index.html"
+    },
+    {
+      "source": "/playbook/:path*",
+      "destination": "/public/playbook/:path*"
+    },
+    {
       "source": "/godley",
       "destination": "/public/godley/index.html"
     },

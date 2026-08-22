@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/playbook/" />
+    <title>DailySlop Market Playbook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/playbook/styles.css" />
+  </head>
+  <body>
+    <div class="glow glow-one"></div><div class="glow glow-two"></div>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <nav class="breadcrumb" aria-label="DailySlop pages">
+            <a href="/sp500ad">S&amp;P 500</a><span>/</span><a href="/intermarket">Macro Radar</a><span>/</span><a href="/regime">Regime</a><span>/</span><strong>Playbook</strong>
+          </nav>
+          <p class="eyebrow">Macro → sector → stock</p>
+          <h1>Market Playbook</h1>
+          <p class="subhead">The strongest current bullish and bearish S&amp;P 500 ideas, ranked only when signal, sector regime, sector tape, and price evidence can be evaluated together.</p>
+        </div>
+        <div class="hero-actions">
+          <button id="refreshButton" type="button">Refresh</button>
+          <span id="statusText">Loading shared market data…</span>
+        </div>
+      </header>
+
+      <section class="context-panel" aria-labelledby="contextTitle">
+        <div class="context-heading">
+          <div><p class="section-kicker">Current decision context</p><h2 id="contextTitle">Building today’s evidence chain…</h2></div>
+          <a href="/regime">Explore regime trajectory →</a>
+        </div>
+        <div class="context-grid" id="contextGrid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+        <p class="context-summary" id="contextSummary"></p>
+      </section>
+
+      <section class="method-strip" aria-label="Ranking methodology">
+        <div><strong>Transparent composite</strong><span id="methodology">Signal 45% · sector regime 25% · sector confirmation 18% · price confirmation 12%</span></div>
+        <p>This is an evidence ranking, not a trade instruction. Weak candidates are not added merely to fill five slots.</p>
+      </section>
+
+      <div class="side-grid">
+        <section class="ideas-panel bullish-panel" aria-labelledby="bullishTitle">
+          <div class="ideas-heading">
+            <div><p class="section-kicker">Potential long setups</p><h2 id="bullishTitle">Top bullish ideas</h2></div>
+            <span class="idea-count" id="bullishCount">--</span>
+          </div>
+          <div class="idea-list" id="bullishList"><div class="loading-card">Ranking bullish evidence…</div></div>
+        </section>
+
+        <section class="ideas-panel bearish-panel" aria-labelledby="bearishTitle">
+          <div class="ideas-heading">
+            <div><p class="section-kicker bearish-kicker">Potential short / risk setups</p><h2 id="bearishTitle">Top bearish ideas</h2></div>
+            <span class="idea-count" id="bearishCount">--</span>
+          </div>
+          <div class="idea-list" id="bearishList"><div class="loading-card">Ranking bearish evidence…</div></div>
+        </section>
+      </div>
+
+      <section class="reading-panel">
+        <p class="section-kicker">How to use this page</p>
+        <h2>Start with agreement, investigate disagreement</h2>
+        <div class="reading-grid">
+          <p><strong>Confirmed</strong> means that layer agrees with the candidate’s direction. It does not mean the trade will work.</p>
+          <p><strong>Mixed</strong> means the evidence is usable but not decisive. These names need a cleaner trigger or smaller risk.</p>
+          <p><strong>Against</strong> means a major layer conflicts with the idea. Treat it as a watch, not a finished setup.</p>
+        </div>
+      </section>
+    </main>
+    <script src="/playbook/ranking.js"></script>
+    <script src="/playbook/app.js"></script>
+  </body>
+</html>
