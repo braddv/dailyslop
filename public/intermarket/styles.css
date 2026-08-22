@@ -126,6 +126,8 @@ h1 { margin: 0; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 0.95; letter-s
 .regime-evidence li strong, .regime-evidence li span { display: block; }
 .regime-evidence li strong { margin-bottom: 4px; color: var(--accent); font-size: 0.55rem; text-transform: uppercase; }
 .regime-evidence li span, .regime-empty { margin: 0; color: var(--muted); font-size: 0.62rem; line-height: 1.4; }
+.regime-history-link { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:13px 16px; border:1px solid rgba(87,195,255,.22); border-radius:13px; color:var(--accent); background:rgba(87,195,255,.055); font-size:.72rem; font-weight:700; text-decoration:none; }
+.regime-history-link span { font-size:1rem; }
 
 #breadthSummary { display: flex; max-width: 540px; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; }
 .breadth-callout { font-size: 0.9rem; }

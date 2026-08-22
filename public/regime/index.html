@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/regime/" />
+    <title>DailySlop Regime History</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/regime/styles.css" />
+  </head>
+  <body>
+    <div class="glow glow-one"></div><div class="glow glow-two"></div>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <nav class="breadcrumb" aria-label="DailySlop pages">
+            <a href="/sp500ad">S&amp;P 500</a><span>/</span><a href="/intermarket">Macro Radar</a><span>/</span><strong>Regime History</strong>
+          </nav>
+          <p class="eyebrow">Growth × inflation trajectory</p>
+          <h1>Regime History</h1>
+          <p class="subhead">See where the market-implied macro regime is moving—not just where it sits today.</p>
+        </div>
+        <div class="meta">
+          <div class="meta-card"><span>As of</span><strong id="asOf">Loading…</strong></div>
+          <div class="meta-card"><span>History</span><strong id="historyCount">--</strong></div>
+        </div>
+      </header>
+
+      <section class="current-panel" aria-labelledby="currentTitle">
+        <div class="current-copy">
+          <p class="section-kicker">Live market-implied snapshot</p>
+          <h2 id="currentTitle">Loading current regime…</h2>
+          <p id="currentDescription">Calculating cross-asset evidence.</p>
+        </div>
+        <div class="current-stats" id="currentStats"></div>
+      </section>
+
+      <section class="history-panel" aria-labelledby="historyTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Point-in-time reconstruction</p>
+            <h2 id="historyTitle">Regime trajectory</h2>
+            <p>Each point uses the same model and only evidence available on that date.</p>
+          </div>
+          <div class="range-toggle" id="rangeToggle" aria-label="History timeframe">
+            <button type="button" data-range="1m">1M</button>
+            <button type="button" data-range="3m">3M</button>
+            <button type="button" data-range="6m">6M</button>
+            <button class="active" type="button" data-range="1y">1Y</button>
+          </div>
+        </div>
+        <div class="quadrant-wrap">
+          <svg id="quadrant" viewBox="0 0 800 520" role="img" aria-label="Historical growth and inflation regime trajectory"></svg>
+        </div>
+        <div class="chart-legend">
+          <span><i class="goldilocks"></i>Goldilocks</span><span><i class="reflation"></i>Reflation</span>
+          <span><i class="stagflation"></i>Stagflation</span><span><i class="slowdown"></i>Disinflationary slowdown</span>
+          <span><i class="mixed"></i>Mixed / transitioning</span>
+        </div>
+      </section>
+
+      <section class="detail-panel" aria-labelledby="detailTitle">
+        <div class="detail-heading">
+          <div><p class="section-kicker">Selected snapshot</p><h2 id="detailTitle">--</h2><p id="detailMeta">--</p></div>
+          <div class="detail-scores" id="detailScores"></div>
+        </div>
+        <div class="evidence-grid">
+          <div><h3>Supporting evidence</h3><div id="supportingEvidence"></div></div>
+          <div><h3>Contradicting evidence</h3><div id="contradictingEvidence"></div></div>
+        </div>
+      </section>
+
+      <section class="timeline-panel" aria-labelledby="timelineTitle">
+        <div class="section-heading compact">
+          <div><p class="section-kicker">Persistence and change</p><h2 id="timelineTitle">Regime timeline</h2></div>
+          <p id="timelineSummary">--</p>
+        </div>
+        <div class="timeline" id="timeline" aria-label="Daily regime timeline"></div>
+        <div class="transition-list" id="transitionList"></div>
+      </section>
+
+      <section class="method-panel">
+        <p class="section-kicker">How to read it</p>
+        <h2>One model through time</h2>
+        <p>The timeframe buttons change only the visible history window. They do not change the scoring model. Growth blends equity trend, volatility, small caps, emerging markets, credit and copper versus gold. Inflation pressure blends energy, copper, agriculture, Treasury yields, the dollar and gold. Scores inside ±15 remain neutral so the system does not force a false regime.</p>
+      </section>
+
+      <footer><button id="refreshButton" type="button">Refresh</button><span id="statusText">Loading historical regimes…</span></footer>
+    </main>
+    <script src="/regime/app.js"></script>
+  </body>
+</html>

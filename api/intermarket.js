@@ -8,6 +8,7 @@ const {
   buildTrendContext,
   buildMacroState,
   buildMacroRegime,
+  buildMacroRegimeHistory,
   buildRelationships,
   extractCloseSeries,
   getLastFinite,
@@ -15,8 +16,9 @@ const {
   replayPoints,
 } = require('./_lib/intermarket');
 
-const DAILY_CACHE_KEY = 'intermarket_yahoo_daily_v2';
+const DAILY_CACHE_KEY = 'intermarket_yahoo_daily_v3';
 const INTRADAY_CACHE_KEY = 'intermarket_yahoo_intraday_v1';
+const REGIME_HISTORY_CACHE_KEY = 'intermarket_regime_history_v1';
 const DAILY_TTL_MS = 12 * 60 * 60 * 1000;
 const INTRADAY_MARKET_TTL_MS = 10 * 60 * 1000;
 const INTRADAY_OFF_HOURS_TTL_MS = 60 * 60 * 1000;
@@ -194,6 +196,7 @@ function validIntraday(value) {
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   const refresh = String(req.query?.refresh || '').toLowerCase() === 'true';
+  const includeRegimeHistory = String(req.query?.includeRegimeHistory || '').toLowerCase() === 'true';
   const intradayTtl = isActiveMarketWindow() ? INTRADAY_MARKET_TTL_MS : INTRADAY_OFF_HOURS_TTL_MS;
   let daily = refresh ? null : await readSharedCache(DAILY_CACHE_KEY, DAILY_TTL_MS);
   let intraday = refresh ? null : await readSharedCache(INTRADAY_CACHE_KEY, intradayTtl);
@@ -236,6 +239,21 @@ module.exports = async function handler(req, res) {
     ...buildMacroRegime(instruments, relationships),
     evidenceThrough: intraday.asOf || daily.asOf,
   };
+  let regimeHistory;
+  if (includeRegimeHistory) {
+    const cachedHistory = refresh ? null : await readSharedCache(REGIME_HISTORY_CACHE_KEY, 2 * DAY_MS);
+    if (cachedHistory?.dailyAsOf === daily.asOf && Array.isArray(cachedHistory.history)) {
+      regimeHistory = cachedHistory.history;
+    } else {
+      regimeHistory = buildMacroRegimeHistory(instruments);
+      await writeSharedCache(REGIME_HISTORY_CACHE_KEY, { dailyAsOf: daily.asOf, history: regimeHistory }, 7 * DAY_MS);
+    }
+  }
+  const responseCutoff = Date.now() - 400 * DAY_MS;
+  const responseInstruments = instruments.map((row) => ({
+    ...row,
+    replayDaily: (row.replayDaily || []).filter(([timestamp]) => timestamp * 1000 >= responseCutoff),
+  }));
   return res.status(200).json({
     success: true,
     asOf: intraday.asOf || daily.asOf,
@@ -249,8 +267,9 @@ module.exports = async function handler(req, res) {
     failures: [...(daily.failures || []), ...(intraday.failures || [])],
     macroState: buildMacroState(instruments),
     macroRegime,
+    ...(includeRegimeHistory ? { regimeHistory } : {}),
     systematicTrend: buildSystematicTrendSummary(instruments),
     relationships,
-    instruments,
+    instruments: responseInstruments,
   });
 };

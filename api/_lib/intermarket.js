@@ -380,7 +380,9 @@ function buildDailyInstrument(definition, spark, nowMs = Date.now()) {
       : getLastFinite(closes, 1);
   if (!Number.isFinite(currentPrice)) return null;
   const change = Number.isFinite(previousClose) ? currentPrice - previousClose : null;
-  const replayDaily = replayPoints(timestamps, closes, nowMs - 400 * DAY_MS);
+  // Retain enough trailing history to reconstruct a full year of point-in-time
+  // regimes while still giving the earliest snapshot a 12-month lookback.
+  const replayDaily = replayPoints(timestamps, closes, nowMs - 800 * DAY_MS);
   const instrument = {
     ...definition,
     currentPrice,
@@ -397,6 +399,85 @@ function buildDailyInstrument(definition, spark, nowMs = Date.now()) {
     trend: buildTrendContext(instrument),
     systematicTrend: buildSystematicTrend({ ...instrument, nowMs }),
   };
+}
+
+function buildHistoricalInstrumentAt(instrument, cutoffTimestamp) {
+  const replayDaily = (instrument.replayDaily || [])
+    .filter(([timestamp, close]) => timestamp <= cutoffTimestamp && Number.isFinite(close))
+    .sort((left, right) => left[0] - right[0]);
+  if (replayDaily.length < 64) return null;
+  const timestamps = replayDaily.map((point) => point[0]);
+  const closes = replayDaily.map((point) => point[1]);
+  const currentPrice = closes.at(-1);
+  const previousClose = closes.at(-2);
+  const cutoffMs = cutoffTimestamp * 1000;
+  const row = {
+    ...instrument,
+    currentPrice,
+    previousClose,
+    change: Number.isFinite(previousClose) ? currentPrice - previousClose : null,
+    changePercent: percentChange(currentPrice, previousClose),
+    perf1w: performance(currentPrice, timestamps, closes, 7, cutoffMs),
+    perf1m: performance(currentPrice, timestamps, closes, 30, cutoffMs),
+    perf3m: performance(currentPrice, timestamps, closes, 90, cutoffMs),
+    replayDaily,
+    replayDay15m: [],
+    replayWeekHourly: [],
+  };
+  return {
+    ...row,
+    trend: buildTrendContext(row),
+    systematicTrend: buildSystematicTrend({ ...row, nowMs: cutoffMs }),
+  };
+}
+
+function compactRegimeEvidence(rows = []) {
+  return rows.map(({ label, axis, score }) => ({ label, axis, score }));
+}
+
+function buildMacroRegimeHistory(instruments, maxSessions = 260) {
+  const spy = instruments.find((row) => row.symbol === 'SPY');
+  const sessions = [...new Set((spy?.replayDaily || [])
+    .filter(([timestamp, close]) => Number.isFinite(timestamp) && Number.isFinite(close))
+    .map(([timestamp]) => timestamp))]
+    .sort((left, right) => left - right)
+    .slice(-maxSessions);
+  let previousKey = null;
+  let sessionsInRegime = 0;
+  let transitionTimestamp = null;
+  return sessions.map((timestamp) => {
+    const pointInTime = instruments
+      .map((instrument) => buildHistoricalInstrumentAt(instrument, timestamp))
+      .filter(Boolean);
+    const regime = buildMacroRegime(pointInTime);
+    if (regime.key === previousKey) sessionsInRegime += 1;
+    else {
+      sessionsInRegime = 1;
+      transitionTimestamp = timestamp;
+    }
+    const result = {
+      timestamp,
+      snapshotAt: new Date(timestamp * 1000).toISOString(),
+      evidenceThrough: new Date(timestamp * 1000).toISOString(),
+      key: regime.key,
+      label: regime.label,
+      status: regime.status,
+      confidence: regime.confidence,
+      growthScore: regime.growthScore,
+      inflationScore: regime.inflationScore,
+      growthDirection: regime.growthDirection,
+      inflationDirection: regime.inflationDirection,
+      coveragePercent: regime.coveragePercent,
+      sessionsInRegime,
+      transitionTimestamp,
+      previousRegimeKey: previousKey,
+      supportingEvidence: compactRegimeEvidence(regime.supportingEvidence.slice(0, 4)),
+      contradictingEvidence: compactRegimeEvidence(regime.contradictingEvidence.slice(0, 3)),
+      methodologyVersion: regime.methodologyVersion,
+    };
+    previousKey = regime.key;
+    return result;
+  });
 }
 
 function relativeReturn(left, right, key) {
@@ -725,6 +806,7 @@ module.exports = {
   buildRelationships,
   buildMacroState,
   buildMacroRegime,
+  buildMacroRegimeHistory,
   extractCloseSeries,
   getLastFinite,
   percentChange,
