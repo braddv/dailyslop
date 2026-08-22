@@ -19,6 +19,25 @@
     'Bull trend': 10, 'Transitioning bullish': 25, Rotational: 55, Unclear: 50,
     'Reversal-led / choppy': 55, 'Transitioning bearish': 85, 'Bear trend': 100,
   };
+  const MACRO_SECTOR_FIT = {
+    goldilocks: {
+      favored: ['Information Technology', 'Consumer Discretionary', 'Industrials', 'Financials', 'Communication Services'],
+      challenged: [],
+    },
+    reflation: {
+      favored: ['Energy', 'Materials', 'Industrials', 'Financials', 'Consumer Discretionary'],
+      challenged: ['Utilities', 'Real Estate', 'Consumer Staples'],
+    },
+    stagflation: {
+      favored: ['Energy', 'Materials', 'Consumer Staples'],
+      challenged: ['Consumer Discretionary', 'Industrials', 'Information Technology', 'Real Estate'],
+    },
+    'disinflationary-slowdown': {
+      favored: ['Utilities', 'Consumer Staples', 'Health Care', 'Real Estate'],
+      challenged: ['Energy', 'Materials', 'Industrials', 'Financials', 'Consumer Discretionary'],
+    },
+    'mixed-transitioning': { favored: [], challenged: [] },
+  };
 
   function finite(value) {
     const number = Number(value);
@@ -122,6 +141,19 @@
     return clamp(confluence * 0.65 + clamp(trend) * 0.35);
   }
 
+  function macroFitScore(macroRegime, sector, side) {
+    const key = String(macroRegime?.key || macroRegime?.label || '')
+      .toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
+    const fit = MACRO_SECTOR_FIT[key];
+    let bullishScore = 50;
+    if (fit?.favored.includes(sector)) bullishScore = 85;
+    else if (fit?.challenged.includes(sector)) bullishScore = 20;
+    const confidence = String(macroRegime?.confidence || 'low').toLowerCase();
+    const confidenceWeight = confidence === 'high' ? 1 : confidence === 'medium' ? 0.78 : 0.58;
+    const directional = side === 'bullish' ? bullishScore : 100 - bullishScore;
+    return clamp(50 + (directional - 50) * confidenceWeight);
+  }
+
   function confirmation(score, positive = 67, mixed = 45) {
     if (score >= positive) return { key: 'confirmed', label: 'Confirmed' };
     if (score >= mixed) return { key: 'mixed', label: 'Mixed' };
@@ -140,6 +172,7 @@
     const reasons = [
       `${candidate.signal.label} scores ${Math.round(candidate.signal.score)}.`,
       `${candidate.sector.name} is ${candidate.regime.label.toLowerCase()} with ${candidate.regime.confidence} confidence.`,
+      `${candidate.macroRegime} is ${candidate.macroConfirmation.label.toLowerCase()} for this sector and direction.`,
       `${candidate.symbol} is ${return1w} over 1W versus ${candidate.sector.symbol} at ${sectorReturn}.`,
     ];
     const risk = candidate.extended
@@ -168,7 +201,9 @@
       const regimeComponent = regimeScore(regime, side);
       const sectorComponent = sectorScore(sectorRow, sectorLive, side);
       const priceComponent = priceScore(row, live, side, selected.bucket);
-      const total = selected.score * 0.45 + regimeComponent * 0.25 + sectorComponent * 0.18 + priceComponent * 0.12;
+      const macroComponent = macroFitScore(intermarket?.macroRegime, row.sector, side);
+      const total = selected.score * 0.40 + regimeComponent * 0.20 + sectorComponent * 0.15 +
+        priceComponent * 0.15 + macroComponent * 0.10;
       const distance20d = finite(row.distance_20d);
       const candidate = {
         snapshotAt, side, symbol: row.symbol, security: row.security, sectorName: row.sector,
@@ -190,6 +225,7 @@
           distance20d,
         },
         priceScore: priceComponent, priceConfirmation: confirmation(priceComponent),
+        macroScore: macroComponent, macroConfirmation: confirmation(macroComponent),
         extended: distance20d !== null && Math.abs(distance20d) >= 10,
         macroRegime: intermarket?.macroRegime?.label || 'Unavailable',
       };
@@ -198,11 +234,35 @@
     }).filter(Boolean);
     return candidates.sort((left, right) =>
       right.score - left.score || right.signal.score - left.signal.score || left.symbol.localeCompare(right.symbol)
-    ).slice(0, 5);
+    );
+  }
+
+  function diversifiedCandidates(candidates, maximum = 5, perSector = 2) {
+    const sectorCounts = new Map();
+    const selected = [];
+    candidates.forEach((candidate) => {
+      if (selected.length >= maximum) return;
+      const count = sectorCounts.get(candidate.sectorName) || 0;
+      if (count >= perSector) return;
+      sectorCounts.set(candidate.sectorName, count + 1);
+      selected.push(candidate);
+    });
+    return selected;
+  }
+
+  function concentration(candidates) {
+    const counts = new Map();
+    candidates.forEach((candidate) => counts.set(candidate.sectorName, (counts.get(candidate.sectorName) || 0) + 1));
+    const [sector, count] = [...counts.entries()].sort((left, right) => right[1] - left[1])[0] || [null, 0];
+    return { concentrated: count >= 3, sector, count, total: candidates.length };
   }
 
   function buildPlaybook(input) {
     const latest = latestSessionRows(input.history);
+    const bullishAll = buildCandidates({ ...input, side: 'bullish' });
+    const bearishAll = buildCandidates({ ...input, side: 'bearish' });
+    const bullish = bullishAll.slice(0, 5);
+    const bearish = bearishAll.slice(0, 5);
     return {
       generatedAt: new Date().toISOString(),
       signalSnapshotAt: latest.snapshotAt,
@@ -210,11 +270,17 @@
       macroAsOf: input.intermarket?.asOf || null,
       macroRegime: input.intermarket?.macroRegime || null,
       macroState: input.intermarket?.macroState || null,
-      bullish: buildCandidates({ ...input, side: 'bullish' }),
-      bearish: buildCandidates({ ...input, side: 'bearish' }),
-      methodology: 'Signal 45% · sector regime 25% · sector confirmation 18% · price confirmation 12%',
+      bullish,
+      bearish,
+      diversifiedBullish: diversifiedCandidates(bullishAll),
+      diversifiedBearish: diversifiedCandidates(bearishAll),
+      concentration: { bullish: concentration(bullish), bearish: concentration(bearish) },
+      methodology: 'Signal 40% · sector regime 20% · sector confirmation 15% · price confirmation 15% · macro fit 10%',
     };
   }
 
-  return { buildPlaybook, latestSessionRows, priceScore, regimeScore, sectorScore, SIGNAL_LABELS };
+  return {
+    buildPlaybook, diversifiedCandidates, latestSessionRows, macroFitScore, priceScore,
+    regimeScore, sectorScore, SIGNAL_LABELS,
+  };
 }));

@@ -4,7 +4,12 @@ const elements = {
   contextSummary: document.getElementById('contextSummary'), methodology: document.getElementById('methodology'),
   bullishList: document.getElementById('bullishList'), bearishList: document.getElementById('bearishList'),
   bullishCount: document.getElementById('bullishCount'), bearishCount: document.getElementById('bearishCount'),
+  shortlistToggle: document.getElementById('shortlistToggle'), shortlistDescription: document.getElementById('shortlistDescription'),
+  bullishConcentration: document.getElementById('bullishConcentration'), bearishConcentration: document.getElementById('bearishConcentration'),
 };
+
+let currentPlaybook = null;
+let shortlistMode = 'strongest';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (character) => ({
@@ -54,6 +59,7 @@ function ideaCard(candidate, index) {
         ${evidencePill('Regime', candidate.regime.confirmation)}
         ${evidencePill('Sector', candidate.sector.confirmation)}
         ${evidencePill('Price', candidate.priceConfirmation)}
+        ${evidencePill('Macro', candidate.macroConfirmation)}
       </div>
       <dl class="performance-row">
         <div><dt>Price</dt><dd>$${price(candidate.currentPrice)}</dd></div>
@@ -72,6 +78,31 @@ function renderList(target, countTarget, candidates, side) {
   target.innerHTML = candidates.length
     ? candidates.map(ideaCard).join('')
     : `<div class="empty-state"><strong>No qualifying ${side} ideas.</strong><p>The playbook will not fill the list with weak or incomplete evidence.</p></div>`;
+}
+
+function renderConcentration(target, result) {
+  const show = shortlistMode === 'strongest' && result?.concentrated;
+  target.hidden = !show;
+  target.textContent = show
+    ? `Concentration warning: ${result.count} of ${result.total} ideas are ${result.sector}. Treat this as one sector thesis, not ${result.count} independent bets.`
+    : '';
+}
+
+function renderShortlists() {
+  if (!currentPlaybook) return;
+  const diversified = shortlistMode === 'diversified';
+  const bullish = diversified ? currentPlaybook.diversifiedBullish : currentPlaybook.bullish;
+  const bearish = diversified ? currentPlaybook.diversifiedBearish : currentPlaybook.bearish;
+  renderList(elements.bullishList, elements.bullishCount, bullish, 'bullish');
+  renderList(elements.bearishList, elements.bearishCount, bearish, 'bearish');
+  renderConcentration(elements.bullishConcentration, currentPlaybook.concentration?.bullish);
+  renderConcentration(elements.bearishConcentration, currentPlaybook.concentration?.bearish);
+  elements.shortlistDescription.textContent = diversified
+    ? 'Highest-ranked evidence with no more than two stocks from any one sector.'
+    : 'The five highest evidence scores, including sector concentration.';
+  elements.shortlistToggle.querySelectorAll('[data-shortlist]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.shortlist === shortlistMode);
+  });
 }
 
 function contextCard(label, value, detail, tone = 'neutral') {
@@ -104,9 +135,9 @@ async function load() {
       json('/api/signal-history?limit=6'), json('/api/sector-ad'), json('/api/intermarket'),
     ]);
     const playbook = window.PlaybookRanking.buildPlaybook({ history, market, intermarket });
+    currentPlaybook = playbook;
     renderContext(playbook, history);
-    renderList(elements.bullishList, elements.bullishCount, playbook.bullish, 'bullish');
-    renderList(elements.bearishList, elements.bearishCount, playbook.bearish, 'bearish');
+    renderShortlists();
     elements.methodology.textContent = playbook.methodology;
     elements.statusText.textContent = `Signals ${dateTime(playbook.signalSnapshotAt)} · prices ${dateTime(playbook.marketAsOf)} · macro ${dateTime(playbook.macroAsOf)}`;
   } catch (error) {
@@ -121,4 +152,10 @@ async function load() {
 }
 
 elements.refreshButton.addEventListener('click', load);
+elements.shortlistToggle.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-shortlist]');
+  if (!button) return;
+  shortlistMode = button.dataset.shortlist;
+  renderShortlists();
+});
 load();
