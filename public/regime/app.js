@@ -7,12 +7,19 @@ const LABELS = {
   goldilocks: 'Goldilocks', reflation: 'Reflation', stagflation: 'Stagflation',
   'disinflationary-slowdown': 'Disinflationary slowdown', 'mixed-transitioning': 'Mixed / transitioning',
 };
-const state = { data: null, range: '1y', selectedIndex: null, animationTimer: null, animationGeneration: 0 };
+const state = {
+  data: null, range: '1y', selectedIndex: null, animationTimer: null, animationGeneration: 0,
+  trajectoryRows: [], trajectoryIndex: 0, trajectoryPlaying: true, trajectorySpeed: 700,
+  showTrajectoryPoint: null, scheduleTrajectory: null,
+};
 const elements = {
   asOf: document.getElementById('asOf'), historyCount: document.getElementById('historyCount'),
   currentTitle: document.getElementById('currentTitle'), currentDescription: document.getElementById('currentDescription'),
   currentStats: document.getElementById('currentStats'), rangeToggle: document.getElementById('rangeToggle'),
-  quadrant: document.getElementById('quadrant'), trajectoryReadout: document.getElementById('trajectoryReadout'), detailTitle: document.getElementById('detailTitle'),
+  quadrant: document.getElementById('quadrant'), trajectoryReadout: document.getElementById('trajectoryReadout'),
+  trajectoryTransport: document.getElementById('trajectoryTransport'), trajectoryPlay: document.getElementById('trajectoryPlay'),
+  trajectoryScrubber: document.getElementById('trajectoryScrubber'), trajectorySpeed: document.getElementById('trajectorySpeed'),
+  detailTitle: document.getElementById('detailTitle'),
   detailMeta: document.getElementById('detailMeta'), detailScores: document.getElementById('detailScores'),
   supportingEvidence: document.getElementById('supportingEvidence'), contradictingEvidence: document.getElementById('contradictingEvidence'),
   timeline: document.getElementById('timeline'), timelineSummary: document.getElementById('timelineSummary'),
@@ -32,6 +39,38 @@ function stat(label, value, detail) { return `<div class="stat"><span>${label}</
 function pointX(score) { return 50 + ((Math.max(-100, Math.min(100, score || 0)) + 100) / 200) * 700; }
 function pointY(score) { return 470 - ((Math.max(-100, Math.min(100, score || 0)) + 100) / 200) * 420; }
 
+function clearTrajectoryTimer() {
+  if (state.animationTimer) clearTimeout(state.animationTimer);
+  state.animationTimer = null;
+}
+
+function updateTrajectoryControls() {
+  const hasReplay = state.trajectoryRows.length > 1;
+  elements.trajectoryTransport.classList.toggle('is-disabled', !hasReplay);
+  elements.trajectoryPlay.disabled = !hasReplay;
+  elements.trajectoryPlay.innerHTML = state.trajectoryPlaying
+    ? '<span aria-hidden="true">Ⅱ</span><span>Pause</span>'
+    : '<span aria-hidden="true">▶</span><span>Play</span>';
+  elements.trajectoryPlay.setAttribute('aria-label', `${state.trajectoryPlaying ? 'Pause' : 'Play'} regime trajectory`);
+  elements.trajectoryPlay.setAttribute('aria-pressed', String(!state.trajectoryPlaying));
+  elements.trajectoryScrubber.max = Math.max(0, state.trajectoryRows.length - 1);
+  elements.trajectoryScrubber.value = state.trajectoryIndex;
+}
+
+function pauseTrajectory() {
+  state.trajectoryPlaying = false;
+  clearTrajectoryTimer();
+  updateTrajectoryControls();
+}
+
+function playTrajectory() {
+  if (state.trajectoryRows.length < 2 || !state.showTrajectoryPoint || !state.scheduleTrajectory) return;
+  if (state.trajectoryIndex >= state.trajectoryRows.length - 1) state.showTrajectoryPoint(0);
+  state.trajectoryPlaying = true;
+  updateTrajectoryControls();
+  state.scheduleTrajectory(state.trajectorySpeed);
+}
+
 function renderCurrent() {
   const regime = state.data.macroRegime;
   const completed = state.data.regimeHistory?.at(-1);
@@ -47,8 +86,7 @@ function renderCurrent() {
 }
 
 function renderQuadrant() {
-  if (state.animationTimer) clearTimeout(state.animationTimer);
-  state.animationTimer = null;
+  clearTrajectoryTimer();
   state.animationGeneration += 1;
   const animationGeneration = state.animationGeneration;
   const rows = visibleHistory();
@@ -57,6 +95,7 @@ function renderQuadrant() {
   const sampleStep = ['6m', '1y'].includes(state.range) ? 5 : state.range === '3m' ? 2 : 1;
   const pathRows = rows.map((row, index) => ({ row, index }))
     .filter(({ index }) => index % sampleStep === 0 || index === rows.length - 1);
+  state.trajectoryRows = pathRows;
   const segments = pathRows.slice(1).map(({ row }, segmentIndex) => {
     const previous = pathRows[segmentIndex].row;
     return `<line data-trajectory-segment="${segmentIndex}" x1="${pointX(previous.growthScore)}" y1="${pointY(previous.inflationScore)}" x2="${pointX(row.growthScore)}" y2="${pointY(row.inflationScore)}" stroke="#e9edf6" stroke-width="1.4" stroke-linecap="round" opacity=".08"/>`;
@@ -66,7 +105,7 @@ function renderQuadrant() {
     <div class="playback-status"><span class="playback-dot"></span><div><small>Trajectory replay</small><strong data-playback-date>${formatDate(firstPoint.snapshotAt, true)}</strong></div></div>
     <div class="playback-value"><small>Regime</small><strong data-playback-regime>${firstPoint.label}</strong></div>
     <div class="playback-value"><small>Growth / inflation</small><strong data-playback-scores>${signed(firstPoint.growthScore)} / ${signed(firstPoint.inflationScore)}</strong></div>
-    <p>Loops automatically</p>
+    <p data-playback-mode>Playing</p>
     <div class="playback-progress"><i data-playback-progress></i></div>`;
   elements.quadrant.innerHTML = `
     <rect x="50" y="50" width="350" height="210" fill="rgba(255,127,150,.055)"/><rect x="400" y="50" width="350" height="210" fill="rgba(241,182,103,.055)"/>
@@ -83,6 +122,8 @@ function renderQuadrant() {
   const regimeReadout = elements.trajectoryReadout.querySelector('[data-playback-regime]');
   const scoresReadout = elements.trajectoryReadout.querySelector('[data-playback-scores]');
   const progressReadout = elements.trajectoryReadout.querySelector('[data-playback-progress]');
+  const modeReadout = elements.trajectoryReadout.querySelector('[data-playback-mode]');
+  const playbackDot = elements.trajectoryReadout.querySelector('.playback-dot');
   const segmentElements = [...elements.quadrant.querySelectorAll('[data-trajectory-segment]')];
   const cursor = elements.quadrant.querySelector('.trajectory-cursor');
   const halo = elements.quadrant.querySelector('.trajectory-cursor-halo');
@@ -90,16 +131,22 @@ function renderQuadrant() {
 
   const showPoint = (pathIndex) => {
     if (animationGeneration !== state.animationGeneration) return;
-    const point = pathRows[pathIndex].row;
-    const progress = pathRows.length <= 1 ? 1 : pathIndex / (pathRows.length - 1);
+    const safeIndex = Math.max(0, Math.min(pathRows.length - 1, pathIndex));
+    const pointEntry = pathRows[safeIndex];
+    const point = pointEntry.row;
+    state.trajectoryIndex = safeIndex;
+    state.selectedIndex = pointEntry.index;
+    const progress = pathRows.length <= 1 ? 1 : safeIndex / (pathRows.length - 1);
     cursor.setAttribute('cx', pointX(point.growthScore)); cursor.setAttribute('cy', pointY(point.inflationScore)); cursor.setAttribute('fill', COLORS[point.key]);
     halo.setAttribute('cx', pointX(point.growthScore)); halo.setAttribute('cy', pointY(point.inflationScore)); halo.setAttribute('fill', COLORS[point.key]);
     dateReadout.textContent = formatDate(point.snapshotAt, true);
     regimeReadout.textContent = point.label;
     scoresReadout.textContent = `${signed(point.growthScore)} / ${signed(point.inflationScore)}`;
     progressReadout.style.width = `${Math.max(2, progress * 100)}%`;
+    modeReadout.textContent = state.trajectoryPlaying ? 'Playing' : 'Paused';
+    playbackDot.classList.toggle('paused', !state.trajectoryPlaying);
     segmentElements.forEach((segment, index) => {
-      const complete = index < pathIndex;
+      const complete = index < safeIndex;
       segment.setAttribute('opacity', complete ? String(0.28 + (index / Math.max(1, segmentElements.length - 1)) * 0.62) : '.06');
       segment.setAttribute('stroke-width', complete ? '2.8' : '1.2');
     });
@@ -108,14 +155,27 @@ function renderQuadrant() {
       const cursorPixel = (pointX(point.growthScore) / 800) * elements.quadrant.clientWidth;
       scroller.scrollTo({ left: Math.max(0, Math.min(scroller.scrollWidth - scroller.clientWidth, cursorPixel - scroller.clientWidth / 2)), behavior: 'smooth' });
     }
+    updateTrajectoryControls();
+    renderDetail();
+    elements.timeline.querySelectorAll('[data-timeline-index]').forEach((button) => {
+      button.classList.toggle('selected', Number(button.dataset.timelineIndex) === state.selectedIndex);
+    });
   };
-  const schedulePoint = (pathIndex) => {
-    showPoint(pathIndex);
-    if (reducedMotion) return;
-    const atEnd = pathIndex >= pathRows.length - 1;
-    state.animationTimer = setTimeout(() => schedulePoint(atEnd ? 0 : pathIndex + 1), atEnd ? 1600 : 700);
+  const schedulePoint = (delay = state.trajectorySpeed) => {
+    clearTrajectoryTimer();
+    if (!state.trajectoryPlaying || reducedMotion) return;
+    state.animationTimer = setTimeout(() => {
+      if (animationGeneration !== state.animationGeneration || !state.trajectoryPlaying) return;
+      const atEnd = state.trajectoryIndex >= pathRows.length - 1;
+      showPoint(atEnd ? 0 : state.trajectoryIndex + 1);
+      schedulePoint(state.trajectoryIndex >= pathRows.length - 1 ? 1600 : state.trajectorySpeed);
+    }, delay);
   };
-  schedulePoint(reducedMotion ? pathRows.length - 1 : 0);
+  state.showTrajectoryPoint = showPoint;
+  state.scheduleTrajectory = schedulePoint;
+  state.trajectoryPlaying = !reducedMotion;
+  showPoint(reducedMotion ? pathRows.length - 1 : 0);
+  schedulePoint(state.trajectorySpeed);
 }
 
 function evidenceHtml(rows, emptyText, supporting) {
@@ -162,4 +222,16 @@ elements.rangeToggle.addEventListener('click', (event) => {
   elements.rangeToggle.querySelectorAll('button').forEach((item) => item.classList.toggle('active', item === button)); renderHistory();
 });
 elements.refreshButton.addEventListener('click', () => loadData(true));
+elements.trajectoryPlay.addEventListener('click', () => {
+  if (state.trajectoryPlaying) pauseTrajectory(); else playTrajectory();
+  state.showTrajectoryPoint?.(state.trajectoryIndex);
+});
+elements.trajectoryScrubber.addEventListener('input', () => {
+  pauseTrajectory();
+  state.showTrajectoryPoint?.(Number(elements.trajectoryScrubber.value));
+});
+elements.trajectorySpeed.addEventListener('change', () => {
+  state.trajectorySpeed = Number(elements.trajectorySpeed.value);
+  if (state.trajectoryPlaying) state.scheduleTrajectory?.(state.trajectorySpeed);
+});
 loadData();

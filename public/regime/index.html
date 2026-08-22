@@ -52,6 +52,19 @@
           </div>
         </div>
         <div class="trajectory-readout" id="trajectoryReadout"></div>
+        <div class="trajectory-transport" id="trajectoryTransport" aria-label="Regime trajectory replay controls">
+          <button class="trajectory-play" id="trajectoryPlay" type="button" aria-label="Pause regime trajectory">
+            <span aria-hidden="true">Ⅱ</span><span>Pause</span>
+          </button>
+          <input class="trajectory-scrubber" id="trajectoryScrubber" type="range" min="0" max="0" value="0" step="1" aria-label="Regime trajectory timeline" />
+          <label class="trajectory-speed">Speed
+            <select id="trajectorySpeed">
+              <option value="1100">0.5×</option>
+              <option value="700" selected>1×</option>
+              <option value="350">2×</option>
+            </select>
+          </label>
+        </div>
         <div class="quadrant-wrap">
           <svg id="quadrant" viewBox="0 0 800 520" role="img" aria-label="Historical growth and inflation regime trajectory"></svg>
         </div>
