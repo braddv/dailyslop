@@ -31,6 +31,14 @@
       "destination": "/public/intermarket/:path*"
     },
     {
+      "source": "/regime",
+      "destination": "/public/regime/index.html"
+    },
+    {
+      "source": "/regime/:path*",
+      "destination": "/public/regime/:path*"
+    },
+    {
       "source": "/godley",
       "destination": "/public/godley/index.html"
     },

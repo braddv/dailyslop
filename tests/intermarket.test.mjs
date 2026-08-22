@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 const {
   buildDailyInstrument,
   buildMacroRegime,
+  buildMacroRegimeHistory,
   buildMacroState,
   buildRelationships,
   buildSystematicTrend,
@@ -300,6 +301,39 @@ test('macro regime does not force a quadrant when an axis is inside the neutral 
   assert.equal(result.key, 'mixed-transitioning');
   assert.equal(result.status, 'Unclear');
   assert.equal(result.confidence, 'Low');
+});
+
+function historicalRegimeRows() {
+  const symbols = ['SPY', '^VIX', 'IWM', 'EEM', 'HYG', 'LQD', 'HG=F', 'GC=F', 'CL=F', 'BZ=F', 'DBA', '^TNX', '^TYX', 'DX-Y.NYB'];
+  return symbols.map((symbol, symbolIndex) => ({
+    symbol,
+    format: symbol.startsWith('^T') ? 'yield' : undefined,
+    replayDaily: Array.from({ length: 330 }, (_, index) => {
+      const direction = ['^VIX', 'LQD', 'DX-Y.NYB'].includes(symbol) ? -1 : 1;
+      const base = symbol.startsWith('^T') ? 3.5 : 80 + symbolIndex * 4;
+      return [1_700_000_000 + index * 86_400, base * Math.exp(direction * index * 0.0009 + Math.sin(index * 0.19) * 0.002)];
+    }),
+  }));
+}
+
+test('historical macro regimes are point-in-time and ignore later prices', () => {
+  const rows = historicalRegimeRows();
+  const original = buildMacroRegimeHistory(rows, 20);
+  const changed = structuredClone(rows);
+  changed.forEach((row) => { row.replayDaily.at(-1)[1] *= row.symbol === '^VIX' ? 0.2 : 5; });
+  const revised = buildMacroRegimeHistory(changed, 20);
+  assert.deepEqual(revised.slice(0, -1), original.slice(0, -1));
+  assert.notDeepEqual(revised.at(-1), original.at(-1));
+  assert.ok(original.every((point) => new Date(point.evidenceThrough).getTime() <= point.timestamp * 1000));
+});
+
+test('historical macro regimes expose bounded daily history and transition metadata', () => {
+  const history = buildMacroRegimeHistory(historicalRegimeRows(), 30);
+  assert.equal(history.length, 30);
+  assert.ok(history.every((point) => Number.isFinite(point.growthScore)));
+  assert.ok(history.every((point) => Number.isFinite(point.inflationScore)));
+  assert.ok(history.every((point) => Number.isInteger(point.sessionsInRegime) && point.sessionsInRegime >= 1));
+  assert.ok(history.every((point) => point.methodologyVersion === 1));
 });
 
 test('replay points deduplicate timestamps and percent change rejects invalid bases', () => {
