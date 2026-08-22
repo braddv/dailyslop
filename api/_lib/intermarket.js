@@ -502,6 +502,125 @@ function averageFinite(values) {
   return finite.length ? finite.reduce((sum, value) => sum + value, 0) / finite.length : null;
 }
 
+function clamp(value, minimum = -100, maximum = 100) {
+  return Math.max(minimum, Math.min(maximum, value));
+}
+
+function structuralScore(row) {
+  if (Number.isFinite(row?.systematicTrend?.score)) return clamp(row.systematicTrend.score);
+  if (row?.trend?.direction === 'higher') return 35;
+  if (row?.trend?.direction === 'lower') return -35;
+  if (Number.isFinite(row?.perf1m)) return clamp(row.perf1m * 10);
+  if (Number.isFinite(row?.changePercent)) return clamp(row.changePercent * 20);
+  return null;
+}
+
+function relationshipScore(row) {
+  const weighted = [
+    [row?.perf1m, 0.6],
+    [row?.perf3m, 0.4],
+  ].filter(([value]) => Number.isFinite(value));
+  if (weighted.length) {
+    const weight = weighted.reduce((sum, [, itemWeight]) => sum + itemWeight, 0);
+    return clamp(weighted.reduce((sum, [value, itemWeight]) => sum + value * itemWeight, 0) / weight * 12);
+  }
+  if (Number.isFinite(row?.perf1w)) return clamp(row.perf1w * 18);
+  if (Number.isFinite(row?.changePercent)) return clamp(row.changePercent * 25);
+  return null;
+}
+
+function weightedAxis(components) {
+  const available = components.filter((component) => Number.isFinite(component.score));
+  const availableWeight = available.reduce((sum, component) => sum + component.weight, 0);
+  const totalWeight = components.reduce((sum, component) => sum + component.weight, 0);
+  const score = availableWeight
+    ? available.reduce((sum, component) => sum + component.score * component.weight, 0) / availableWeight
+    : null;
+  return {
+    score: Number.isFinite(score) ? Math.round(clamp(score)) : null,
+    coverage: totalWeight ? availableWeight / totalWeight : 0,
+    components: available.map((component) => ({
+      ...component,
+      contribution: Math.round(component.score * component.weight),
+    })),
+  };
+}
+
+function evidenceDetail(component) {
+  const direction = component.score >= 0 ? 'supports' : 'pressures';
+  return `${component.label} ${direction} this axis (${component.score >= 0 ? '+' : ''}${Math.round(component.score)})`;
+}
+
+function buildMacroRegime(instruments, relationships = buildRelationships(instruments)) {
+  const bySymbol = new Map(instruments.map((row) => [row.symbol, row]));
+  const byRelationship = new Map(relationships.map((row) => [row.id, row]));
+  const component = (id, label, score, weight) => ({ id, label, score, weight });
+  const growth = weightedAxis([
+    component('equity-trend', 'S&P 500 trend', structuralScore(bySymbol.get('SPY')), 1),
+    component('volatility', 'Falling volatility', Number.isFinite(structuralScore(bySymbol.get('^VIX'))) ? -structuralScore(bySymbol.get('^VIX')) : null, 0.7),
+    component('small-caps', 'Small caps vs S&P 500', relationshipScore(byRelationship.get('small-cap-risk')), 1.1),
+    component('emerging-markets', 'Emerging markets vs S&P 500', relationshipScore(byRelationship.get('emerging-market-leadership')), 0.6),
+    component('credit', 'High yield vs investment grade', relationshipScore(byRelationship.get('credit-risk')), 0.9),
+    component('copper-gold', 'Copper vs gold', relationshipScore(byRelationship.get('copper-gold')), 1),
+  ]);
+  const inflation = weightedAxis([
+    component('wti', 'WTI crude trend', structuralScore(bySymbol.get('CL=F')), 1),
+    component('brent', 'Brent crude trend', structuralScore(bySymbol.get('BZ=F')), 0.8),
+    component('copper', 'Copper trend', structuralScore(bySymbol.get('HG=F')), 0.8),
+    component('agriculture', 'Agriculture trend', structuralScore(bySymbol.get('DBA')), 0.7),
+    component('ten-year', '10Y yield trend', structuralScore(bySymbol.get('^TNX')), 0.9),
+    component('thirty-year', '30Y yield trend', structuralScore(bySymbol.get('^TYX')), 0.6),
+    component('dollar', 'Weaker dollar', Number.isFinite(structuralScore(bySymbol.get('DX-Y.NYB'))) ? -structuralScore(bySymbol.get('DX-Y.NYB')) : null, 0.5),
+    component('gold', 'Gold trend', structuralScore(bySymbol.get('GC=F')), 0.3),
+  ]);
+  const neutralThreshold = 15;
+  const growthDirection = !Number.isFinite(growth.score) || Math.abs(growth.score) < neutralThreshold
+    ? 'neutral' : growth.score > 0 ? 'rising' : 'falling';
+  const inflationDirection = !Number.isFinite(inflation.score) || Math.abs(inflation.score) < neutralThreshold
+    ? 'neutral' : inflation.score > 0 ? 'rising' : 'falling';
+  const key = growthDirection === 'rising' && inflationDirection === 'rising' ? 'reflation'
+    : growthDirection === 'rising' && inflationDirection === 'falling' ? 'goldilocks'
+      : growthDirection === 'falling' && inflationDirection === 'rising' ? 'stagflation'
+        : growthDirection === 'falling' && inflationDirection === 'falling' ? 'disinflationary-slowdown'
+          : 'mixed-transitioning';
+  const labels = {
+    reflation: 'Reflation',
+    goldilocks: 'Goldilocks',
+    stagflation: 'Stagflation',
+    'disinflationary-slowdown': 'Disinflationary slowdown',
+    'mixed-transitioning': 'Mixed / transitioning',
+  };
+  const coverage = (growth.coverage + inflation.coverage) / 2;
+  const conviction = Math.min(Math.abs(growth.score || 0), Math.abs(inflation.score || 0));
+  const confidence = key !== 'mixed-transitioning' && coverage >= 0.8 && conviction >= 35 ? 'High'
+    : key !== 'mixed-transitioning' && coverage >= 0.6 && conviction >= neutralThreshold ? 'Medium' : 'Low';
+  const allComponents = [
+    ...growth.components.map((item) => ({ ...item, axis: 'growth' })),
+    ...inflation.components.map((item) => ({ ...item, axis: 'inflation' })),
+  ];
+  const axisSign = { growth: Math.sign(growth.score || 0), inflation: Math.sign(inflation.score || 0) };
+  const ranked = allComponents
+    .map((item) => ({ ...item, detail: evidenceDetail(item) }))
+    .sort((left, right) => Math.abs(right.contribution) - Math.abs(left.contribution));
+  return {
+    key,
+    label: labels[key],
+    status: key === 'mixed-transitioning' ? 'Unclear' : confidence === 'High' ? 'Established' : 'Emerging',
+    confidence,
+    growthScore: growth.score,
+    inflationScore: inflation.score,
+    growthDirection,
+    inflationDirection,
+    neutralThreshold,
+    coveragePercent: Math.round(coverage * 100),
+    supportingEvidence: ranked.filter((item) => Math.sign(item.score) === axisSign[item.axis]).slice(0, 5),
+    contradictingEvidence: ranked.filter((item) => Math.sign(item.score) !== axisSign[item.axis]).slice(0, 4),
+    axes: { growth, inflation },
+    methodologyVersion: 1,
+    note: 'A blended 1–3 month market-implied classification, not an economic forecast.',
+  };
+}
+
 function moveLabelForRatio(ratio) {
   return !Number.isFinite(ratio)
     ? 'Unavailable'
@@ -605,6 +724,7 @@ module.exports = {
   buildTrendContext,
   buildRelationships,
   buildMacroState,
+  buildMacroRegime,
   extractCloseSeries,
   getLastFinite,
   percentChange,
