@@ -7,7 +7,7 @@ const LABELS = {
   goldilocks: 'Goldilocks', reflation: 'Reflation', stagflation: 'Stagflation',
   'disinflationary-slowdown': 'Disinflationary slowdown', 'mixed-transitioning': 'Mixed / transitioning',
 };
-const state = { data: null, range: '1y', selectedIndex: null };
+const state = { data: null, range: '1y', selectedIndex: null, animationTimer: null, animationGeneration: 0 };
 const elements = {
   asOf: document.getElementById('asOf'), historyCount: document.getElementById('historyCount'),
   currentTitle: document.getElementById('currentTitle'), currentDescription: document.getElementById('currentDescription'),
@@ -47,48 +47,28 @@ function renderCurrent() {
 }
 
 function renderQuadrant() {
+  if (state.animationTimer) clearTimeout(state.animationTimer);
+  state.animationTimer = null;
+  state.animationGeneration += 1;
+  const animationGeneration = state.animationGeneration;
   const rows = visibleHistory();
   if (!rows.length) return;
   if (state.selectedIndex == null || state.selectedIndex >= rows.length) state.selectedIndex = rows.length - 1;
-  const selected = rows[state.selectedIndex];
   const sampleStep = ['6m', '1y'].includes(state.range) ? 5 : state.range === '3m' ? 2 : 1;
   const pathRows = rows.map((row, index) => ({ row, index }))
     .filter(({ index }) => index % sampleStep === 0 || index === rows.length - 1);
-  const arrowEvery = Math.max(3, Math.round((pathRows.length - 1) / 6));
-  const segments = pathRows.slice(1).map(({ row, index }, segmentIndex) => {
+  const segments = pathRows.slice(1).map(({ row }, segmentIndex) => {
     const previous = pathRows[segmentIndex].row;
-    const progress = (segmentIndex + 1) / Math.max(1, pathRows.length - 1);
-    const opacity = (0.14 + progress * 0.76).toFixed(2);
-    const width = (1.4 + progress * 1.8).toFixed(2);
-    const arrow = (segmentIndex + 1) % arrowEvery === 0 || index === rows.length - 1 ? ' marker-end="url(#trajectoryArrow)"' : '';
-    return `<line x1="${pointX(previous.growthScore)}" y1="${pointY(previous.inflationScore)}" x2="${pointX(row.growthScore)}" y2="${pointY(row.inflationScore)}" stroke="rgba(233,237,246,${opacity})" stroke-width="${width}" stroke-linecap="round"${arrow}/>`;
+    return `<line data-trajectory-segment="${segmentIndex}" x1="${pointX(previous.growthScore)}" y1="${pointY(previous.inflationScore)}" x2="${pointX(row.growthScore)}" y2="${pointY(row.inflationScore)}" stroke="#e9edf6" stroke-width="1.4" stroke-linecap="round" opacity=".08"/>`;
   }).join('');
-  const markers = pathRows.map(({ row, index }, pathIndex) => {
-    const selectedClass = index === state.selectedIndex ? ' selected' : '';
-    const progress = pathIndex / Math.max(1, pathRows.length - 1);
-    const opacity = (0.22 + progress * 0.78).toFixed(2);
-    return `<circle class="history-point${selectedClass}" data-index="${index}" cx="${pointX(row.growthScore)}" cy="${pointY(row.inflationScore)}" r="${index === state.selectedIndex ? 8 : 4.5}" fill="${COLORS[row.key]}" opacity="${opacity}" tabindex="0"><title>${formatDate(row.snapshotAt, true)} · ${row.label}</title></circle>`;
-  }).join('');
-  const selectedMarker = pathRows.some(({ index }) => index === state.selectedIndex) ? ''
-    : `<circle class="history-point selected" data-index="${state.selectedIndex}" cx="${pointX(selected.growthScore)}" cy="${pointY(selected.inflationScore)}" r="8" fill="${COLORS[selected.key]}" tabindex="0"><title>${formatDate(selected.snapshotAt, true)} · ${selected.label}</title></circle>`;
-  const start = rows[0];
-  const latest = rows.at(-1);
-  const scoreDelta = (value) => `${value >= 0 ? '+' : ''}${Math.round(value)}`;
+  const firstPoint = pathRows[0].row;
   elements.trajectoryReadout.innerHTML = `
-    <div><span class="route-dot start"></span><small>Start · ${formatDate(start.snapshotAt, true)}</small><strong>${start.label}</strong></div>
-    <b>→</b>
-    <div><span class="route-dot latest"></span><small>Latest close · ${formatDate(latest.snapshotAt, true)}</small><strong>${latest.label}</strong></div>
-    <p>Net move: growth ${scoreDelta(latest.growthScore - start.growthScore)} · inflation ${scoreDelta(latest.inflationScore - start.inflationScore)}</p>`;
-  const svgLabel = (row, title, below) => {
-    const x = pointX(row.growthScore);
-    const y = pointY(row.inflationScore);
-    const labelWidth = 116;
-    const labelX = Math.max(55, Math.min(745 - labelWidth, x - labelWidth / 2));
-    const labelY = below ? Math.min(438, y + 18) : Math.max(54, y - 45);
-    return `<g class="route-label" transform="translate(${labelX} ${labelY})"><rect width="${labelWidth}" height="32" rx="8"/><text x="8" y="13">${title}</text><text x="8" y="25">${formatDate(row.snapshotAt, state.range === '1y')}</text></g>`;
-  };
+    <div class="playback-status"><span class="playback-dot"></span><div><small>Trajectory replay</small><strong data-playback-date>${formatDate(firstPoint.snapshotAt, true)}</strong></div></div>
+    <div class="playback-value"><small>Regime</small><strong data-playback-regime>${firstPoint.label}</strong></div>
+    <div class="playback-value"><small>Growth / inflation</small><strong data-playback-scores>${signed(firstPoint.growthScore)} / ${signed(firstPoint.inflationScore)}</strong></div>
+    <p>Loops automatically</p>
+    <div class="playback-progress"><i data-playback-progress></i></div>`;
   elements.quadrant.innerHTML = `
-    <defs><marker id="trajectoryArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e9edf6"/></marker></defs>
     <rect x="50" y="50" width="350" height="210" fill="rgba(255,127,150,.055)"/><rect x="400" y="50" width="350" height="210" fill="rgba(241,182,103,.055)"/>
     <rect x="50" y="260" width="350" height="210" fill="rgba(143,157,181,.055)"/><rect x="400" y="260" width="350" height="210" fill="rgba(100,217,177,.055)"/>
     <rect x="347.5" y="50" width="105" height="420" fill="rgba(193,140,255,.035)"/><rect x="50" y="228.5" width="700" height="63" fill="rgba(193,140,255,.035)"/>
@@ -96,19 +76,46 @@ function renderQuadrant() {
     <g class="quadrant-labels" fill="#9aa6b9" font-size="13"><text x="70" y="80">STAGFLATION</text><text x="730" y="80" text-anchor="end">REFLATION</text><text x="70" y="445">DISINFLATIONARY SLOWDOWN</text><text x="730" y="445" text-anchor="end">GOLDILOCKS</text></g>
     <text x="746" y="282" text-anchor="end" fill="#748197" font-size="11">GROWTH PULSE →</text><text x="414" y="67" fill="#748197" font-size="11">INFLATION PRESSURE ↑</text>
     <g class="trajectory-segments">${segments}</g>
-    ${markers}${selectedMarker}
-    <circle cx="${pointX(start.growthScore)}" cy="${pointY(start.inflationScore)}" r="10" fill="none" stroke="#9aa6b9" stroke-width="2" stroke-dasharray="3 3"/>
-    <circle cx="${pointX(latest.growthScore)}" cy="${pointY(latest.inflationScore)}" r="11" fill="none" stroke="#fff" stroke-width="2.5"/>
-    ${svgLabel(start, 'START', true)}${svgLabel(latest, 'LATEST', false)}`;
-  elements.quadrant.querySelectorAll('[data-index]').forEach((marker) => marker.addEventListener('click', () => {
-    state.selectedIndex = Number(marker.dataset.index); renderHistory();
-  }));
-  requestAnimationFrame(() => {
+    <circle class="trajectory-cursor-halo" cx="${pointX(firstPoint.growthScore)}" cy="${pointY(firstPoint.inflationScore)}" r="14" fill="${COLORS[firstPoint.key]}" opacity=".18"/>
+    <circle class="trajectory-cursor" cx="${pointX(firstPoint.growthScore)}" cy="${pointY(firstPoint.inflationScore)}" r="7" fill="${COLORS[firstPoint.key]}" stroke="#fff" stroke-width="2.5"/>`;
+
+  const dateReadout = elements.trajectoryReadout.querySelector('[data-playback-date]');
+  const regimeReadout = elements.trajectoryReadout.querySelector('[data-playback-regime]');
+  const scoresReadout = elements.trajectoryReadout.querySelector('[data-playback-scores]');
+  const progressReadout = elements.trajectoryReadout.querySelector('[data-playback-progress]');
+  const segmentElements = [...elements.quadrant.querySelectorAll('[data-trajectory-segment]')];
+  const cursor = elements.quadrant.querySelector('.trajectory-cursor');
+  const halo = elements.quadrant.querySelector('.trajectory-cursor-halo');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const showPoint = (pathIndex) => {
+    if (animationGeneration !== state.animationGeneration) return;
+    const point = pathRows[pathIndex].row;
+    const progress = pathRows.length <= 1 ? 1 : pathIndex / (pathRows.length - 1);
+    cursor.setAttribute('cx', pointX(point.growthScore)); cursor.setAttribute('cy', pointY(point.inflationScore)); cursor.setAttribute('fill', COLORS[point.key]);
+    halo.setAttribute('cx', pointX(point.growthScore)); halo.setAttribute('cy', pointY(point.inflationScore)); halo.setAttribute('fill', COLORS[point.key]);
+    dateReadout.textContent = formatDate(point.snapshotAt, true);
+    regimeReadout.textContent = point.label;
+    scoresReadout.textContent = `${signed(point.growthScore)} / ${signed(point.inflationScore)}`;
+    progressReadout.style.width = `${Math.max(2, progress * 100)}%`;
+    segmentElements.forEach((segment, index) => {
+      const complete = index < pathIndex;
+      segment.setAttribute('opacity', complete ? String(0.28 + (index / Math.max(1, segmentElements.length - 1)) * 0.62) : '.06');
+      segment.setAttribute('stroke-width', complete ? '2.8' : '1.2');
+    });
     const scroller = elements.quadrant.closest('.quadrant-wrap');
-    if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return;
-    const selectedPixel = (pointX(selected.growthScore) / 800) * elements.quadrant.clientWidth;
-    scroller.scrollLeft = Math.max(0, Math.min(scroller.scrollWidth - scroller.clientWidth, selectedPixel - scroller.clientWidth / 2));
-  });
+    if (scroller && scroller.scrollWidth > scroller.clientWidth) {
+      const cursorPixel = (pointX(point.growthScore) / 800) * elements.quadrant.clientWidth;
+      scroller.scrollTo({ left: Math.max(0, Math.min(scroller.scrollWidth - scroller.clientWidth, cursorPixel - scroller.clientWidth / 2)), behavior: 'smooth' });
+    }
+  };
+  const schedulePoint = (pathIndex) => {
+    showPoint(pathIndex);
+    if (reducedMotion) return;
+    const atEnd = pathIndex >= pathRows.length - 1;
+    state.animationTimer = setTimeout(() => schedulePoint(atEnd ? 0 : pathIndex + 1), atEnd ? 1600 : 700);
+  };
+  schedulePoint(reducedMotion ? pathRows.length - 1 : 0);
 }
 
 function evidenceHtml(rows, emptyText, supporting) {
@@ -125,7 +132,7 @@ function renderDetail() {
 function renderTimeline() {
   const rows = visibleHistory(); if (!rows.length) return;
   elements.timeline.innerHTML = rows.map((row, index) => `<button type="button" class="${index === state.selectedIndex ? 'selected' : ''}" data-timeline-index="${index}" style="background:${COLORS[row.key]}" aria-label="${formatDate(row.snapshotAt, true)} ${row.label}"></button>`).join('');
-  elements.timeline.querySelectorAll('[data-timeline-index]').forEach((button) => button.addEventListener('click', () => { state.selectedIndex = Number(button.dataset.timelineIndex); renderHistory(); }));
+  elements.timeline.querySelectorAll('[data-timeline-index]').forEach((button) => button.addEventListener('click', () => { state.selectedIndex = Number(button.dataset.timelineIndex); renderDetail(); renderTimeline(); }));
   const transitions = rows.filter((row, index) => index && row.key !== rows[index - 1].key);
   const latest = rows.at(-1);
   elements.timelineSummary.textContent = `${rows.length} completed sessions · ${transitions.length} transition${transitions.length === 1 ? '' : 's'} · current close: ${latest.label}`;
