@@ -230,6 +230,37 @@ elements.trajectoryScrubber.addEventListener('input', () => {
   pauseTrajectory();
   state.showTrajectoryPoint?.(Number(elements.trajectoryScrubber.value));
 });
+let trajectoryScrubPointer = null;
+const scrubTrajectoryAt = (clientX) => {
+  const bounds = elements.trajectoryScrubber.getBoundingClientRect();
+  const maximum = Number(elements.trajectoryScrubber.max);
+  if (!bounds.width || !maximum) return;
+  const progress = Math.max(0, Math.min(1, (clientX - bounds.left) / bounds.width));
+  pauseTrajectory();
+  elements.trajectoryScrubber.value = String(Math.round(progress * maximum));
+  state.showTrajectoryPoint?.(Number(elements.trajectoryScrubber.value));
+};
+elements.trajectoryScrubber.addEventListener('pointerdown', (event) => {
+  trajectoryScrubPointer = event.pointerId;
+  elements.trajectoryScrubber.setPointerCapture?.(event.pointerId);
+  scrubTrajectoryAt(event.clientX);
+  event.preventDefault();
+});
+elements.trajectoryScrubber.addEventListener('pointermove', (event) => {
+  if (event.pointerId !== trajectoryScrubPointer) return;
+  scrubTrajectoryAt(event.clientX);
+  event.preventDefault();
+});
+const finishTrajectoryScrub = (event) => {
+  if (event.pointerId !== trajectoryScrubPointer) return;
+  scrubTrajectoryAt(event.clientX);
+  elements.trajectoryScrubber.releasePointerCapture?.(event.pointerId);
+  trajectoryScrubPointer = null;
+};
+elements.trajectoryScrubber.addEventListener('pointerup', finishTrajectoryScrub);
+elements.trajectoryScrubber.addEventListener('pointercancel', (event) => {
+  if (event.pointerId === trajectoryScrubPointer) trajectoryScrubPointer = null;
+});
 elements.trajectorySpeed.addEventListener('change', () => {
   state.trajectorySpeed = Number(elements.trajectorySpeed.value);
   if (state.trajectoryPlaying) state.scheduleTrajectory?.(state.trajectorySpeed);
