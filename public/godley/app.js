@@ -154,6 +154,151 @@ const chapters = [
       { id:"muN", label:"North import propensity · μᴺ", min:.05, max:.35, step:.01, value:.15 },
       { id:"muS", label:"South import propensity · μˢ", min:.05, max:.35, step:.01, value:.25 }
     ]
+  },
+  {
+    number:"07", short:"Model BMW", title:"Banks create the money firms need",
+    label:"Chapter 07 · A simple model with private bank money", meta:"11 variables · Model BMW",
+    summary:"BMW returns to a closed economy and introduces commercial-bank loans and deposits. Investment creates a financing need; banks accommodate loans, and the matching deposits become household wealth.",
+    lab:"Change firms’ desired capital ratio, investment adjustment speed and the loan rate. The experiment follows output, productive capital and the matching stock of bank credit.",
+    model:"BMW",
+    nodes: [
+      { id:"C7", symbol:"C", label:"Consumption", type:"flow", x:70, y:75, description:"Households consume from current disposable income and opening deposits.", equation:"C = α₀ + α₁YD + α₂M₋₁" },
+      { id:"Y7", symbol:"Y", label:"Output", type:"flow", x:265, y:75, description:"Closed-economy output supplies consumption and investment goods.", equation:"Y = C + I" },
+      { id:"WB7", symbol:"WB", label:"Wage bill", type:"flow", x:470, y:75, description:"Firms pay wages after interest costs and depreciation allowances.", equation:"WB = Y − rₗ₋₁L₋₁ − AF" },
+      { id:"YD7", symbol:"YD", label:"Disposable income", type:"flow", x:665, y:150, description:"Households receive wages and interest on their bank deposits.", equation:"YD = WB + rₘ₋₁M₋₁" },
+      { id:"M7", symbol:"M", label:"Bank deposits", type:"stock", x:845, y:285, description:"Deposits are bank liabilities and household assets created alongside loans.", equation:"M = M₋₁ + YD − C" },
+      { id:"RL7", symbol:"rₗ", label:"Loan rate", type:"external", x:845, y:75, description:"Banks set the loan rate exogenously in the basic BMW model.", equation:"rₗ = r̄ₗ; rₘ = rₗ" },
+      { id:"I7", symbol:"I", label:"Investment", type:"flow", x:270, y:285, description:"Firms close part of the gap between desired and existing productive capital.", equation:"I = γ(Kᵀ − K₋₁) + DA" },
+      { id:"KT7", symbol:"Kᵀ", label:"Target capital", type:"flow", x:70, y:440, description:"Desired productive capacity is proportional to prior output.", equation:"Kᵀ = κY₋₁" },
+      { id:"K7", symbol:"K", label:"Capital stock", type:"stock", x:465, y:440, description:"Gross investment adds to productive capital while depreciation removes from it.", equation:"K = K₋₁ + I − DA" },
+      { id:"L7", symbol:"L", label:"Bank loans", type:"stock", x:665, y:390, description:"Firms borrow to finance investment beyond depreciation allowances.", equation:"L = L₋₁ + I − AF" },
+      { id:"B7", symbol:"BANK", label:"Commercial bank", type:"actor", x:845, y:460, description:"The bank accommodates firms’ loan demand and creates matching deposits.", equation:"ΔMˢ = ΔLˢ" }
+    ],
+    edges: [
+      ["C7","Y7","demand"], ["I7","Y7","demand"], ["Y7","WB7","sales"], ["RL7","WB7","interest cost"], ["WB7","YD7","wages"], ["M7","YD7","deposit interest"], ["YD7","C7","income"], ["M7","C7","wealth effect"],
+      ["Y7","KT7","capacity norm"], ["KT7","I7","capital gap"], ["K7","I7","existing capital"], ["I7","K7","accumulate"], ["I7","L7","finance"], ["RL7","L7","loan cost"], ["L7","B7","bank asset"], ["B7","M7","creates deposits"]
+    ],
+    controls: [
+      { id:"alpha0BMW", label:"Autonomous consumption · α₀", min:0, max:15, step:1, value:5 },
+      { id:"kappaBMW", label:"Target capital/output · κ", min:1, max:2.5, step:.1, value:1.5 },
+      { id:"gammaBMW", label:"Investment adjustment · γ", min:.05, max:.45, step:.05, value:.2 },
+      { id:"rLBMW", label:"Loan rate · rₗ", min:.005, max:.08, step:.005, value:.03 }
+    ]
+  },
+  {
+    number:"08", short:"Inventory bridge", title:"Production happens before demand is known",
+    label:"Chapter 08 · Time, inventories, profits + pricing", meta:"9 concepts · Accounting bridge",
+    summary:"Chapter 8 is a bridge rather than a closed model. It introduces dated decisions: firms form sales expectations, produce in advance, absorb forecast errors in inventories, calculate historic costs and set prices with a markup.",
+    lab:"Apply a demand change at period 10. Watch production chase expected sales while inventories absorb the forecast error—the timing mechanism that later drives profits and inflation.",
+    model:"INV",
+    nodes: [
+      { id:"SE8", symbol:"sᵉ", label:"Expected sales", type:"flow", x:70, y:90, description:"Production plans begin with expectations formed before current sales are observed.", equation:"sᵉₜ = sᵉₜ₋₁ + β(sₜ₋₁ − sᵉₜ₋₁)" },
+      { id:"INT8", symbol:"inᵀ", label:"Target inventory", type:"stock", x:265, y:90, description:"Firms desire an inventory buffer proportional to expected sales.", equation:"inᵀ = σᵀsᵉ" },
+      { id:"Q8", symbol:"y", label:"Production", type:"flow", x:470, y:90, description:"Output covers expected sales and gradually closes the inventory gap.", equation:"y = sᵉ + γ(inᵀ − in₋₁)" },
+      { id:"S8", symbol:"s", label:"Realized sales", type:"external", x:845, y:90, description:"Actual demand is only known after production decisions have been made.", equation:"s = realized demand" },
+      { id:"IN8", symbol:"in", label:"Closing inventory", type:"stock", x:665, y:245, description:"Unsold production accumulates; unexpectedly strong sales run inventories down.", equation:"in = in₋₁ + y − s" },
+      { id:"UC8", symbol:"UC", label:"Historic unit cost", type:"flow", x:470, y:390, description:"Inventory valuation makes costs depend on when goods were produced.", equation:"UC = (WB + opening inventory cost) / available goods" },
+      { id:"P8", symbol:"p", label:"Price", type:"flow", x:665, y:455, description:"Firms set price as a markup over normal historic unit cost.", equation:"p = (1 + φ)NHUC" },
+      { id:"F8", symbol:"F", label:"Realized profit", type:"flow", x:845, y:330, description:"Profits reconcile sales revenue, wage costs, interest and inventory revaluation.", equation:"F = S − WB + ΔIN − rₗ₋₁IN₋₁" },
+      { id:"E8", symbol:"↻", label:"Expectation update", type:"external", x:265, y:455, description:"Forecast errors feed the next period rather than being solved away instantly.", equation:"errorₜ = sₜ − sᵉₜ" }
+    ],
+    edges: [
+      ["SE8","INT8","inventory norm"], ["SE8","Q8","planned sales"], ["INT8","Q8","inventory gap"], ["Q8","IN8","add output"], ["S8","IN8","subtract sales"], ["IN8","UC8","valuation"], ["Q8","UC8","unit cost"], ["UC8","P8","markup"], ["S8","F8","revenue"], ["IN8","F8","stock change"], ["P8","F8","sales value"], ["S8","E8","forecast error"], ["E8","SE8","next period","identity"]
+    ],
+    controls: [
+      { id:"demandINV", label:"Demand after t10", min:70, max:135, step:5, value:85 },
+      { id:"sigmaINV", label:"Target inventory/sales · σᵀ", min:.05, max:.4, step:.01, value:.2 },
+      { id:"gammaINV", label:"Inventory adjustment · γ", min:.1, max:.8, step:.05, value:.35 },
+      { id:"markupINV", label:"Price markup · φ", min:.05, max:.5, step:.01, value:.25 }
+    ]
+  },
+  {
+    number:"09", short:"Model DIS", title:"Inventories turn demand into inflation",
+    label:"Chapter 09 · Private bank money, inventories + inflation", meta:"11 variables · Model DIS/DISINF",
+    summary:"DIS combines bank-financed production with explicit inventories and price setting. DISINF then endogenizes wages, allowing wage costs, markups and demand pressure to generate a full inflation process.",
+    lab:"Shock demand at period 10 and change the inventory norm or wage response. Output adjusts through production, inventories buffer the surprise, and cost pressure moves the price index.",
+    model:"DIS",
+    nodes: [
+      { id:"D9", symbol:"s", label:"Sales demand", type:"external", x:70, y:75, description:"Household and government demand determines realized sales after firms have planned production.", equation:"s = c + g" },
+      { id:"SE9", symbol:"sᵉ", label:"Expected sales", type:"flow", x:70, y:260, description:"Firms adapt expected sales toward recently realized demand.", equation:"sᵉ = s₋₁ + adaptive correction" },
+      { id:"IT9", symbol:"inᵀ", label:"Target inventory", type:"stock", x:265, y:75, description:"The desired stock of goods is tied to expected sales and may respond to financing costs.", equation:"inᵀ = σᵀsᵉ" },
+      { id:"Y9", symbol:"y", label:"Real output", type:"flow", x:265, y:260, description:"Production covers expected sales and closes part of the inventory gap.", equation:"y = sᵉ + γ(inᵀ − in₋₁)" },
+      { id:"IN9", symbol:"in", label:"Inventories", type:"stock", x:465, y:400, description:"Inventory is the physical buffer between production and realized sales.", equation:"in = in₋₁ + y − s" },
+      { id:"N9", symbol:"N", label:"Employment", type:"flow", x:465, y:75, description:"Employment follows the labor required to produce current output.", equation:"N = y / pr" },
+      { id:"W9", symbol:"W", label:"Wage rate", type:"flow", x:665, y:75, description:"DIS takes wages as given; DISINF lets wage claims respond to employment and prices.", equation:"W = W₋₁(1 + wage response)" },
+      { id:"UC9", symbol:"UC", label:"Unit cost", type:"flow", x:665, y:245, description:"Wages, productivity and inventory finance determine unit cost.", equation:"UC = W/pr + financing cost" },
+      { id:"P9", symbol:"p", label:"Price level", type:"flow", x:845, y:245, description:"Prices are set as a markup on normal historic unit costs.", equation:"p = (1 + φ)NHUC" },
+      { id:"PI9", symbol:"π", label:"Inflation", type:"flow", x:845, y:430, description:"Inflation is the proportional change in the price level.", equation:"π = (p − p₋₁) / p₋₁" },
+      { id:"L9", symbol:"L", label:"Inventory loans", type:"stock", x:665, y:455, description:"Firms borrow to finance the cost of goods held in inventory.", equation:"L = IN" }
+    ],
+    edges: [
+      ["D9","SE9","update"], ["SE9","IT9","inventory norm"], ["SE9","Y9","planned sales"], ["IT9","Y9","inventory gap"], ["Y9","IN9","production"], ["D9","IN9","sales"], ["Y9","N9","labor demand"], ["N9","W9","wage pressure"], ["W9","UC9","labor cost"], ["IN9","UC9","historic cost"], ["UC9","P9","markup"], ["P9","PI9","price change"], ["IN9","L9","finance stock"], ["L9","UC9","interest cost"]
+    ],
+    controls: [
+      { id:"demandDIS", label:"Demand after t10", min:80, max:140, step:5, value:120 },
+      { id:"sigmaDIS", label:"Target inventory/sales · σᵀ", min:.05, max:.35, step:.01, value:.18 },
+      { id:"gammaDIS", label:"Inventory adjustment · γ", min:.1, max:.8, step:.05, value:.35 },
+      { id:"wageDIS", label:"Wage response", min:0, max:.08, step:.005, value:.02 }
+    ]
+  },
+  {
+    number:"10", short:"Model INSOUT", title:"The whole monetary hierarchy connects",
+    label:"Chapter 10 · A model with both inside and outside money", meta:"11 nodes · Model INSOUT spine",
+    summary:"INSOUT joins households, firms, commercial banks, government and the central bank. Loans and deposits form inside money; cash, reserves and government securities form outside money; bank liquidity and reserve rules connect both layers.",
+    lab:"Raise reserve or liquidity targets and change government demand. The focused banking experiment shows how balance-sheet constraints alter loan capacity, reserves and aggregate output.",
+    model:"INSOUT",
+    nodes: [
+      { id:"HH10", symbol:"HH", label:"Households", type:"actor", x:70, y:90, description:"Households earn income, consume and allocate wealth across cash, deposits and government securities.", equation:"V = Hh + M1 + M2 + Bh + pBL·BLh" },
+      { id:"C10", symbol:"C", label:"Consumption", type:"flow", x:260, y:90, description:"Real consumption responds to expected real disposable income and wealth.", equation:"c = α₁ydʳᵉ + α₂v₋₁" },
+      { id:"F10", symbol:"FIRMS", label:"Producing firms", type:"actor", x:460, y:90, description:"Firms produce, price, hold inventories and borrow to finance working capital.", equation:"Lᵈ = inventory finance + production finance" },
+      { id:"Y10", symbol:"Y", label:"Output", type:"flow", x:650, y:90, description:"Demand for consumption and government goods determines sales and production.", equation:"Y = C + G + ΔIN" },
+      { id:"G10", symbol:"GOV", label:"Government", type:"actor", x:845, y:90, description:"Government spends, taxes and supplies bills and bonds to finance its deficit.", equation:"PSBR = G + interest − T" },
+      { id:"L10", symbol:"L", label:"Bank loans", type:"stock", x:365, y:280, description:"Commercial-bank assets accommodate eligible firm credit demand subject to bank constraints.", equation:"Lˢ = Lᵈ" },
+      { id:"M10", symbol:"M", label:"Bank deposits", type:"stock", x:170, y:300, description:"Checking and term deposits are inside-money liabilities of commercial banks.", equation:"M1ˢ + M2ˢ = household deposit holdings" },
+      { id:"B10", symbol:"BANK", label:"Commercial banks", type:"actor", x:465, y:455, description:"Banks connect inside money to reserves, bills and central-bank advances.", equation:"assets = L + Hᵇ + Bᵇ; liabilities = M1 + M2 + A" },
+      { id:"R10", symbol:"Hᵇ", label:"Bank reserves", type:"stock", x:650, y:360, description:"Banks demand cash reserves against deposits and payment needs.", equation:"Hᵇᵈ = ρ₁M1 + ρ₂M2" },
+      { id:"CB10", symbol:"CB", label:"Central bank", type:"actor", x:845, y:455, description:"The central bank supplies reserves and advances and holds government bills.", equation:"Hˢ = Hʰ + Hᵇ; Aˢ = Aᵈ" },
+      { id:"GB10", symbol:"B/BL", label:"Govt securities", type:"stock", x:845, y:280, description:"Bills and bonds are government liabilities held by households, banks and the central bank.", equation:"Bˢ = Bh + Bb + Bcb" }
+    ],
+    edges: [
+      ["HH10","C10","spending"], ["C10","F10","sales"], ["F10","Y10","production"], ["G10","Y10","public demand"], ["F10","L10","borrows"], ["L10","B10","bank asset"], ["B10","M10","creates deposits"], ["M10","HH10","inside money"],
+      ["M10","R10","reserve base"], ["R10","B10","liquidity"], ["CB10","R10","supplies reserves"], ["G10","GB10","issues"], ["GB10","B10","liquid asset"], ["GB10","HH10","portfolio asset"], ["CB10","B10","advances"]
+    ],
+    controls: [
+      { id:"gINS", label:"Government demand · G", min:15, max:45, step:1, value:25 },
+      { id:"reserveINS", label:"Required reserve ratio · ρ", min:.04, max:.25, step:.01, value:.1 },
+      { id:"liquidityINS", label:"Bank liquidity target", min:.05, max:.3, step:.01, value:.12 },
+      { id:"alphaINS", label:"Income propensity · α₁", min:.45, max:.85, step:.01, value:.68 }
+    ]
+  },
+  {
+    number:"11", short:"Model GROWTH", title:"Stocks, capacity and policy grow together",
+    label:"Chapter 11 · A growth model prototype", meta:"11 nodes · Model GROWTH spine",
+    summary:"GROWTH embeds every major sector in an expanding economy. Investment builds productive capacity, productivity and wages evolve, firms finance accumulation, and fiscal and monetary policy influence both the level and path of activity.",
+    lab:"Set the trend rates for government demand, productivity, wages and investment. The experiment tracks whether demand and productive capacity expand together over forty periods.",
+    model:"GROWTH",
+    nodes: [
+      { id:"G11", symbol:"G", label:"Govt demand", type:"external", x:70, y:75, description:"Government expenditure follows an exogenous or policy-guided growth path.", equation:"G = G₋₁(1 + gG)" },
+      { id:"C11", symbol:"C", label:"Consumption", type:"flow", x:70, y:270, description:"Household demand grows with income and accumulated financial wealth.", equation:"C = α₁YD + α₂V₋₁" },
+      { id:"Y11", symbol:"Y", label:"Real output", type:"flow", x:270, y:170, description:"Actual output is demand-led until productive capacity becomes binding.", equation:"Y = min(C + I + G, Yᶜ)" },
+      { id:"K11", symbol:"K", label:"Capital stock", type:"stock", x:465, y:75, description:"Investment expands productive capacity while depreciation retires old capital.", equation:"K = K₋₁ + I − δK₋₁" },
+      { id:"I11", symbol:"I", label:"Investment", type:"flow", x:465, y:270, description:"Firms invest to expand capacity and meet their target accumulation path.", equation:"I = desired accumulation + replacement" },
+      { id:"PR11", symbol:"pr", label:"Productivity", type:"external", x:270, y:455, description:"Labor productivity follows a trend that allows output to grow faster than employment.", equation:"pr = pr₋₁(1 + gpr)" },
+      { id:"N11", symbol:"N", label:"Employment", type:"flow", x:665, y:75, description:"Employment is the labor required to produce current real output.", equation:"N = Y / pr" },
+      { id:"W11", symbol:"W", label:"Wage rate", type:"flow", x:845, y:75, description:"Nominal wage growth and productivity jointly shape unit labor costs.", equation:"W = W₋₁(1 + gW)" },
+      { id:"P11", symbol:"p", label:"Price level", type:"flow", x:845, y:270, description:"Firms set prices over normal costs, connecting distribution to inflation.", equation:"p = (1 + φ) normal unit cost" },
+      { id:"F11", symbol:"FU", label:"Retained earnings", type:"flow", x:665, y:360, description:"Undistributed profits finance part of gross investment internally.", equation:"FU = target internal-finance share × I" },
+      { id:"L11", symbol:"L", label:"Loans + equity", type:"stock", x:465, y:455, description:"External finance closes the gap between investment and retained earnings.", equation:"ΔL + equity issues = I − FU" }
+    ],
+    edges: [
+      ["G11","Y11","public demand"], ["C11","Y11","private demand"], ["I11","Y11","investment demand"], ["Y11","C11","income"], ["K11","Y11","capacity"], ["I11","K11","accumulate"], ["K11","I11","capacity target"], ["PR11","N11","productivity"], ["Y11","N11","labor demand"], ["N11","W11","wage pressure"], ["W11","P11","unit cost"], ["Y11","F11","profits"], ["F11","I11","internal finance"], ["I11","L11","finance gap"], ["L11","I11","credit supply"]
+    ],
+    controls: [
+      { id:"gGov11", label:"Government growth · gG", min:0, max:.06, step:.005, value:.025 },
+      { id:"gProd11", label:"Productivity growth · gpr", min:0, max:.04, step:.005, value:.015 },
+      { id:"gWage11", label:"Nominal wage growth · gW", min:0, max:.08, step:.005, value:.03 },
+      { id:"invShare11", label:"Gross investment/capital", min:.04, max:.12, step:.005, value:.075 }
+    ]
   }
 ];
 
@@ -273,8 +418,8 @@ function renderControls(chapter) {
 }
 
 function formatControl(value, control) {
-  if (["theta","alpha1","alpha2","lambda0","lambdaLong"].includes(control.id)) return Number(value).toFixed(2);
-  if (["r","rb","rbl","muN","muS"].includes(control.id)) return `${(Number(value) * 100).toFixed(1)}%`;
+  if (["theta","alpha1","alpha2","lambda0","lambdaLong","kappaBMW","gammaBMW"].includes(control.id)) return Number(value).toFixed(2);
+  if (["r","rb","rbl","muN","muS","rLBMW","sigmaINV","gammaINV","markupINV","sigmaDIS","gammaDIS","wageDIS","reserveINS","liquidityINS","alphaINS","gGov11","gProd11","gWage11","invShare11"].includes(control.id)) return `${(Number(value) * 100).toFixed(1)}%`;
   return Number(value).toFixed(0);
 }
 
@@ -365,10 +510,111 @@ function simulateREG(p) {
   return { rows, series:[{key:"YN",label:"North income",color:"#ff8b61"},{key:"YS",label:"South income",color:"#62c6b9"},{key:"TBS",label:"South trade bal.",color:"#e6c36b"}] };
 }
 
+function simulateBMW(p) {
+  const rows = []; let K = 80; let L = 60; let M = 60; let C = 45; let Ylast = 80;
+  const alpha1 = .6, alpha2 = .2, delta = .05;
+  for (let t = 0; t <= 40; t += 1) {
+    const Ktarget = p.kappaBMW * Ylast;
+    const depreciation = delta * K;
+    const I = Math.max(0, p.gammaBMW * (Ktarget - K) + depreciation);
+    for (let k = 0; k < 120; k += 1) {
+      const Y = C + I;
+      const wages = Math.max(0, Y - p.rLBMW * L - depreciation);
+      const YD = wages + p.rLBMW * M;
+      const nextC = Math.max(0, p.alpha0BMW + alpha1 * YD + alpha2 * M);
+      if (Math.abs(nextC - C) < 1e-8) { C = nextC; break; }
+      C = nextC;
+    }
+    const Y = C + I;
+    K = Math.max(0, K + I - depreciation);
+    L = Math.max(0, L + I - depreciation);
+    M = L;
+    Ylast = Y;
+    rows.push({ Y, K, L });
+  }
+  return { rows, series:[{key:"Y",label:"Output",color:"#ff8b61"},{key:"K",label:"Capital",color:"#62c6b9"},{key:"L",label:"Bank loans",color:"#e6c36b"}] };
+}
+
+function simulateInventory(p) {
+  const rows = []; let expected = 100; let inventory = 20;
+  for (let t = 0; t <= 40; t += 1) {
+    const sales = t < 10 ? 100 : p.demandINV;
+    const target = p.sigmaINV * expected;
+    const production = Math.max(0, expected + p.gammaINV * (target - inventory));
+    inventory = Math.max(0, inventory + production - sales);
+    expected += .35 * (sales - expected);
+    const unitCost = 1 + .004 * Math.max(0, target - inventory);
+    const priceIndex = 100 * (1 + p.markupINV) * unitCost / 1.25;
+    rows.push({ Production:production, Inventory:inventory, PriceIndex:priceIndex });
+  }
+  return { rows, series:[{key:"Production",label:"Production",color:"#ff8b61"},{key:"Inventory",label:"Inventories",color:"#62c6b9"},{key:"PriceIndex",label:"Price index",color:"#e6c36b"}] };
+}
+
+function simulateDIS(p) {
+  const rows = []; let expected = 100; let inventory = 18; let wage = 1; const initialPrice = 1.25;
+  for (let t = 0; t <= 40; t += 1) {
+    const sales = t < 10 ? 100 : p.demandDIS;
+    const target = p.sigmaDIS * expected;
+    const output = Math.max(0, expected + p.gammaDIS * (target - inventory));
+    inventory = Math.max(0, inventory + output - sales);
+    const employmentPressure = (output - 100) / 100;
+    wage *= Math.max(.98, 1 + .005 + p.wageDIS * employmentPressure);
+    const price = 1.25 * wage;
+    expected += .4 * (sales - expected);
+    rows.push({ Output:output, Inventory:inventory, PriceIndex:100 * price / initialPrice });
+  }
+  return { rows, series:[{key:"Output",label:"Real output",color:"#ff8b61"},{key:"Inventory",label:"Inventories",color:"#62c6b9"},{key:"PriceIndex",label:"Price index",color:"#e6c36b"}] };
+}
+
+function simulateINSOUT(p) {
+  const rows = []; let deposits = 100; let loans = 75; let consumption = 60;
+  for (let t = 0; t <= 40; t += 1) {
+    const reserves = p.reserveINS * deposits;
+    const liquidAssets = p.liquidityINS * deposits;
+    const lendingCapacity = Math.max(0, deposits - reserves - liquidAssets);
+    const desiredLoans = Math.max(0, .72 * (consumption + p.gINS) + 12);
+    loans += .28 * (Math.min(desiredLoans, lendingCapacity) - loans);
+    const investment = .08 * loans;
+    let output = consumption + p.gINS + investment;
+    for (let k = 0; k < 80; k += 1) {
+      const income = .76 * output;
+      const nextConsumption = p.alphaINS * income + .05 * deposits;
+      const nextOutput = nextConsumption + p.gINS + investment;
+      consumption = nextConsumption;
+      if (Math.abs(nextOutput - output) < 1e-8) { output = nextOutput; break; }
+      output = nextOutput;
+    }
+    deposits = Math.max(1, 100 + .65 * (loans - 75));
+    rows.push({ Output:output, Loans:loans, Reserves:p.reserveINS * deposits });
+  }
+  return { rows, series:[{key:"Output",label:"Output",color:"#ff8b61"},{key:"Loans",label:"Bank loans",color:"#62c6b9"},{key:"Reserves",label:"Reserves",color:"#e6c36b"}] };
+}
+
+function simulateGrowth(p) {
+  const rows = []; let K = 300; let G = 40; let C = 120; let wealth = 100; let productivity = 1; let wage = 1; let output = 190;
+  const delta = .04, capitalOutput = 1.5;
+  for (let t = 0; t <= 40; t += 1) {
+    if (t > 0) G *= 1 + p.gGov11;
+    productivity *= 1 + p.gProd11;
+    wage *= 1 + p.gWage11;
+    const investment = p.invShare11 * K;
+    const capacity = K * productivity / capitalOutput;
+    const demand = C + investment + G;
+    output = Math.min(demand, capacity);
+    const disposableIncome = .76 * output;
+    C = .76 * disposableIncome + .025 * wealth;
+    wealth = Math.max(0, wealth + disposableIncome - C);
+    K = Math.max(0, K + investment - delta * K);
+    const priceIndex = 100 * wage / productivity;
+    rows.push({ Output:output, Capacity:capacity, PriceIndex:priceIndex });
+  }
+  return { rows, series:[{key:"Output",label:"Real output",color:"#ff8b61"},{key:"Capacity",label:"Productive capacity",color:"#62c6b9"},{key:"PriceIndex",label:"Price index",color:"#e6c36b"}] };
+}
+
 function renderSimulation(chapter) {
   const params = currentParams(chapter);
-  const simulations = { SIM:simulateSIM, PC:simulatePC, LP:simulateLP, REG:simulateREG };
-  const titles = { SIM:"Income, consumption + money", PC:"Income + the household portfolio", LP:"Income, wealth + long bonds", REG:"Regional income + South trade balance" };
+  const simulations = { SIM:simulateSIM, PC:simulatePC, LP:simulateLP, REG:simulateREG, BMW:simulateBMW, INV:simulateInventory, DIS:simulateDIS, INSOUT:simulateINSOUT, GROWTH:simulateGrowth };
+  const titles = { SIM:"Income, consumption + money", PC:"Income + the household portfolio", LP:"Income, wealth + long bonds", REG:"Regional income + South trade balance", BMW:"Output, capital + private credit", INV:"The inventory timing loop", DIS:"Output, inventories + the price level", INSOUT:"Bank constraints + aggregate activity", GROWTH:"Demand and capacity through time" };
   const result = simulations[chapter.model](params);
   el("chartTitle").textContent = titles[chapter.model];
   drawChart(result.rows, result.series);

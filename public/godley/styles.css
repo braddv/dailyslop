@@ -46,7 +46,7 @@ h1 em { color: var(--orange); font-weight: 500; }
 .chapter-tab.active { color: var(--white); background: var(--ink); }
 .chapter-tab small { display: block; margin-bottom: 22px; font-family: "DM Mono", monospace; font-size: .62rem; letter-spacing: .08em; }
 .chapter-tab strong { display: block; max-width: 240px; font-family: "Newsreader", serif; font-size: 1.23rem; font-weight: 600; line-height: 1.08; }
-.chapter-tab.active::after { content: ""; position: absolute; left: 20px; bottom: -8px; width: 15px; height: 15px; transform: rotate(45deg); background: var(--ink); }
+.chapter-tab.active::after { content: ""; position: absolute; inset: auto 18px 8px auto; width: 16px; height: 3px; background: var(--orange); }
 
 .workspace { padding: 76px 0 30px; }
 .workspace-heading, .lab-heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 500px); gap: 40px; align-items: end; margin-bottom: 32px; }
