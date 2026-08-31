@@ -94,7 +94,7 @@ function renderBalanceChart(rows) {
   chart.replaceChildren();
   const d = { width:1200, height:520, left:72, right:22, top:25, bottom:50 };
   const plotWidth = d.width - d.left - d.right;
-  const extent = yExtent(rows, ['privatePct','governmentPct','foreignPct'], true);
+  const extent = yExtent(rows, ['householdPct','businessPct','governmentPct','foreignPct'], true);
   const y = drawAxes(chart, d, extent, rows);
   const columnWidth = plotWidth / rows.length;
   const barWidth = Math.max(1.2, columnWidth * .72);
@@ -103,7 +103,7 @@ function renderBalanceChart(rows) {
     const x = d.left + index * columnWidth + (columnWidth - barWidth) / 2;
     let positive = 0;
     let negative = 0;
-    ['private','government','foreign'].forEach((key) => {
+    ['household','business','government','foreign'].forEach((key) => {
       const value = Number(row[`${key}Pct`]) || 0;
       const start = value >= 0 ? positive : negative;
       const end = start + value;
@@ -112,7 +112,7 @@ function renderBalanceChart(rows) {
       if (value >= 0) positive = end; else negative = end;
     });
     if (row.date === state.selectedDate) append(chart, 'line', { x1:x+barWidth/2, x2:x+barWidth/2, y1:d.top, y2:d.height-d.bottom, class:'selected-line' });
-    const hit = append(chart, 'rect', { x:d.left+index*columnWidth, y:d.top, width:columnWidth, height:d.height-d.top-d.bottom, class:'quarter-hit', tabindex:'0', 'aria-label':`${row.quarter}: private ${pct(row.privatePct)}, government ${pct(row.governmentPct)}, foreign ${pct(row.foreignPct)}` });
+    const hit = append(chart, 'rect', { x:d.left+index*columnWidth, y:d.top, width:columnWidth, height:d.height-d.top-d.bottom, class:'quarter-hit', tabindex:'0', 'aria-label':`${row.quarter}: households ${pct(row.householdPct)}, business ${pct(row.businessPct)}, government ${pct(row.governmentPct)}, foreign ${pct(row.foreignPct)}` });
     hit.addEventListener('pointerenter', () => setSelected(row.date));
     hit.addEventListener('click', () => setSelected(row.date));
     hit.addEventListener('focus', () => setSelected(row.date));
