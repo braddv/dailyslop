@@ -28,6 +28,32 @@ function parseFredCsv(text, expectedId) {
   return values;
 }
 
+function parseFredCsvBundle(text, definitions = SERIES) {
+  const lines = String(text || '').trim().split(/\r?\n/);
+  const maps = Object.fromEntries(definitions.map(({ key }) => [key, new Map()]));
+  if (lines.length < 2) return maps;
+
+  const header = lines[0].split(',').map((column) => column.trim());
+  const columns = definitions.map((definition) => ({
+    ...definition,
+    index: header.indexOf(definition.id),
+  }));
+
+  lines.slice(1).forEach((line) => {
+    if (!line.trim()) return;
+    const values = line.split(',');
+    const date = values[0]?.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    columns.forEach(({ key, index }) => {
+      if (index < 1) return;
+      const value = finite(values[index]?.trim());
+      if (value !== null) maps[key].set(date, value);
+    });
+  });
+
+  return maps;
+}
+
 function percentOfGdp(value, gdp) {
   if (!Number.isFinite(value) || !Number.isFinite(gdp) || gdp === 0) return null;
   return (value / gdp) * 100;
@@ -137,6 +163,7 @@ module.exports = {
   buildSummary,
   mergeSeries,
   parseFredCsv,
+  parseFredCsvBundle,
   percentOfGdp,
   quarterLabel,
 };

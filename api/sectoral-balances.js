@@ -1,43 +1,30 @@
 const seed = require('../public/sectoral-balances/data/sectoral-balances.json');
 const { readSharedCache, writeSharedCache } = require('./_lib/cache');
-const { SERIES, buildPayload, parseFredCsv } = require('./_lib/sectoral-balances');
+const { SERIES, buildPayload, parseFredCsvBundle } = require('./_lib/sectoral-balances');
 
 const CACHE_KEY = 'fred_sectoral_balances_v1';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FRESH_TTL_MS = 12 * 60 * 60 * 1000;
 const STALE_TTL_MS = 30 * DAY_MS;
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchSeries(definition) {
-  const waits = [0, 350, 1000];
-  let lastError;
-  for (const wait of waits) {
-    if (wait) await sleep(wait);
-    try {
-      const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${encodeURIComponent(definition.id)}`;
-      const response = await fetch(url, {
-        headers: {
-          accept: 'text/csv,text/plain,*/*',
-          'user-agent': 'DailySlop sectoral balances/1.0',
-        },
-      });
-      if (!response.ok) throw new Error(`FRED ${definition.id} HTTP ${response.status}`);
-      const values = parseFredCsv(await response.text(), definition.id);
-      if (values.size < 20) throw new Error(`FRED ${definition.id} returned insufficient history`);
-      return [definition.key, values];
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError || new Error(`FRED ${definition.id} failed`);
-}
-
 async function fetchFreshPayload() {
-  const entries = await Promise.all(SERIES.map(fetchSeries));
-  return buildPayload(Object.fromEntries(entries));
+  const ids = SERIES.map(({ id }) => encodeURIComponent(id)).join(',');
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${ids}`;
+  const response = await fetch(url, {
+    headers: {
+      accept: 'text/csv,text/plain,*/*',
+      'user-agent': 'DailySlop sectoral balances/1.0',
+    },
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!response.ok) throw new Error(`FRED bundle HTTP ${response.status}`);
+
+  const seriesMaps = parseFredCsvBundle(await response.text());
+  const incomplete = SERIES.filter(({ key }) => seriesMaps[key].size < 20);
+  if (incomplete.length) {
+    throw new Error(`FRED bundle missing history for ${incomplete.map(({ id }) => id).join(', ')}`);
+  }
+  return buildPayload(seriesMaps);
 }
 
 function validPayload(value) {
