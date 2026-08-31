@@ -93,12 +93,72 @@ const chapters = [
       { id:"theta", label:"Tax rate · θ", min:.1, max:.4, step:.01, value:.2 },
       { id:"lambda0", label:"Base bill share · λ₀", min:.35, max:.8, step:.01, value:.635 }
     ]
+  },
+  {
+    number:"05", short:"Model LP", title:"Duration enters the balance sheet",
+    label:"Chapter 05 · Long-term bonds, capital gains + liquidity preference", meta:"12 variables · Model LP",
+    summary:"LP adds perpetual government bonds alongside money and bills. A change in the long rate changes the bond price immediately, creating capital gains or losses that move household wealth and consumption.",
+    lab:"Set a new long-bond yield for period 10. The repricing creates a one-time capital gain or loss, while liquidity preference divides wealth among money, bills and perpetuities.",
+    model:"LP",
+    nodes: [
+      { id:"G", symbol:"G", label:"Govt spending", type:"external", x:70, y:80, description:"Government purchases remain an exogenous source of aggregate demand.", equation:"G = exogenous" },
+      { id:"Y", symbol:"Y", label:"National income", type:"flow", x:255, y:80, description:"Output is the sum of household consumption and government spending.", equation:"Y = C + G" },
+      { id:"YDr", symbol:"YDʳ", label:"Regular income", type:"flow", x:455, y:95, description:"Regular disposable income includes bill interest and the coupon paid by perpetuities, but excludes capital gains.", equation:"YDʳ = Y − T + rᵦ₋₁Bh₋₁ + BLh₋₁" },
+      { id:"C", symbol:"C", label:"Consumption", type:"flow", x:260, y:270, description:"Consumption responds to expected regular disposable income and opening wealth.", equation:"C = α₁YDʳᵉ + α₂V₋₁" },
+      { id:"Vlag", symbol:"V₋₁", label:"Opening wealth", type:"stock", x:75, y:310, description:"The prior portfolio carries financial history into current spending and wealth accumulation.", equation:"V₋₁ = Hh₋₁ + Bh₋₁ + pBL₋₁·BLh₋₁" },
+      { id:"rb", symbol:"rᵦ", label:"Bill rate", type:"external", x:75, y:465, description:"The short rate raises bill income and shifts desired portfolio shares.", equation:"rᵦ = r̄ᵦ" },
+      { id:"pBL", symbol:"pBL", label:"Bond price", type:"external", x:450, y:455, description:"A perpetuity paying one unit per period has a price inversely related to its yield.", equation:"rBL = 1 / pBL" },
+      { id:"CG", symbol:"CG", label:"Capital gain", type:"flow", x:620, y:435, description:"Existing long bonds gain or lose value when their market price changes.", equation:"CG = (pBL − pBL₋₁)BLh₋₁" },
+      { id:"V", symbol:"V", label:"Closing wealth", type:"stock", x:650, y:245, description:"Saving and bond revaluation jointly update household wealth.", equation:"V = V₋₁ + YDʳ − C + CG" },
+      { id:"Bh", symbol:"Bh", label:"Bill holdings", type:"stock", x:825, y:125, description:"Short bills are one interest-bearing component of the household portfolio.", equation:"Bh = Vᵉ(λ₂₀ + λ₂₂rᵦ − λ₂₃ERrBL − λ₂₄YDʳᵉ/Vᵉ)" },
+      { id:"BLh", symbol:"BLh", label:"Long bonds", type:"stock", x:825, y:300, description:"Demand for perpetuities rises with their expected return and falls with the competing bill rate.", equation:"BLh = Vᵉ(λ₃₀ − λ₃₂rᵦ + λ₃₃ERrBL − λ₃₄YDʳᵉ/Vᵉ) / pBL" },
+      { id:"Hh", symbol:"Hh", label:"Money", type:"stock", x:825, y:475, description:"Money is the liquid residual after wealth is allocated to bills and long bonds.", equation:"Hh = V − Bh − pBL·BLh" }
+    ],
+    edges: [
+      ["G","Y","demand"], ["C","Y","demand"], ["Y","YDr","income"], ["Bh","YDr","bill interest"], ["BLh","YDr","coupon"], ["YDr","C","expected income"], ["Vlag","C","wealth effect"],
+      ["pBL","CG","reprice"], ["BLh","CG","position"], ["CG","V","capital gain"], ["YDr","V","saving"], ["C","V","subtract"], ["Vlag","V","carry"],
+      ["V","Bh","allocate"], ["rb","Bh","short yield"], ["V","BLh","allocate"], ["pBL","BLh","long yield"], ["V","Hh","residual"], ["Bh","Hh","subtract"], ["BLh","Hh","subtract"]
+    ],
+    controls: [
+      { id:"G", label:"Government spending · G", min:10, max:40, step:1, value:20 },
+      { id:"rb", label:"Bill yield · rᵦ", min:.005, max:.08, step:.005, value:.025 },
+      { id:"rbl", label:"Long yield at t10 · rBL", min:.02, max:.1, step:.005, value:.05 },
+      { id:"lambdaLong", label:"Long-bond wealth share", min:.15, max:.55, step:.01, value:.35 }
+    ]
+  },
+  {
+    number:"06", short:"Model REG", title:"One country, two regional balances",
+    label:"Chapter 06 · Introducing the open economy", meta:"10 variables · Model REG",
+    summary:"REG divides the PC economy into North and South while retaining one currency, one government and one central bank. Each region’s imports are the other region’s exports, so trade and fiscal balances must reconcile.",
+    lab:"Change regional spending and import propensities. A region that imports more than it exports accumulates an offsetting private or government balance elsewhere in the shared system.",
+    model:"REG",
+    nodes: [
+      { id:"GN", symbol:"Gᴺ", label:"North spending", type:"external", x:75, y:75, description:"Government purchases directed to firms in the North add to Northern demand.", equation:"Gᴺ = exogenous" },
+      { id:"CN", symbol:"Cᴺ", label:"North consumption", type:"flow", x:75, y:265, description:"Northern households consume from Northern disposable income and opening wealth.", equation:"Cᴺ = α₁ᴺYDᴺ + α₂ᴺVᴺ₋₁" },
+      { id:"VN", symbol:"Vᴺ", label:"North wealth", type:"stock", x:75, y:455, description:"Northern saving accumulates as household wealth in money and government bills.", equation:"Vᴺ = Vᴺ₋₁ + YDᴺ − Cᴺ" },
+      { id:"YN", symbol:"Yᴺ", label:"North income", type:"flow", x:285, y:175, description:"Northern output includes domestic demand and exports to the South, less Northern imports.", equation:"Yᴺ = Cᴺ + Gᴺ + Xᴺ − IMᴺ" },
+      { id:"IMN", symbol:"IMᴺ", label:"North imports", type:"flow", x:410, y:390, description:"Northern imports rise proportionally with Northern income and become Southern exports.", equation:"IMᴺ = μᴺYᴺ = Xˢ" },
+      { id:"IMS", symbol:"IMˢ", label:"South imports", type:"flow", x:510, y:105, description:"Southern imports rise with Southern income and are simultaneously Northern exports.", equation:"IMˢ = μˢYˢ = Xᴺ" },
+      { id:"YS", symbol:"Yˢ", label:"South income", type:"flow", x:635, y:275, description:"Southern output includes domestic demand and exports to the North, less Southern imports.", equation:"Yˢ = Cˢ + Gˢ + Xˢ − IMˢ" },
+      { id:"GS", symbol:"Gˢ", label:"South spending", type:"external", x:845, y:75, description:"Government purchases directed to the South support Southern output.", equation:"Gˢ = exogenous" },
+      { id:"CS", symbol:"Cˢ", label:"South consumption", type:"flow", x:845, y:265, description:"Southern consumption responds to its own disposable income and inherited wealth.", equation:"Cˢ = α₁ˢYDˢ + α₂ˢVˢ₋₁" },
+      { id:"VS", symbol:"Vˢ", label:"South wealth", type:"stock", x:845, y:455, description:"Southern disposable income not consumed accumulates as household wealth.", equation:"Vˢ = Vˢ₋₁ + YDˢ − Cˢ" }
+    ],
+    edges: [
+      ["GN","YN","demand"], ["CN","YN","demand"], ["YN","IMN","import demand"], ["IMN","YN","subtract"], ["IMS","YN","exports"], ["YN","CN","income"], ["VN","CN","wealth effect"], ["YN","VN","saving"], ["CN","VN","subtract"],
+      ["GS","YS","demand"], ["CS","YS","demand"], ["YS","IMS","import demand"], ["IMS","YS","subtract"], ["IMN","YS","exports"], ["YS","CS","income"], ["VS","CS","wealth effect"], ["YS","VS","saving"], ["CS","VS","subtract"]
+    ],
+    controls: [
+      { id:"GN", label:"North spending · Gᴺ", min:10, max:35, step:1, value:20 },
+      { id:"GS", label:"South spending · Gˢ", min:10, max:35, step:1, value:20 },
+      { id:"muN", label:"North import propensity · μᴺ", min:.05, max:.35, step:.01, value:.15 },
+      { id:"muS", label:"South import propensity · μˢ", min:.05, max:.35, step:.01, value:.25 }
+    ]
   }
 ];
 
 let currentChapter = 2;
 let selectedNode = null;
-let flowOn = true;
 
 const el = id => document.getElementById(id);
 const chapterNav = el("chapterNav");
@@ -147,7 +207,7 @@ function renderGraph(chapter) {
   chapter.edges.forEach((edge, index) => {
     const [fromId, toId, label, kind] = edge;
     const route = edgePath(nodeCenter(chapter, fromId), nodeCenter(chapter, toId));
-    const path = svgElement("path", { d:route.d, class:`edge ${kind || ""} ${flowOn ? "flowing" : ""}`, "data-from":fromId, "data-to":toId });
+    const path = svgElement("path", { d:route.d, class:`edge flowing ${kind || ""}`, "data-from":fromId, "data-to":toId });
     path.style.animationDelay = `${index * -90}ms`;
     edgeLayer.appendChild(path);
     const text = svgElement("text", { x:route.label.x, y:route.label.y, class:"edge-label", "text-anchor":"middle", "data-from":fromId, "data-to":toId });
@@ -172,16 +232,12 @@ function renderGraph(chapter) {
 function selectNode(chapter, id) {
   selectedNode = id;
   const node = chapter.nodes.find(item => item.id === id);
-  const connectedIds = new Set([id]);
-  chapter.edges.forEach(([from, to]) => { if (from === id || to === id) { connectedIds.add(from); connectedIds.add(to); } });
   document.querySelectorAll(".node").forEach(item => {
     item.classList.toggle("selected", item.dataset.id === id);
-    item.classList.toggle("dim", !connectedIds.has(item.dataset.id));
   });
   document.querySelectorAll(".edge, .edge-label").forEach(item => {
     const active = item.dataset.from === id || item.dataset.to === id;
     item.classList.toggle("active", active);
-    item.classList.toggle("dim", !active);
   });
   el("nodeSymbol").textContent = node.symbol;
   el("nodeSymbol").className = `node-symbol ${node.type}`;
@@ -217,8 +273,8 @@ function renderControls(chapter) {
 }
 
 function formatControl(value, control) {
-  if (["theta","alpha1","alpha2","lambda0"].includes(control.id)) return Number(value).toFixed(2);
-  if (control.id === "r") return `${(Number(value) * 100).toFixed(1)}%`;
+  if (["theta","alpha1","alpha2","lambda0","lambdaLong"].includes(control.id)) return Number(value).toFixed(2);
+  if (["r","rb","rbl","muN","muS"].includes(control.id)) return `${(Number(value) * 100).toFixed(1)}%`;
   return Number(value).toFixed(0);
 }
 
@@ -262,9 +318,59 @@ function simulatePC(p) {
   return { rows, series:[{key:"Y",label:"Income",color:"#ff8b61"},{key:"Bh",label:"Bills",color:"#62c6b9"},{key:"Hh",label:"Money",color:"#e6c36b"}] };
 }
 
+function simulateLP(p) {
+  const rows = []; let V = 0; let Bh = 0; let BLh = 0; let C = 0; let pBL = 25;
+  const theta = .2, alpha1 = .6, alpha2 = .4;
+  for (let t = 0; t <= 40; t += 1) {
+    const Vlag = V, oldPrice = pBL;
+    pBL = t < 10 ? 25 : 1 / p.rbl;
+    const CG = (pBL - oldPrice) * BLh;
+    const interest = p.rb * Bh + BLh;
+    for (let k = 0; k < 100; k += 1) {
+      const Y = C + p.G; const TX = theta * (Y + interest); const YDr = Y - TX + interest;
+      const nextC = alpha1 * YDr + alpha2 * Vlag;
+      if (Math.abs(nextC - C) < 1e-8) { C = nextC; break; }
+      C = nextC;
+    }
+    const Y = C + p.G; const TX = theta * (Y + interest); const YDr = Y - TX + interest;
+    V = Math.max(0, Vlag + YDr - C + CG);
+    const billShare = Math.max(.12, Math.min(.6, .34 + 1.2 * (p.rb - .025)));
+    const longValue = V * p.lambdaLong;
+    Bh = V * Math.min(billShare, 1 - p.lambdaLong);
+    BLh = pBL ? longValue / pBL : 0;
+    rows.push({ Y, V, BLV:longValue, CG });
+  }
+  return { rows, series:[{key:"Y",label:"Income",color:"#ff8b61"},{key:"V",label:"Wealth",color:"#62c6b9"},{key:"BLV",label:"Long bonds",color:"#e6c36b"}] };
+}
+
+function simulateREG(p) {
+  const rows = []; let VN = 0; let VS = 0; let BhN = 0; let BhS = 0; let CN = 0; let CS = 0;
+  const theta = .2, alpha1 = .7, alpha2 = .3, r = .025, billShare = .67;
+  for (let t = 0; t <= 40; t += 1) {
+    const VNlag = VN, VSlag = VS, interestN = r * BhN, interestS = r * BhS;
+    let YN = CN + p.GN, YS = CS + p.GS;
+    for (let k = 0; k < 180; k += 1) {
+      const IMN = p.muN * YN, IMS = p.muS * YS;
+      const YDN = (1 - theta) * (YN + interestN); const YDS = (1 - theta) * (YS + interestS);
+      const nextCN = alpha1 * YDN + alpha2 * VNlag; const nextCS = alpha1 * YDS + alpha2 * VSlag;
+      const nextYN = nextCN + p.GN + IMS - IMN; const nextYS = nextCS + p.GS + IMN - IMS;
+      if (Math.max(Math.abs(nextYN - YN), Math.abs(nextYS - YS)) < 1e-8) { CN = nextCN; CS = nextCS; YN = nextYN; YS = nextYS; break; }
+      CN = nextCN; CS = nextCS; YN = nextYN; YS = nextYS;
+    }
+    const YDN = (1 - theta) * (YN + interestN); const YDS = (1 - theta) * (YS + interestS);
+    VN = VNlag + YDN - CN; VS = VSlag + YDS - CS; BhN = billShare * VN; BhS = billShare * VS;
+    const IMN = p.muN * YN, IMS = p.muS * YS;
+    rows.push({ YN, YS, TBS:IMN - IMS });
+  }
+  return { rows, series:[{key:"YN",label:"North income",color:"#ff8b61"},{key:"YS",label:"South income",color:"#62c6b9"},{key:"TBS",label:"South trade bal.",color:"#e6c36b"}] };
+}
+
 function renderSimulation(chapter) {
-  const result = chapter.model === "SIM" ? simulateSIM(currentParams(chapter)) : simulatePC(currentParams(chapter));
-  el("chartTitle").textContent = chapter.model === "SIM" ? "Income, consumption + money" : "Income + the household portfolio";
+  const params = currentParams(chapter);
+  const simulations = { SIM:simulateSIM, PC:simulatePC, LP:simulateLP, REG:simulateREG };
+  const titles = { SIM:"Income, consumption + money", PC:"Income + the household portfolio", LP:"Income, wealth + long bonds", REG:"Regional income + South trade balance" };
+  const result = simulations[chapter.model](params);
+  el("chartTitle").textContent = titles[chapter.model];
   drawChart(result.rows, result.series);
 }
 
@@ -273,11 +379,13 @@ function drawChart(rows, series) {
   svg.replaceChildren();
   const bounds = { left:46, right:742, top:18, bottom:264 };
   const allValues = rows.flatMap(row => series.map(item => row[item.key])).filter(Number.isFinite);
-  const max = Math.max(...allValues, 1) * 1.08;
+  const rawMin = Math.min(...allValues, 0); const rawMax = Math.max(...allValues, 1);
+  const pad = Math.max((rawMax - rawMin) * .08, 1);
+  const min = rawMin < 0 ? rawMin - pad : 0; const max = rawMax + pad;
   const x = index => bounds.left + (index / (rows.length - 1)) * (bounds.right - bounds.left);
-  const y = value => bounds.bottom - (value / max) * (bounds.bottom - bounds.top);
+  const y = value => bounds.bottom - ((value - min) / (max - min)) * (bounds.bottom - bounds.top);
   for (let i = 0; i <= 4; i += 1) {
-    const value = max * i / 4; const yy = y(value);
+    const value = min + (max - min) * i / 4; const yy = y(value);
     svg.appendChild(svgElement("line", { x1:bounds.left, x2:bounds.right, y1:yy, y2:yy, class:"chart-grid" }));
     const label = svgElement("text", { x:bounds.left - 8, y:yy + 3, class:"chart-axis-label", "text-anchor":"end" }); label.textContent = value.toFixed(0); svg.appendChild(label);
   }
@@ -320,13 +428,6 @@ function renderChapter(index) {
   renderControls(chapter);
   selectNode(chapter, chapter.nodes[0].id);
 }
-
-el("flowToggle").addEventListener("click", () => {
-  flowOn = !flowOn;
-  el("flowToggle").classList.toggle("active", flowOn);
-  el("flowToggle").setAttribute("aria-pressed", String(flowOn));
-  document.querySelectorAll(".edge").forEach(edge => edge.classList.toggle("flowing", flowOn));
-});
 
 el("resetGraph").addEventListener("click", () => {
   const chapter = chapters[currentChapter];

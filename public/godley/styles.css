@@ -39,7 +39,7 @@ h1 em { color: var(--orange); font-weight: 500; }
 .zero-sum b { color: var(--orange); font-family: "Newsreader", serif; font-size: 3.7rem; font-weight: 500; line-height: 1; }
 .zero-sum strong { font-family: "DM Mono", monospace; font-size: 4.4rem; font-weight: 400; line-height: .95; }
 
-.chapter-nav { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.chapter-nav { display: grid; grid-template-columns: repeat(6, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
 .chapter-tab { position: relative; min-height: 118px; padding: 20px; border: 0; border-right: 1px solid var(--line); color: var(--muted); background: transparent; text-align: left; transition: background 160ms ease, color 160ms ease; }
 .chapter-tab:last-child { border-right: 0; }
 .chapter-tab:hover { background: rgba(255,255,255,.35); }
@@ -62,16 +62,17 @@ h1 em { color: var(--orange); font-weight: 500; }
 .panel-bar small { color: var(--muted); font-family: "DM Mono", monospace; font-size: .6rem; }
 .graph-actions button { padding: 7px 10px; border: 1px solid var(--line); color: var(--muted); background: transparent; font-family: "DM Mono", monospace; font-size: .58rem; text-transform: uppercase; }
 .graph-actions button:hover, .graph-actions button.active { border-color: var(--ink); color: var(--white); background: var(--ink); }
+.flow-state { display: inline-flex; align-items: center; gap: 7px; color: var(--teal); font-family: "DM Mono", monospace; font-size: .58rem; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.flow-state i { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 4px rgba(20,121,110,.12); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .4; transform: scale(.72); } }
 .graph-wrap { position: relative; min-height: 592px; overflow: hidden; background-image: radial-gradient(var(--line) .8px, transparent .8px); background-size: 18px 18px; }
 #modelGraph { width: 100%; height: 570px; display: block; }
 .edge { fill: none; stroke: #a9aaa2; stroke-width: 1.5; marker-end: url(#arrow-flow); transition: opacity 180ms ease, stroke 180ms ease, stroke-width 180ms ease; }
 .edge.identity { stroke-dasharray: 5 4; marker-end: url(#arrow-identity); }
-.edge.dim { opacity: .12; }
 .edge.active { stroke: var(--orange); stroke-width: 2.7; }
 .edge.flowing { stroke-dasharray: 7 7; animation: flow 850ms linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -28; } }
 .edge-label { fill: var(--muted); font: 500 11px "DM Mono", monospace; paint-order: stroke; stroke: var(--white); stroke-width: 5px; stroke-linejoin: round; }
-.edge-label.dim { opacity: .12; }
 .node { cursor: pointer; outline: none; }
 .node rect { fill: var(--white); stroke: var(--ink); stroke-width: 1.4; filter: url(#nodeShadow); transition: fill 150ms ease, opacity 150ms ease, stroke-width 150ms ease; }
 .node .node-accent { stroke: none; filter: none; }
@@ -83,7 +84,6 @@ h1 em { color: var(--orange); font-weight: 500; }
 .node .label { fill: var(--muted); font: 500 10px "DM Mono", monospace; letter-spacing: .02em; }
 .node:hover rect:first-child, .node.selected rect:first-child { stroke-width: 2.5; }
 .node.selected rect:first-child { fill: #fff7ea; }
-.node.dim rect, .node.dim text { opacity: .23; }
 .graph-legend { position: absolute; left: 16px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 11px; border: 1px solid var(--line); background: rgba(255,253,248,.9); color: var(--muted); font-family: "DM Mono", monospace; font-size: .55rem; }
 .graph-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .graph-legend i { width: 7px; height: 7px; border-radius: 50%; }
@@ -134,6 +134,7 @@ h1 em { color: var(--orange); font-weight: 500; }
 .site-footer p { margin: 0; }
 
 @media (max-width: 1000px) {
+  .chapter-nav { grid-template-columns: repeat(3, 1fr); }
   .model-layout { grid-template-columns: 1fr; }
   .inspector { border-top: 1px solid var(--ink); border-left: 0; }
   .inspector > p:not(.inspector-kicker) { min-height: 0; }
@@ -167,5 +168,4 @@ h1 em { color: var(--orange); font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .edge.flowing { animation: none; }
 }
