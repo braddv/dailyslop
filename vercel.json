@@ -39,6 +39,14 @@
       "destination": "/public/regime/:path*"
     },
     {
+      "source": "/sectoral-balances",
+      "destination": "/public/sectoral-balances/index.html"
+    },
+    {
+      "source": "/sectoral-balances/:path*",
+      "destination": "/public/sectoral-balances/:path*"
+    },
+    {
       "source": "/playbook",
       "destination": "/public/playbook/index.html"
     },
