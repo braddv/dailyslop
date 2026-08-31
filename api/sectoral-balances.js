@@ -51,7 +51,11 @@ module.exports = async function handler(req, res) {
   let cacheFresh = validPayload(payload);
   let refreshError = null;
 
-  if (!cacheFresh) {
+  // Ordinary page loads must never wait on six upstream FRED requests. Serve
+  // the shared cache when it is warm and fall through to the bundled snapshot
+  // immediately when it is not. Only an explicit refresh performs upstream
+  // work and updates the shared cache for later visitors.
+  if (refresh) {
     try {
       payload = await fetchFreshPayload();
       cacheFresh = true;

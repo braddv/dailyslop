@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { buildPayload, mergeSeries, parseFredCsv, percentOfGdp, quarterLabel } = require('../api/_lib/sectoral-balances');
+const sectoralBalancesHandler = require('../api/sectoral-balances');
 
 function map(values) { return new Map(Object.entries(values)); }
 
@@ -44,4 +45,32 @@ test('mergeSeries excludes a newer quarter until every point-in-time input exist
 test('format helpers produce GDP percentages and quarter labels', () => {
   assert.equal(percentOfGdp(-250, 10000), -2.5);
   assert.equal(quarterLabel('2026-04-01'), 'Q2 2026');
+});
+
+test('ordinary API loads never wait for an upstream FRED request', async () => {
+  const originalFetch = global.fetch;
+  let upstreamCalls = 0;
+  global.fetch = async () => {
+    upstreamCalls += 1;
+    throw new Error('ordinary loads must not fetch FRED');
+  };
+
+  let statusCode = 200;
+  let body;
+  const response = {
+    setHeader() {},
+    status(code) { statusCode = code; return this; },
+    json(value) { body = value; return value; },
+  };
+
+  try {
+    await sectoralBalancesHandler({ query: {} }, response);
+  } finally {
+    global.fetch = originalFetch;
+  }
+
+  assert.equal(statusCode, 200);
+  assert.equal(body.success, true);
+  assert.ok(body.observations.length >= 100);
+  assert.equal(upstreamCalls, 0);
 });
