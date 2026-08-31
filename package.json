@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "build": "node --check api/_lib/signals.js && node --check api/_lib/backtests.js && node --check api/_lib/regimes.js && node --check api/_lib/intermarket.js && node --check api/_lib/market-context.js && node --check api/signal-history.js && node --check api/intermarket.js && node --check public/intermarket/app.js && node --check public/regime/app.js && node --check public/playbook/ranking.js && node --check public/playbook/app.js && node --check public/sp500ad/app.js && node --check public/godley/app.js"
+    "build": "node --check api/_lib/signals.js && node --check api/_lib/backtests.js && node --check api/_lib/regimes.js && node --check api/_lib/intermarket.js && node --check api/_lib/market-context.js && node --check api/_lib/sectoral-balances.js && node --check api/signal-history.js && node --check api/intermarket.js && node --check api/sectoral-balances.js && node --check public/intermarket/app.js && node --check public/regime/app.js && node --check public/sectoral-balances/app.js && node --check public/playbook/ranking.js && node --check public/playbook/app.js && node --check public/sp500ad/app.js && node --check public/godley/app.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

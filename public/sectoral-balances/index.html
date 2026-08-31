@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/sectoral-balances/" />
+    <title>DailySlop Sectoral Balances</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/sectoral-balances/styles.css" />
+  </head>
+  <body>
+    <div class="glow glow-one"></div><div class="glow glow-two"></div>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <nav class="breadcrumb" aria-label="DailySlop pages">
+            <a href="/sp500ad">S&amp;P 500</a><span>/</span><a href="/intermarket">Macro Radar</a><span>/</span><strong>Sectoral Balances</strong><span>/</span><a href="/regime">Regime</a><span>/</span><a href="/playbook">Playbook</a>
+          </nav>
+          <p class="eyebrow">Financial flows beneath the macro tape</p>
+          <h1>Sectoral Balances</h1>
+          <p class="subhead">Track how government deficits, private saving and the external balance offset one another across the U.S. economy.</p>
+        </div>
+        <div class="meta">
+          <div class="meta-card"><span>Complete through</span><strong id="latestQuarter">Loading…</strong></div>
+          <div class="meta-card"><span>Data source</span><strong id="dataSource">FRED / BEA</strong></div>
+        </div>
+      </header>
+
+      <section class="identity-panel" aria-labelledby="identityTitle">
+        <div>
+          <p class="section-kicker">The accounting identity</p>
+          <h2 id="identityTitle">Every financial surplus has an offsetting deficit.</h2>
+          <p>The balances always reconcile. The useful question is which sector is supplying or absorbing the financial assets—and how that mix is changing.</p>
+        </div>
+        <div class="identity-equation" aria-label="Private plus government plus foreign balance equals zero">
+          <span><i class="private-dot"></i>Private</span><b>+</b><span><i class="government-dot"></i>Government</span><b>+</b><span><i class="foreign-dot"></i>Foreign</span><b>= 0</b>
+        </div>
+      </section>
+
+      <section class="snapshot-panel" aria-labelledby="snapshotTitle">
+        <div class="section-heading compact">
+          <div><p class="section-kicker">Latest complete quarter</p><h2 id="snapshotTitle">Current balance map</h2></div>
+          <p id="snapshotSummary">Loading the latest flows…</p>
+        </div>
+        <div class="snapshot-grid" id="snapshotGrid"></div>
+        <div class="balance-read" id="balanceRead"></div>
+      </section>
+
+      <section class="chart-panel" aria-labelledby="historyTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Normalized history</p>
+            <h2 id="historyTitle">Who is lending and who is borrowing?</h2>
+            <p>Quarterly balances as a share of nominal GDP. Positive values are net lending; negative values are net borrowing.</p>
+          </div>
+          <div class="range-toggle" id="rangeToggle" aria-label="History timeframe">
+            <button type="button" data-range="5y">5Y</button>
+            <button type="button" data-range="10y">10Y</button>
+            <button class="active" type="button" data-range="20y">20Y</button>
+            <button type="button" data-range="max">Max</button>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i class="private-dot"></i>Private domestic</span><span><i class="government-dot"></i>Government</span><span><i class="foreign-dot"></i>Foreign</span>
+        </div>
+        <div class="chart-scroll"><svg id="balanceChart" viewBox="0 0 1200 520" role="img" aria-label="Quarterly U.S. sectoral balances as percent of GDP"></svg></div>
+        <div class="selected-quarter" id="selectedQuarter"></div>
+      </section>
+
+      <section class="private-panel" aria-labelledby="privateTitle">
+        <div class="section-heading compact">
+          <div><p class="section-kicker">Inside the private balance</p><h2 id="privateTitle">Households versus domestic business</h2></div>
+          <p>These components add to the private-sector balance apart from small statistical discrepancies.</p>
+        </div>
+        <div class="legend"><span><i class="household-dot"></i>Households &amp; institutions</span><span><i class="business-dot"></i>Domestic business</span></div>
+        <div class="chart-scroll private-chart-scroll"><svg id="privateChart" viewBox="0 0 1200 390" role="img" aria-label="Household and business financial balances as percent of GDP"></svg></div>
+      </section>
+
+      <section class="method-panel">
+        <div>
+          <p class="section-kicker">How to use it</p>
+          <h2>Context, not a mechanical trading signal</h2>
+          <p>A widening government deficit generally adds financial assets to the nongovernment sectors, while a current-account deficit transfers part of that support abroad. A rising private surplus can indicate healthier buffers—or defensive saving. Combine these slow quarterly flows with DailySlop’s live regime, breadth and sector leadership.</p>
+        </div>
+        <div class="source-links">
+          <a href="https://fred.stlouisfed.org/series/W994RC1Q027SBEA" target="_blank" rel="noreferrer">Private balance ↗</a>
+          <a href="https://fred.stlouisfed.org/series/AD01RC1Q027SBEA" target="_blank" rel="noreferrer">Government balance ↗</a>
+          <a href="https://fred.stlouisfed.org/series/NETFI" target="_blank" rel="noreferrer">Current account ↗</a>
+          <a href="https://fred.stlouisfed.org/series/GDP" target="_blank" rel="noreferrer">Nominal GDP ↗</a>
+        </div>
+      </section>
+
+      <footer><button id="refreshButton" type="button">Refresh data</button><button class="secondary" id="downloadButton" type="button">Download CSV</button><span id="statusText">Loading FRED data…</span></footer>
+    </main>
+    <script src="/sectoral-balances/app.js"></script>
+  </body>
+</html>
