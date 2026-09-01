@@ -7,6 +7,7 @@ const app = await readFile(new URL("../public/job-guarantee/app.js", import.meta
 const atlasHtml = await readFile(new URL("../public/job-bank-atlas/index.html", import.meta.url), "utf8");
 const atlasApp = await readFile(new URL("../public/job-bank-atlas/app.js", import.meta.url), "utf8");
 const atlasNeeds = await readFile(new URL("../public/job-bank-atlas/needs-data.js", import.meta.url), "utf8");
+const atlasPaths = await readFile(new URL("../public/job-bank-atlas/state-paths.js", import.meta.url), "utf8");
 const vercel = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
 
 test("job guarantee page covers work, demand, VISTA, macro effects, and guardrails", () => {
@@ -63,4 +64,14 @@ test("job bank atlas maps official state unemployment and documents the matching
   assert.match(atlasNeeds, /"olderAdults": 18/);
   assert.match(atlasNeeds, /"rentBurden": 51\.8/);
   assert.match(atlasNeeds, /"uninsured": 8\.2/);
+});
+
+test("job bank atlas loads its map locally without runtime CDN dependencies", () => {
+  assert.match(atlasHtml, /src="\/job-bank-atlas\/state-paths\.js"/);
+  assert.doesNotMatch(atlasHtml, /cdn\.jsdelivr\.net/);
+  assert.doesNotMatch(atlasApp, /fetch\s*\(/);
+  assert.doesNotMatch(atlasApp, /\bd3\b|\btopojson\b/);
+  assert.match(atlasPaths, /globalThis\.JOB_BANK_STATE_PATHS/);
+  assert.match(atlasPaths, /"viewBox":"0 0 920 560"/);
+  assert.match(atlasPaths, /"06":"M/);
 });
