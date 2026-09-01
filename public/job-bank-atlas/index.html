@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A policy atlas connecting local unemployment, public need and ready community projects." />
+    <title>Job Bank Atlas · DailySlop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/job-bank-atlas/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="/">DAILY<span>SLOP</span></a>
+      <p>Policy Lab <i>·</i> Atlas 01</p>
+      <a class="home-link" href="/job-guarantee">Job Guarantee <span>↗</span></a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="overline">A map for the public option for work</p>
+          <h1>Where people need work.<br /><em>Where work needs doing.</em></h1>
+        </div>
+        <p class="lede">A Job Guarantee needs more than a vacancy board. It needs a continuously maintained map of labor-market stress, unmet public need and organizations ready to turn both into voluntary, useful employment.</p>
+      </section>
+
+      <section class="map-section" id="map">
+        <div class="section-heading">
+          <div>
+            <p class="overline">Labor-market pressure</p>
+            <h2>Unemployment is not evenly distributed.</h2>
+          </div>
+          <p>State unemployment rates are seasonally adjusted. Select a state to locate labor-market pressure; this first atlas layer does not infer an individual worker’s skills or preferences.</p>
+        </div>
+
+        <div class="map-layout">
+          <div class="map-panel">
+            <div class="map-meta">
+              <span>BLS LAUS · JULY 2026 (PRELIMINARY)</span>
+              <div class="legend" aria-label="Unemployment-rate legend">
+                <span>2.0%</span><i></i><span>5.9%</span>
+              </div>
+            </div>
+            <div id="stateMap" class="state-map" aria-live="polite">
+              <p class="map-loading">Loading official state geography…</p>
+            </div>
+            <p class="map-source">Source: <a href="https://www.bls.gov/web/laus/laumstrk.htm" target="_blank" rel="noreferrer">U.S. Bureau of Labor Statistics, Local Area Unemployment Statistics ↗</a></p>
+          </div>
+
+          <aside class="state-detail" id="stateDetail">
+            <p class="detail-label">NATIONAL BASELINE</p>
+            <h3>United States</h3>
+            <strong>4.1%</strong>
+            <p class="comparison">July 2026 unemployment rate</p>
+            <dl>
+              <div><dt>Unemployed people</dt><dd>6.9 million</dd></div>
+              <div><dt>State range</dt><dd>2.0–5.9%</dd></div>
+              <div><dt>What this measures</dt><dd>People without a job who are available for and actively seeking work</dd></div>
+            </dl>
+            <p class="detail-note">Choose a state on the map for a point-in-time comparison with the national labor market.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="matching-section" id="matching">
+        <div class="section-heading">
+          <div>
+            <p class="overline">The matching model</p>
+            <h2>Map the opportunity—not the person.</h2>
+          </div>
+          <p>The model should recommend places, project categories and capacity investments. People choose among suitable offers through an accessible intake process.</p>
+        </div>
+
+        <div class="equation" aria-label="Job-bank matching model">
+          <div><span>01</span><strong>Labor slack</strong><small>Rate, count, persistence and participation</small></div>
+          <b>+</b>
+          <div><span>02</span><strong>Public need</strong><small>Care, schools, climate, housing and health</small></div>
+          <b>+</b>
+          <div><span>03</span><strong>Project readiness</strong><small>Sponsor, supervisor, tools and safe work plan</small></div>
+          <b>+</b>
+          <div><span>04</span><strong>Worker fit</strong><small>Opt-in preferences, skills, schedule and access</small></div>
+          <b>−</b>
+          <div><span>05</span><strong>Displacement risk</strong><small>Existing employees and funded vacancies protected</small></div>
+        </div>
+
+        <div class="model-grid">
+          <article>
+            <p>SUPPLY LAYER</p>
+            <h3>Where employment is needed</h3>
+            <ul>
+              <li>Monthly BLS unemployment rate and count</li>
+              <li>Long-duration and recurring unemployment</li>
+              <li>Participation and employment-population gaps</li>
+              <li>Metro, county and commuting-area boundaries</li>
+            </ul>
+          </article>
+          <article>
+            <p>NEED LAYER</p>
+            <h3>Where useful work is waiting</h3>
+            <ul>
+              <li>Childcare, eldercare and disability-service gaps</li>
+              <li>Tutoring, attendance and after-school demand</li>
+              <li>Heat, fire, flood and weatherization backlogs</li>
+              <li>Parks, food access and public-health capacity</li>
+            </ul>
+          </article>
+          <article>
+            <p>DELIVERY LAYER</p>
+            <h3>Where a job can start safely</h3>
+            <ul>
+              <li>Approved public or nonprofit sponsor</li>
+              <li>Named supervisor and worker-support ratio</li>
+              <li>Training, equipment and accessibility plan</li>
+              <li>Published output and non-displacement review</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="output-section">
+        <div>
+          <p class="overline">What the atlas should return</p>
+          <h2>A ranked investigation list—not a fake jobs number.</h2>
+          <p>The atlas should only estimate positions after local sponsors document a need and their delivery capacity. Until then, it identifies where planning grants and project development are most urgent.</p>
+        </div>
+        <div class="output-card">
+          <div class="output-top"><span>EXAMPLE OUTPUT FORMAT</span><i>Illustrative · not an estimate</i></div>
+          <h3>County or workforce area</h3>
+          <div class="output-row"><span>Labor-market pressure</span><strong>High / medium / low</strong></div>
+          <div class="output-row"><span>Candidate project families</span><strong>Care · resilience · schools</strong></div>
+          <div class="output-row"><span>Sponsor readiness</span><strong>Measured from submitted projects</strong></div>
+          <div class="output-row"><span>Training pathway</span><strong>O*NET skills + local providers</strong></div>
+          <div class="output-row"><span>Confidence</span><strong>Published with every result</strong></div>
+        </div>
+      </section>
+
+      <section class="roadmap-section">
+        <div>
+          <p class="overline">Build sequence</p>
+          <h2>Start with evidence we already have.</h2>
+        </div>
+        <ol>
+          <li><span>NOW</span><strong>State unemployment layer</strong><p>Monthly BLS rates reveal broad geographic differences.</p></li>
+          <li><span>NEXT</span><strong>County labor-market layer</strong><p>Add unemployment counts, persistence and participation without confusing seasonally adjusted and unadjusted data.</p></li>
+          <li><span>THEN</span><strong>Community-need indicators</strong><p>Combine federal datasets with locally validated service gaps.</p></li>
+          <li><span>REQUIRED</span><strong>Sponsor project registry</strong><p>No job estimate becomes actionable until a qualified institution can supervise it.</p></li>
+          <li><span>FINAL</span><strong>Voluntary worker matching</strong><p>American Job Center intake connects preferences and accommodations to real approved offers.</p></li>
+        </ol>
+      </section>
+
+      <section class="sources-section">
+        <div><p class="overline">Data architecture</p><h2>Public sources, explicit limitations.</h2></div>
+        <div class="source-list">
+          <a href="https://www.bls.gov/lau/" target="_blank" rel="noreferrer"><span>BLS · MONTHLY</span><strong>Local Area Unemployment Statistics</strong><i>↗</i></a>
+          <a href="https://www.census.gov/data/developers/data-sets/acs-5year.html" target="_blank" rel="noreferrer"><span>CENSUS · ANNUAL</span><strong>ACS local demographic, housing and commuting indicators</strong><i>↗</i></a>
+          <a href="https://www.bls.gov/oes/" target="_blank" rel="noreferrer"><span>BLS · ANNUAL</span><strong>Occupational Employment and Wage Statistics</strong><i>↗</i></a>
+          <a href="https://www.onetcenter.org/database.html" target="_blank" rel="noreferrer"><span>O*NET</span><strong>Skills, tasks, training and occupational requirements</strong><i>↗</i></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>DailySlop Policy Lab</p>
+      <p>Labor slack · public need · project readiness</p>
+      <a href="/job-guarantee">Return to the Job Guarantee ↑</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <script src="/job-bank-atlas/app.js"></script>
+  </body>
+</html>

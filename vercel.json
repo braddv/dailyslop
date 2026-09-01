@@ -71,6 +71,14 @@
       "destination": "/public/job-guarantee/:path*"
     },
     {
+      "source": "/job-bank-atlas",
+      "destination": "/public/job-bank-atlas/index.html"
+    },
+    {
+      "source": "/job-bank-atlas/:path*",
+      "destination": "/public/job-bank-atlas/:path*"
+    },
+    {
       "source": "/slop",
       "destination": "/public/slop.html"
     },
