@@ -99,7 +99,24 @@ const legendBar = document.querySelector("#mapLegend i");
 let activeLayerKey = "unemployment";
 let selectedStateId = null;
 let svg;
-let features = [];
+
+function interpolateHex(start, end, amount) {
+  const channels = [1, 3, 5].map((offset) => {
+    const from = Number.parseInt(start.slice(offset, offset + 2), 16);
+    const to = Number.parseInt(end.slice(offset, offset + 2), 16);
+    return Math.round(from + ((to - from) * amount)).toString(16).padStart(2, "0");
+  });
+  return `#${channels.join("")}`;
+}
+
+function colorForValue(value, minimum, midpoint, maximum) {
+  if (value <= midpoint) {
+    const range = midpoint - minimum || 1;
+    return interpolateHex("#f2e4d2", "#e69b68", Math.max(0, Math.min(1, (value - minimum) / range)));
+  }
+  const range = maximum - midpoint || 1;
+  return interpolateHex("#e69b68", "#c4462d", Math.max(0, Math.min(1, (value - midpoint) / range)));
+}
 
 function formatPercent(value) {
   return `${Number(value).toFixed(1)}%`;
@@ -153,7 +170,6 @@ function updateMap() {
   const layer = layers[activeLayerKey];
   const [minimum, maximum] = layerRange(layer);
   const midpoint = layer.national;
-  const color = d3.scaleLinear().domain([minimum, midpoint, maximum]).range(["#f2e4d2", "#e69b68", "#c4462d"]);
 
   description.textContent = layer.description;
   datasetLabel.textContent = layer.vintage.toUpperCase();
@@ -168,18 +184,14 @@ function updateMap() {
   });
 
   if (svg) {
-    svg.attr("aria-label", `United States map colored by ${layer.metric.toLowerCase()}`);
-    svg.select("title").text(`${layer.metric} by state`);
-    svg.select("desc").text(`Select a state to compare its ${layer.metric.toLowerCase()} with the national value of ${formatPercent(layer.national)}.`);
-    svg.selectAll(".state-shape")
-      .attr("fill", (feature) => color(layer.value(String(feature.id).padStart(2, "0"))))
-      .attr("aria-label", (feature) => {
-        const id = String(feature.id).padStart(2, "0");
-        return `${stateRates[id][0]}, ${formatPercent(layer.value(id))} ${layer.metric.toLowerCase()}`;
-      });
-    svg.selectAll(".state-shape title").text((feature) => {
-      const id = String(feature.id).padStart(2, "0");
-      return `${stateRates[id][0]}: ${formatPercent(layer.value(id))}`;
+    svg.setAttribute("aria-label", `United States map colored by ${layer.metric.toLowerCase()}`);
+    svg.querySelector("title").textContent = `${layer.metric} by state`;
+    svg.querySelector("desc").textContent = `Select a state to compare its ${layer.metric.toLowerCase()} with the national value of ${formatPercent(layer.national)}.`;
+    svg.querySelectorAll(".state-shape").forEach((shape) => {
+      const id = shape.dataset.stateId;
+      shape.setAttribute("fill", colorForValue(layer.value(id), minimum, midpoint, maximum));
+      shape.setAttribute("aria-label", `${stateRates[id][0]}, ${formatPercent(layer.value(id))} ${layer.metric.toLowerCase()}`);
+      shape.querySelector("title").textContent = `${stateRates[id][0]}: ${formatPercent(layer.value(id))}`;
     });
   }
 
@@ -199,53 +211,41 @@ function renderControls() {
   });
 }
 
-async function renderMap() {
-  if (!globalThis.d3 || !globalThis.topojson || !globalThis.JOB_BANK_NEEDS) {
-    throw new Error("Map libraries or public-need data did not load.");
-  }
-
-  const response = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
-  if (!response.ok) throw new Error(`State geography returned ${response.status}.`);
-  const topology = await response.json();
-  const states = topojson.feature(topology, topology.objects.states);
-  features = states.features.filter((feature) => stateRates[String(feature.id).padStart(2, "0")]);
-  const collection = { type: "FeatureCollection", features };
-  const width = 920;
-  const height = 560;
-  const projection = d3.geoAlbersUsa().fitExtent([[16, 16], [width - 16, height - 16]], collection);
-  const path = d3.geoPath(projection);
-
+function renderMap() {
+  const map = globalThis.JOB_BANK_STATE_PATHS;
+  if (!map || !globalThis.JOB_BANK_NEEDS) throw new Error("Local map or public-need data did not load.");
+  const namespace = "http://www.w3.org/2000/svg";
   mapRoot.innerHTML = "";
-  svg = d3.select(mapRoot)
-    .append("svg")
-    .attr("viewBox", `0 0 ${width} ${height}`)
-    .attr("role", "img");
+  svg = document.createElementNS(namespace, "svg");
+  svg.setAttribute("viewBox", map.viewBox);
+  svg.setAttribute("role", "img");
+  svg.append(document.createElementNS(namespace, "title"), document.createElementNS(namespace, "desc"));
 
-  svg.append("title");
-  svg.append("desc");
-
-  svg.selectAll("path")
-    .data(features)
-    .join("path")
-    .attr("class", "state-shape")
-    .attr("d", path)
-    .attr("stroke", "#fffdf8")
-    .attr("stroke-width", 1.2)
-    .attr("tabindex", 0)
-    .attr("role", "button")
-    .on("click", selectState)
-    .on("keydown", (event, feature) => {
+  Object.entries(map.paths).forEach(([id, pathData]) => {
+    const shape = document.createElementNS(namespace, "path");
+    shape.dataset.stateId = id;
+    shape.setAttribute("class", "state-shape");
+    shape.setAttribute("d", pathData);
+    shape.setAttribute("stroke", "#fffdf8");
+    shape.setAttribute("stroke-width", "1.2");
+    shape.setAttribute("tabindex", "0");
+    shape.setAttribute("role", "button");
+    shape.append(document.createElementNS(namespace, "title"));
+    shape.addEventListener("click", selectState);
+    shape.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        selectState.call(event.currentTarget, event, feature);
+        selectState.call(event.currentTarget);
       }
-    })
-    .append("title");
+    });
+    svg.append(shape);
+  });
+  mapRoot.append(svg);
 
-  function selectState(event, feature) {
-    selectedStateId = String(feature.id).padStart(2, "0");
-    svg.selectAll(".state-shape").classed("active", false);
-    d3.select(this).classed("active", true);
+  function selectState() {
+    selectedStateId = this.dataset.stateId;
+    svg.querySelectorAll(".state-shape").forEach((shape) => shape.classList.remove("active"));
+    this.classList.add("active");
     renderDetail();
   }
 
@@ -254,7 +254,9 @@ async function renderMap() {
 
 renderControls();
 updateMap();
-renderMap().catch((error) => {
+try {
+  renderMap();
+} catch (error) {
   console.error(error);
   mapRoot.innerHTML = `<p class="map-loading">The map could not load. The indicator definitions and official sources remain available on this page.</p>`;
-});
+}
