@@ -4,6 +4,8 @@ import test from "node:test";
 
 const html = await readFile(new URL("../public/job-guarantee/index.html", import.meta.url), "utf8");
 const app = await readFile(new URL("../public/job-guarantee/app.js", import.meta.url), "utf8");
+const atlasHtml = await readFile(new URL("../public/job-bank-atlas/index.html", import.meta.url), "utf8");
+const atlasApp = await readFile(new URL("../public/job-bank-atlas/app.js", import.meta.url), "utf8");
 const vercel = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
 
 test("job guarantee page covers work, demand, VISTA, macro effects, and guardrails", () => {
@@ -22,6 +24,7 @@ test("job guarantee page covers work, demand, VISTA, macro effects, and guardrai
   assert.doesNotMatch(html, /href="\/sp500ad"/);
   assert.doesNotMatch(html, /href="\/intermarket"/);
   assert.doesNotMatch(html, /href="\/sectoral-balances"/);
+  assert.match(html, /href="\/job-bank-atlas"/);
 });
 
 test("job guarantee scenario labels its major categories and computes direct wages", () => {
@@ -35,4 +38,19 @@ test("vercel exposes the job guarantee page and its static assets", () => {
   const rewrites = vercel.rewrites.map(({ source, destination }) => `${source} -> ${destination}`);
   assert.ok(rewrites.includes("/job-guarantee -> /public/job-guarantee/index.html"));
   assert.ok(rewrites.includes("/job-guarantee/:path* -> /public/job-guarantee/:path*"));
+  assert.ok(rewrites.includes("/job-bank-atlas -> /public/job-bank-atlas/index.html"));
+  assert.ok(rewrites.includes("/job-bank-atlas/:path* -> /public/job-bank-atlas/:path*"));
+});
+
+test("job bank atlas maps official state unemployment and documents the matching model", () => {
+  assert.match(atlasHtml, /Where people need work/);
+  assert.match(atlasHtml, /Map the opportunity—not the person/);
+  assert.match(atlasHtml, /BLS LAUS · JULY 2026/);
+  assert.match(atlasHtml, /Illustrative · not an estimate/);
+  assert.match(atlasHtml, /href="\/job-guarantee"/);
+  assert.doesNotMatch(atlasHtml, /href="\/sp500ad"/);
+  assert.doesNotMatch(atlasHtml, /href="\/intermarket"/);
+  assert.match(atlasApp, /const NATIONAL_RATE = 4\.1/);
+  assert.match(atlasApp, /"11": \["District of Columbia", 5\.9\]/);
+  assert.match(atlasApp, /"46": \["South Dakota", 2\.0\]/);
 });
