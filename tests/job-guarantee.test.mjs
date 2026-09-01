@@ -10,6 +10,12 @@ test("job guarantee page covers work, demand, VISTA, macro effects, and guardrai
   assert.match(html, /What work could people do\?/);
   assert.match(html, /How do we know these jobs are needed\?/);
   assert.match(html, /VISTA proved the architecture/);
+  assert.match(html, /America has pieces of a job bank/);
+  assert.match(html, /American Job Centers/);
+  assert.match(html, /Senior Community Service Employment Program/);
+  assert.match(html, /Public Lands Corps \+ YCC/);
+  assert.match(html, /California Service Corps/);
+  assert.match(html, /How the existing systems compare with a genuine guarantee/);
   assert.match(html, /Economic transmission/);
   assert.match(html, /Design against the obvious risks/);
   assert.match(html, /gross-payroll illustration, not an official budget score/i);
