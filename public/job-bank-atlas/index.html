@@ -29,24 +29,27 @@
       <section class="map-section" id="map">
         <div class="section-heading">
           <div>
-            <p class="overline">Labor-market pressure</p>
-            <h2>Unemployment is not evenly distributed.</h2>
+            <p class="overline">Labor-market pressure + public need</p>
+            <h2>Need is not evenly distributed.</h2>
           </div>
-          <p>State unemployment rates are seasonally adjusted. Select a state to locate labor-market pressure; this first atlas layer does not infer an individual worker’s skills or preferences.</p>
+          <p>Switch among distinct indicators rather than blending them into an arbitrary index. Select a state to compare it with the national value and see the public-work questions the evidence can support.</p>
         </div>
+
+        <div class="layer-controls" id="layerControls" aria-label="Map indicator"></div>
+        <p class="layer-description" id="layerDescription"></p>
 
         <div class="map-layout">
           <div class="map-panel">
             <div class="map-meta">
-              <span>BLS LAUS · JULY 2026 (PRELIMINARY)</span>
-              <div class="legend" aria-label="Unemployment-rate legend">
-                <span>2.0%</span><i></i><span>5.9%</span>
+              <span id="mapDatasetLabel">BLS LAUS · JULY 2026 (PRELIMINARY)</span>
+              <div class="legend" id="mapLegend" aria-label="Map legend">
+                <span id="legendLow">2.0%</span><i></i><span id="legendHigh">5.9%</span>
               </div>
             </div>
             <div id="stateMap" class="state-map" aria-live="polite">
               <p class="map-loading">Loading official state geography…</p>
             </div>
-            <p class="map-source">Source: <a href="https://www.bls.gov/web/laus/laumstrk.htm" target="_blank" rel="noreferrer">U.S. Bureau of Labor Statistics, Local Area Unemployment Statistics ↗</a></p>
+            <p class="map-source">Source: <a id="mapSourceLink" href="https://www.bls.gov/web/laus/laumstrk.htm" target="_blank" rel="noreferrer">U.S. Bureau of Labor Statistics, Local Area Unemployment Statistics ↗</a></p>
           </div>
 
           <aside class="state-detail" id="stateDetail">
@@ -61,6 +64,13 @@
             </dl>
             <p class="detail-note">Choose a state on the map for a point-in-time comparison with the national labor market.</p>
           </aside>
+        </div>
+
+        <div class="indicator-definitions" aria-label="Public-need indicator definitions">
+          <article><span>CARE PROXY</span><strong>Older adults</strong><p>Residents age 65 and over as a share of population. It locates potential care pressure; it does not measure an actual care shortage.</p></article>
+          <article><span>EDUCATION + FAMILY NEED</span><strong>Child poverty</strong><p>People under 18 below the poverty threshold as a share of children whose poverty status is determined.</p></article>
+          <article><span>HOUSING PRESSURE</span><strong>Rent burden</strong><p>Cash-renter households spending at least 30% of income on rent among households for which the ratio can be computed.</p></article>
+          <article><span>HEALTH ACCESS</span><strong>Uninsured</strong><p>Civilian noninstitutionalized residents without health-insurance coverage. It supports outreach planning, not clinical staffing estimates.</p></article>
         </div>
       </section>
 
@@ -169,6 +179,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <script src="/job-bank-atlas/needs-data.js"></script>
     <script src="/job-bank-atlas/app.js"></script>
   </body>
 </html>

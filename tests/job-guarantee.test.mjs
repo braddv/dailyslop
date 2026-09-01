@@ -6,6 +6,7 @@ const html = await readFile(new URL("../public/job-guarantee/index.html", import
 const app = await readFile(new URL("../public/job-guarantee/app.js", import.meta.url), "utf8");
 const atlasHtml = await readFile(new URL("../public/job-bank-atlas/index.html", import.meta.url), "utf8");
 const atlasApp = await readFile(new URL("../public/job-bank-atlas/app.js", import.meta.url), "utf8");
+const atlasNeeds = await readFile(new URL("../public/job-bank-atlas/needs-data.js", import.meta.url), "utf8");
 const vercel = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
 
 test("job guarantee page covers work, demand, VISTA, macro effects, and guardrails", () => {
@@ -25,6 +26,7 @@ test("job guarantee page covers work, demand, VISTA, macro effects, and guardrai
   assert.doesNotMatch(html, /href="\/intermarket"/);
   assert.doesNotMatch(html, /href="\/sectoral-balances"/);
   assert.match(html, /href="\/job-bank-atlas"/);
+  assert.match(html, /Open Job Bank Atlas/);
 });
 
 test("job guarantee scenario labels its major categories and computes direct wages", () => {
@@ -47,10 +49,18 @@ test("job bank atlas maps official state unemployment and documents the matching
   assert.match(atlasHtml, /Map the opportunity—not the person/);
   assert.match(atlasHtml, /BLS LAUS · JULY 2026/);
   assert.match(atlasHtml, /Illustrative · not an estimate/);
+  assert.match(atlasHtml, /Public-need indicator definitions/);
+  assert.match(atlasHtml, /Rent burden/);
   assert.match(atlasHtml, /href="\/job-guarantee"/);
   assert.doesNotMatch(atlasHtml, /href="\/sp500ad"/);
   assert.doesNotMatch(atlasHtml, /href="\/intermarket"/);
   assert.match(atlasApp, /const NATIONAL_RATE = 4\.1/);
   assert.match(atlasApp, /"11": \["District of Columbia", 5\.9\]/);
   assert.match(atlasApp, /"46": \["South Dakota", 2\.0\]/);
+  assert.match(atlasApp, /childPoverty/);
+  assert.match(atlasApp, /rentBurden/);
+  assert.match(atlasApp, /uninsured/);
+  assert.match(atlasNeeds, /"olderAdults": 18/);
+  assert.match(atlasNeeds, /"rentBurden": 51\.8/);
+  assert.match(atlasNeeds, /"uninsured": 8\.2/);
 });

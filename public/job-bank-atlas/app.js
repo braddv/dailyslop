@@ -20,76 +20,219 @@ const stateRates = {
   "54": ["West Virginia", 4.1], "55": ["Wisconsin", 3.3], "56": ["Wyoming", 3.0]
 };
 
+const needs = globalThis.JOB_BANK_NEEDS?.values || {};
+const stateIds = Object.keys(stateRates);
+
+const layers = {
+  unemployment: {
+    label: "Unemployment",
+    metric: "Unemployment rate",
+    vintage: "BLS LAUS · July 2026 (preliminary)",
+    sourceLabel: "U.S. Bureau of Labor Statistics, Local Area Unemployment Statistics ↗",
+    source: "https://www.bls.gov/web/laus/laumstrk.htm",
+    national: NATIONAL_RATE,
+    value: (id) => stateRates[id]?.[1],
+    description: "Seasonally adjusted unemployment rate. This is the labor-slack layer, not a measure of community service needs.",
+    projects: "Local project planning across all approved categories",
+    caveat: "This rate locates broad labor-market pressure. It cannot describe the circumstances, skills or preferences of any individual worker."
+  },
+  olderAdults: {
+    label: "Older adults",
+    metric: "Population age 65+",
+    vintage: "U.S. Census ACS · 2024 1-year",
+    sourceLabel: "U.S. Census Bureau, ACS table B01001 ↗",
+    source: "https://data.census.gov/table/ACSDT1Y2024.B01001",
+    national: needs.US?.olderAdults,
+    value: (id) => needs[id]?.olderAdults,
+    description: "Residents age 65 and over as a share of population—a screening proxy for potential elder-support demand, not a measured care-worker shortage.",
+    projects: "Senior outreach · home accessibility · meal support · transportation",
+    caveat: "Age structure indicates where care needs may be concentrated. Actual positions require service-gap evidence, qualified supervision and appropriate screening."
+  },
+  childPoverty: {
+    label: "Child poverty",
+    metric: "Children below poverty",
+    vintage: "U.S. Census ACS · 2024 1-year",
+    sourceLabel: "U.S. Census Bureau, ACS table B17001 ↗",
+    source: "https://data.census.gov/table/ACSDT1Y2024.B17001",
+    national: needs.US?.childPoverty,
+    value: (id) => needs[id]?.childPoverty,
+    description: "People under 18 below the poverty threshold as a share of children whose poverty status is determined.",
+    projects: "Tutoring · after-school support · food access · family-resource navigation",
+    caveat: "Poverty is a material hardship indicator, not a finding that a particular child or family needs a specific service. Local institutions must validate the service gap."
+  },
+  rentBurden: {
+    label: "Rent burden",
+    metric: "Renters paying 30%+",
+    vintage: "U.S. Census ACS · 2024 1-year",
+    sourceLabel: "U.S. Census Bureau, ACS table B25070 ↗",
+    source: "https://data.census.gov/table/ACSDT1Y2024.B25070",
+    national: needs.US?.rentBurden,
+    value: (id) => needs[id]?.rentBurden,
+    description: "Cash-renter households spending at least 30% of income on gross rent, excluding households for which the ratio cannot be computed.",
+    projects: "Weatherization · housing rehabilitation · tenant navigation · energy outreach",
+    caveat: "Cost burden demonstrates housing pressure. It does not by itself identify a repair backlog or authorize construction work."
+  },
+  uninsured: {
+    label: "Uninsured",
+    metric: "Residents uninsured",
+    vintage: "U.S. Census ACS · 2024 1-year",
+    sourceLabel: "U.S. Census Bureau, ACS table B27010 ↗",
+    source: "https://data.census.gov/table/ACSDT1Y2024.B27010",
+    national: needs.US?.uninsured,
+    value: (id) => needs[id]?.uninsured,
+    description: "Civilian noninstitutionalized residents without health-insurance coverage as a share of that population.",
+    projects: "Coverage outreach · enrollment navigation · appointment support · health education",
+    caveat: "Insurance status supports outreach planning. It is not a substitute for health-outcome data and does not estimate demand for licensed clinical work."
+  }
+};
+
 const mapRoot = document.querySelector("#stateMap");
 const detail = document.querySelector("#stateDetail");
+const controls = document.querySelector("#layerControls");
+const description = document.querySelector("#layerDescription");
+const datasetLabel = document.querySelector("#mapDatasetLabel");
+const sourceLink = document.querySelector("#mapSourceLink");
+const legendLow = document.querySelector("#legendLow");
+const legendHigh = document.querySelector("#legendHigh");
+const legendBar = document.querySelector("#mapLegend i");
 
-function pressureLabel(rate) {
-  const delta = rate - NATIONAL_RATE;
-  if (delta >= 0.8) return "Elevated relative to the U.S.";
-  if (delta <= -0.8) return "Low relative to the U.S.";
-  return "Near the U.S. rate";
+let activeLayerKey = "unemployment";
+let selectedStateId = null;
+let svg;
+let features = [];
+
+function formatPercent(value) {
+  return `${Number(value).toFixed(1)}%`;
 }
 
-function renderDetail(id) {
-  const [name, rate] = stateRates[id];
-  const delta = rate - NATIONAL_RATE;
-  const direction = delta === 0 ? "equal to" : `${Math.abs(delta).toFixed(1)} point${Math.abs(delta) === 1 ? "" : "s"} ${delta > 0 ? "above" : "below"}`;
+function comparisonText(value, national) {
+  const delta = value - national;
+  if (Math.abs(delta) < 0.05) return `equal to the ${formatPercent(national)} national value`;
+  return `${Math.abs(delta).toFixed(1)} point${Math.abs(delta) === 1 ? "" : "s"} ${delta > 0 ? "above" : "below"} the ${formatPercent(national)} national value`;
+}
+
+function relativeReading(value, national) {
+  const delta = value - national;
+  if (delta >= 1) return "Above the national screening value";
+  if (delta <= -1) return "Below the national screening value";
+  return "Near the national screening value";
+}
+
+function layerRange(layer) {
+  const values = stateIds.map((id) => layer.value(id)).filter(Number.isFinite);
+  return [Math.min(...values), Math.max(...values)];
+}
+
+function renderDetail() {
+  const layer = layers[activeLayerKey];
+  const id = selectedStateId;
+  const name = id ? stateRates[id][0] : "United States";
+  const value = id ? layer.value(id) : layer.national;
+  const [minimum, maximum] = layerRange(layer);
+  const comparison = id ? comparisonText(value, layer.national) : `${layer.metric} · national value`;
+  const special = !id && activeLayerKey === "unemployment"
+    ? `<div><dt>Unemployed people</dt><dd>6.9 million</dd></div>`
+    : "";
 
   detail.innerHTML = `
-    <p class="detail-label">SELECTED STATE</p>
+    <p class="detail-label">${id ? "SELECTED STATE" : "NATIONAL BASELINE"}</p>
     <h3>${name}</h3>
-    <strong>${rate.toFixed(1)}%</strong>
-    <p class="comparison">${direction} the 4.1% national rate</p>
+    <strong>${formatPercent(value)}</strong>
+    <p class="comparison">${comparison}</p>
     <dl>
-      <div><dt>Pressure reading</dt><dd>${pressureLabel(rate)}</dd></div>
-      <div><dt>Evidence through</dt><dd>July 2026 · preliminary</dd></div>
-      <div><dt>What comes next</dt><dd>County unemployment counts, participation, public-need indicators and sponsor capacity</dd></div>
+      ${special}
+      <div><dt>Indicator reading</dt><dd>${id ? relativeReading(value, layer.national) : `State range: ${formatPercent(minimum)}–${formatPercent(maximum)}`}</dd></div>
+      <div><dt>Evidence through</dt><dd>${layer.vintage.replace(" · ", " · ")}</dd></div>
+      <div><dt>Candidate project families</dt><dd>${layer.projects}</dd></div>
     </dl>
-    <p class="detail-note">This rate locates broad labor-market pressure. It is not a job recommendation and cannot describe the circumstances, skills or preferences of any individual worker.</p>
+    <p class="detail-note">${layer.caveat}</p>
   `;
 }
 
+function updateMap() {
+  const layer = layers[activeLayerKey];
+  const [minimum, maximum] = layerRange(layer);
+  const midpoint = layer.national;
+  const color = d3.scaleLinear().domain([minimum, midpoint, maximum]).range(["#f2e4d2", "#e69b68", "#c4462d"]);
+
+  description.textContent = layer.description;
+  datasetLabel.textContent = layer.vintage.toUpperCase();
+  sourceLink.textContent = layer.sourceLabel;
+  sourceLink.href = layer.source;
+  legendLow.textContent = formatPercent(minimum);
+  legendHigh.textContent = formatPercent(maximum);
+  legendBar.style.background = "linear-gradient(90deg,#f2e4d2,#e69b68,#c4462d)";
+
+  controls.querySelectorAll("button").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.layer === activeLayerKey));
+  });
+
+  if (svg) {
+    svg.attr("aria-label", `United States map colored by ${layer.metric.toLowerCase()}`);
+    svg.select("title").text(`${layer.metric} by state`);
+    svg.select("desc").text(`Select a state to compare its ${layer.metric.toLowerCase()} with the national value of ${formatPercent(layer.national)}.`);
+    svg.selectAll(".state-shape")
+      .attr("fill", (feature) => color(layer.value(String(feature.id).padStart(2, "0"))))
+      .attr("aria-label", (feature) => {
+        const id = String(feature.id).padStart(2, "0");
+        return `${stateRates[id][0]}, ${formatPercent(layer.value(id))} ${layer.metric.toLowerCase()}`;
+      });
+    svg.selectAll(".state-shape title").text((feature) => {
+      const id = String(feature.id).padStart(2, "0");
+      return `${stateRates[id][0]}: ${formatPercent(layer.value(id))}`;
+    });
+  }
+
+  renderDetail();
+}
+
+function renderControls() {
+  controls.innerHTML = Object.entries(layers).map(([key, layer]) => (
+    `<button type="button" data-layer="${key}" aria-pressed="${key === activeLayerKey}">${layer.label}</button>`
+  )).join("");
+
+  controls.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-layer]");
+    if (!button || button.dataset.layer === activeLayerKey) return;
+    activeLayerKey = button.dataset.layer;
+    updateMap();
+  });
+}
+
 async function renderMap() {
-  if (!globalThis.d3 || !globalThis.topojson) {
-    throw new Error("Map libraries did not load.");
+  if (!globalThis.d3 || !globalThis.topojson || !globalThis.JOB_BANK_NEEDS) {
+    throw new Error("Map libraries or public-need data did not load.");
   }
 
   const response = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
   if (!response.ok) throw new Error(`State geography returned ${response.status}.`);
   const topology = await response.json();
   const states = topojson.feature(topology, topology.objects.states);
-  const features = states.features.filter((feature) => stateRates[String(feature.id).padStart(2, "0")]);
+  features = states.features.filter((feature) => stateRates[String(feature.id).padStart(2, "0")]);
   const collection = { type: "FeatureCollection", features };
   const width = 920;
   const height = 560;
   const projection = d3.geoAlbersUsa().fitExtent([[16, 16], [width - 16, height - 16]], collection);
   const path = d3.geoPath(projection);
-  const color = d3.scaleLinear().domain([2, 4.1, 5.9]).range(["#f2e4d2", "#e69b68", "#c4462d"]);
 
   mapRoot.innerHTML = "";
-  const svg = d3.select(mapRoot)
+  svg = d3.select(mapRoot)
     .append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
-    .attr("role", "img")
-    .attr("aria-label", "United States map colored by July 2026 state unemployment rate");
+    .attr("role", "img");
 
-  svg.append("title").text("State unemployment rates, July 2026");
-  svg.append("desc").text("Select a state to compare its preliminary seasonally adjusted unemployment rate with the national rate of 4.1 percent.");
+  svg.append("title");
+  svg.append("desc");
 
   svg.selectAll("path")
     .data(features)
     .join("path")
     .attr("class", "state-shape")
     .attr("d", path)
-    .attr("fill", (feature) => color(stateRates[String(feature.id).padStart(2, "0")][1]))
     .attr("stroke", "#fffdf8")
     .attr("stroke-width", 1.2)
     .attr("tabindex", 0)
     .attr("role", "button")
-    .attr("aria-label", (feature) => {
-      const [name, rate] = stateRates[String(feature.id).padStart(2, "0")];
-      return `${name}, ${rate.toFixed(1)} percent unemployment`;
-    })
     .on("click", selectState)
     .on("keydown", (event, feature) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -97,21 +240,21 @@ async function renderMap() {
         selectState.call(event.currentTarget, event, feature);
       }
     })
-    .append("title")
-    .text((feature) => {
-      const [name, rate] = stateRates[String(feature.id).padStart(2, "0")];
-      return `${name}: ${rate.toFixed(1)}%`;
-    });
+    .append("title");
 
   function selectState(event, feature) {
-    const id = String(feature.id).padStart(2, "0");
+    selectedStateId = String(feature.id).padStart(2, "0");
     svg.selectAll(".state-shape").classed("active", false);
     d3.select(this).classed("active", true);
-    renderDetail(id);
+    renderDetail();
   }
+
+  updateMap();
 }
 
+renderControls();
+updateMap();
 renderMap().catch((error) => {
   console.error(error);
-  mapRoot.innerHTML = `<p class="map-loading">The map could not load. The state data and official BLS source remain available on this page.</p>`;
+  mapRoot.innerHTML = `<p class="map-loading">The map could not load. The indicator definitions and official sources remain available on this page.</p>`;
 });
