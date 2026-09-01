@@ -63,6 +63,14 @@
       "destination": "/public/godley/:path*"
     },
     {
+      "source": "/job-guarantee",
+      "destination": "/public/job-guarantee/index.html"
+    },
+    {
+      "source": "/job-guarantee/:path*",
+      "destination": "/public/job-guarantee/:path*"
+    },
+    {
       "source": "/slop",
       "destination": "/public/slop.html"
     },
