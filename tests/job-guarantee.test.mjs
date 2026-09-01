@@ -13,6 +13,9 @@ test("job guarantee page covers work, demand, VISTA, macro effects, and guardrai
   assert.match(html, /Economic transmission/);
   assert.match(html, /Design against the obvious risks/);
   assert.match(html, /gross-payroll illustration, not an official budget score/i);
+  assert.doesNotMatch(html, /href="\/sp500ad"/);
+  assert.doesNotMatch(html, /href="\/intermarket"/);
+  assert.doesNotMatch(html, /href="\/sectoral-balances"/);
 });
 
 test("job guarantee scenario labels its major categories and computes direct wages", () => {
