@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A practical DailySlop blueprint for a federally funded, locally administered Job Guarantee." />
+    <title>A Job, Guaranteed · DailySlop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/job-guarantee/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <header class="site-header">
+      <a class="wordmark" href="/">DAILY<span>SLOP</span></a>
+      <nav aria-label="DailySlop policy pages">
+        <a href="/sectoral-balances">Sectoral balances</a>
+        <a href="/godley">Model atlas</a>
+        <a class="active" href="/job-guarantee">Job guarantee</a>
+      </nav>
+      <a class="market-link" href="/sp500ad">Market tools <span>↗</span></a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="overline">Public option for work · Policy blueprint 01</p>
+          <h1>A job,<br /><em>if you want one.</em></h1>
+          <p class="lede">A standing federal promise of voluntary, living-wage employment—built and administered in the communities where people live.</p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#how-it-works">See how it works</a>
+            <a class="text-link" href="#scenario">Test a scenario <span>↓</span></a>
+          </div>
+        </div>
+
+        <aside class="promise-card">
+          <p class="card-label">THE PROMISE</p>
+          <blockquote>Anyone ready and willing to work can obtain a useful local job at a basic wage with benefits.</blockquote>
+          <div class="promise-route" aria-label="Federal funding supports local projects and a universal job offer">
+            <div><span>01</span><strong>Federal funding</strong><small>Open-ended appropriation</small></div>
+            <i>→</i>
+            <div><span>02</span><strong>Local projects</strong><small>Public + nonprofit sponsors</small></div>
+            <i>→</i>
+            <div><span>03</span><strong>Job offer</strong><small>Voluntary + accessible</small></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="thesis-strip" aria-label="Core thesis">
+        <p>THE THESIS</p>
+        <h2>We do not lack useful work. We lack a durable way to fund, organize and fairly compensate it.</h2>
+      </section>
+
+      <section class="mechanics" id="how-it-works">
+        <div class="section-intro">
+          <p class="overline">The operating model</p>
+          <h2>Not a temporary jobs bill.<br /><em>A permanent institution.</em></h2>
+          <p>The program expands when private employment contracts and shrinks as private employers hire workers away. Funding follows enrollment instead of limiting the number of available jobs.</p>
+        </div>
+        <div class="mechanics-grid">
+          <article><span>01</span><h3>Make the offer universal</h3><p>No employability ranking and no lottery. Eligible adults who want work receive an offer; participation remains voluntary.</p></article>
+          <article><span>02</span><h3>Keep a local project bank</h3><p>Schools, tribes, municipalities and qualified nonprofits maintain approved, shelf-ready projects before unemployment rises.</p></article>
+          <article><span>03</span><h3>Set a labor standard</h3><p>A common wage and benefit package becomes the effective floor private employers must beat to recruit workers.</p></article>
+          <article><span>04</span><h3>Let enrollment float</h3><p>Spending rises automatically in a downturn and recedes during recovery. The job remains available without a new act of Congress.</p></article>
+        </div>
+      </section>
+
+      <section class="vista-section">
+        <div class="vista-mark" aria-hidden="true"><b>V</b><span>1965</span></div>
+        <div class="vista-copy">
+          <p class="overline warm">An American precedent</p>
+          <h2>VISTA proved the architecture.<br /><em>It also exposed the gap.</em></h2>
+          <p>Born in the War on Poverty, Volunteers in Service to America placed federally supported people inside local organizations to build community capacity. Its early purpose emphasized organizing, empowerment and attacking the causes—not only the symptoms—of poverty.</p>
+          <div class="vista-lessons">
+            <div><span>WHAT IT PROVED</span><p>Federal resources can support locally directed, socially useful work through community institutions.</p></div>
+            <div><span>WHAT IT LEFT UNDONE</span><p>Selective entry, temporary terms and subsistence allowances are not a right to secure employment.</p></div>
+          </div>
+          <p class="vista-conclusion">A Job Guarantee would preserve VISTA’s community-rooted capacity building while turning sacrifice into employment: wages, benefits, accessibility and an offer available to everyone.</p>
+          <a class="source-link" href="https://www.americorps.gov/sites/default/files/evidenceexchange/VISTA_Evaluation_and_Impact_Final%20Report_Edited_053118_FINAL_508v2_1.pdf" target="_blank" rel="noreferrer">Read AmeriCorps’ 50-year VISTA review ↗</a>
+        </div>
+      </section>
+
+      <section class="work-section" id="jobs">
+        <div class="section-heading">
+          <div>
+            <p class="overline">The project bank</p>
+            <h2>What work could people do?</h2>
+          </div>
+          <p>Useful projects must meet people where they are—not wait for an ideal applicant. Filter the examples by public need.</p>
+        </div>
+        <div class="filter-row" id="jobFilters" aria-label="Filter job examples"></div>
+        <div class="job-grid" id="jobGrid" aria-live="polite"></div>
+      </section>
+
+      <section class="demand-section">
+        <div class="section-intro compact">
+          <p class="overline">The demand question</p>
+          <h2>How do we know these jobs are needed?</h2>
+          <p>There is no honest single estimate of “available Job Guarantee jobs.” Need, funded demand and organizational capacity are different quantities. A credible program measures all three.</p>
+        </div>
+
+        <div class="demand-layers" aria-label="From unmet need to a filled job">
+          <article><span>01</span><h3>Unmet public need</h3><p>Care not delivered, children not tutored, hazards not mapped, parks not maintained.</p></article>
+          <div class="layer-arrow">→</div>
+          <article><span>02</span><h3>Project capacity</h3><p>A sponsor, supervisor, safe work plan, tools and a measurable public output.</p></article>
+          <div class="layer-arrow">→</div>
+          <article><span>03</span><h3>Worker demand</h3><p>How many people voluntarily enroll, with which skills, schedules and accommodations.</p></article>
+        </div>
+
+        <div class="gap-grid">
+          <article>
+            <div class="gap-top"><span>VISIBLE GAP</span><i class="high">High</i></div>
+            <h3>Care and human services</h3>
+            <p>Aging, disability support, childcare and family caregiving produce recurring labor needs—but also require screening, training and continuity.</p>
+          </article>
+          <article>
+            <div class="gap-top"><span>VISIBLE GAP</span><i class="high">High</i></div>
+            <h3>Education support</h3>
+            <p>Tutoring, attendance outreach, after-school programs and classroom assistance can reduce teacher overload without replacing licensed educators.</p>
+          </article>
+          <article>
+            <div class="gap-top"><span>VISIBLE GAP</span><i class="medium">Place-based</i></div>
+            <h3>Climate and remediation</h3>
+            <p>Heat, floods, fires, polluted land and neglected public space create a large backlog whose labor requirements vary sharply by location.</p>
+          </article>
+          <article>
+            <div class="gap-top"><span>BINDING GAP</span><i class="warning">Constraint</i></div>
+            <h3>Supervision</h3>
+            <p>The hardest shortage may be people and institutions capable of designing projects, supporting workers and certifying useful output.</p>
+          </article>
+        </div>
+
+        <div class="measurement-note">
+          <strong>Measure the gap locally.</strong>
+          <p>Each sponsor should publish its unmet-service baseline, proposed output, worker capacity, supervisory ratio and material requirements. “We need help” becomes an auditable project—not a rhetorical estimate.</p>
+        </div>
+      </section>
+
+      <section class="scenario-section" id="scenario">
+        <div class="section-heading scenario-heading">
+          <div>
+            <p class="overline">Illustrative scenario lab</p>
+            <h2>Let participation—not a job quota—set the scale.</h2>
+          </div>
+          <p>This is a transparent gross-payroll illustration, not an official budget score or inflation forecast.</p>
+        </div>
+
+        <div class="scenario-layout">
+          <div class="controls">
+            <label>
+              <span>Voluntary participants <output id="participantsOutput"></output></span>
+              <input id="participants" type="range" min="1" max="15" step="0.5" value="5" />
+            </label>
+            <label>
+              <span>Base hourly wage <output id="wageOutput"></output></span>
+              <input id="wage" type="range" min="15" max="30" step="1" value="20" />
+            </label>
+            <label>
+              <span>Average weekly hours <output id="hoursOutput"></output></span>
+              <input id="hours" type="range" min="20" max="40" step="1" value="32" />
+            </label>
+            <div class="scenario-caveat"><b>Scope:</b> Direct wages only. Benefits, administration and project materials would add cost; taxes, reduced transfers and wider economic effects are not netted out.</div>
+          </div>
+
+          <div class="scenario-output">
+            <div class="metric primary"><span>Annual gross payroll</span><strong id="payrollMetric"></strong><small>New wage income before feedback effects</small></div>
+            <div class="metric"><span>Annual income / participant</span><strong id="incomeMetric"></strong><small>At the selected wage and schedule</small></div>
+            <div class="metric"><span>Public-purpose hours</span><strong id="laborMetric"></strong><small>Potential labor supplied per year</small></div>
+            <div class="allocation-card">
+              <div class="allocation-heading"><span>Illustrative project mix</span><small>Not a federal mandate</small></div>
+              <div id="allocationBars"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="macro-section">
+        <div class="section-intro compact">
+          <p class="overline">Economic transmission</p>
+          <h2>What changes beyond the jobs themselves?</h2>
+        </div>
+        <div class="macro-grid">
+          <article><span>AUTOMATIC STABILIZER</span><h3>Employment absorbs the shock</h3><p>The program expands when private hiring falls and contracts as private employers recruit from it.</p></article>
+          <article><span>LABOR STANDARD</span><h3>The floor becomes a real option</h3><p>The wage and benefits establish what workers can refuse, not merely what employers are prohibited from paying.</p></article>
+          <article><span>SECTORAL BALANCES</span><h3>Deficits support private income</h3><p>Program spending adds income to the nongovernment sector. Taxes and hiring out of the program moderate the effect as activity recovers.</p><a href="/sectoral-balances">Open Sectoral Balances ↗</a></article>
+          <article><span>PUBLIC CAPACITY</span><h3>Communities retain institutions</h3><p>Project banks, supervisors and partnerships become durable infrastructure available for recessions and emergencies.</p></article>
+        </div>
+      </section>
+
+      <section class="guardrails-section">
+        <div class="section-heading">
+          <div><p class="overline">Failure modes</p><h2>Design against the obvious risks.</h2></div>
+          <p>The program succeeds only if it creates additional, decent work without becoming a low-wage shadow public sector.</p>
+        </div>
+        <div class="guardrail-list">
+          <article><span>01</span><div><h3>Displacement</h3><p>Maintenance-of-effort rules and union review prevent sponsors from replacing existing employees or funded vacancies.</p></div></article>
+          <article><span>02</span><div><h3>Make-work</h3><p>Projects publish outputs, beneficiaries and evaluations. Workers can transfer out of projects that lack useful activity.</p></div></article>
+          <article><span>03</span><div><h3>Inflation and bottlenecks</h3><p>Favor labor-intensive projects, map scarce inputs, phase material-heavy work and let the base wage anchor the offer.</p></div></article>
+          <article><span>04</span><div><h3>Administrative overload</h3><p>Fund planners and supervisors first, certify projects continuously and build capacity before the next downturn.</p></div></article>
+          <article><span>05</span><div><h3>Exclusion</h3><p>Provide part-time schedules, childcare, transportation, disability accommodations and jobs that match different abilities.</p></div></article>
+        </div>
+      </section>
+
+      <section class="roadmap-section">
+        <div class="roadmap-copy">
+          <p class="overline">A credible path</p>
+          <h2>Build the institution before promising the right.</h2>
+          <p>The employment offer can become universal only when every region can reliably convert enrollment into safe, useful work.</p>
+        </div>
+        <ol class="roadmap">
+          <li><span>YEAR 0</span><strong>Fund local planning</strong><p>Map unmet needs, certify sponsors and hire supervisors.</p></li>
+          <li><span>YEAR 1</span><strong>Launch diverse pilots</strong><p>Urban, rural, tribal and high-unemployment regions.</p></li>
+          <li><span>YEAR 2</span><strong>Guarantee priority groups</strong><p>Test open enrollment, worker choice and appeals.</p></li>
+          <li><span>YEAR 3+</span><strong>Establish the national right</strong><p>Funding automatically follows qualified enrollment.</p></li>
+        </ol>
+      </section>
+
+      <section class="sources-section">
+        <div><p class="overline">Further reading</p><h2>The proposal has a literature—and real-world precedents.</h2></div>
+        <div class="source-grid">
+          <a href="https://www.levyinstitute.org/publications/the-job-guarantee-design-jobs-and-implementation/" target="_blank" rel="noreferrer"><span>LEVY · 2018</span><strong>The Job Guarantee: Design, Jobs, and Implementation</strong><i>↗</i></a>
+          <a href="https://www.levyinstitute.org/publications/what-jobs-should-a-public-job-guarantee-provide-lessons-from-hyman-p-minsky/" target="_blank" rel="noreferrer"><span>LEVY · 2021</span><strong>What Jobs Should a Public Job Guarantee Provide?</strong><i>↗</i></a>
+          <a href="https://www.ilo.org/topics-and-sectors/employment-promotion/thematic-areas-employment-intensive-investment/public-employment-programmes" target="_blank" rel="noreferrer"><span>ILO</span><strong>Public Employment Programmes and international experience</strong><i>↗</i></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>DailySlop Policy Lab</p>
+      <p>Useful work · voluntary employment · public purpose</p>
+      <a href="/">Back to DailySlop ↑</a>
+    </footer>
+
+    <script src="/job-guarantee/app.js"></script>
+  </body>
+</html>
