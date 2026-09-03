@@ -8,8 +8,14 @@ const jobGuaranteeHtml = await readFile(new URL("../public/job-guarantee/index.h
 const jobAtlasHtml = await readFile(new URL("../public/job-bank-atlas/index.html", import.meta.url), "utf8");
 const vercel = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
 
-test("public Phoenix mobility page documents feasibility, congestion, logistics, and sources", () => {
-  assert.match(html, /Buildable in phases/);
+test("public Phoenix mobility page documents the network, congestion, logistics, and sources", () => {
+  assert.doesNotMatch(html, /FEASIBILITY READ/);
+  assert.match(html, /THE PUBLIC OPTION/);
+  assert.match(html, /35\.3 light-rail route-miles/);
+  assert.match(html, /≈ \$3\.83B/);
+  assert.match(html, /35th Avenue \+ Van Buren/);
+  assert.match(html, /Camelback Road \+ 24th Street/);
+  assert.match(html, /Thomas Road \+ 44th Street/);
   assert.match(html, /Autonomy does not[\s\S]*automatically help/);
   assert.match(html, /Today’s cars are mostly parking/);
   assert.match(html, /The commute peak still governs capacity/);
