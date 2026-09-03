@@ -79,6 +79,14 @@
       "destination": "/public/job-bank-atlas/:path*"
     },
     {
+      "source": "/phoenix-public-mobility",
+      "destination": "/public/phoenix-public-mobility/index.html"
+    },
+    {
+      "source": "/phoenix-public-mobility/:path*",
+      "destination": "/public/phoenix-public-mobility/:path*"
+    },
+    {
       "source": "/slop",
       "destination": "/public/slop.html"
     },

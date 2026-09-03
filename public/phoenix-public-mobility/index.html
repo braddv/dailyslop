@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A transparent feasibility model for a public, pooled autonomous mobility fleet in metropolitan Phoenix." />
+    <title>Public Mobility, Phoenix · DailySlop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/phoenix-public-mobility/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="/">DAILY<span>SLOP</span></a>
+      <p>Policy Lab <i>·</i> Mobility 01</p>
+      <a class="home-link" href="#model">Open model <span>↓</span></a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="overline">A public option for getting around</p>
+        <h1>What if Phoenix<br />owned the <em>ride?</em></h1>
+        <div class="hero-bottom">
+          <p>A region-scale network of autonomous cars, pooled vans and neighborhood buses could make mobility universal. But replacing 80% of personal driving is not a fleet purchase. It is a new public utility.</p>
+          <div class="verdict"><span>FEASIBILITY READ</span><strong>Buildable in phases.<br />Not credible in one leap.</strong></div>
+        </div>
+      </section>
+
+      <section class="baseline-section">
+        <div class="section-heading">
+          <div><p class="overline">Start with the scale</p><h2>Phoenix moves<br /><em>a lot.</em></h2></div>
+          <p>The model begins with metropolitan vehicle-miles, not an invented trip count. “Replace 80%” means shifting 80% of modeled personal light-duty VMT to a public fleet while leaving freight and commercial movement outside the target.</p>
+        </div>
+        <div class="baseline-grid">
+          <article><span>01 · REGION</span><strong>5.23M</strong><p>Phoenix–Mesa–Chandler residents, July 2025 Census estimate.</p></article>
+          <article><span>02 · MOVEMENT</span><strong>130M</strong><p id="baselineVmt">daily regional vehicle-miles</p></article>
+          <article><span>03 · TODAY'S PUBLIC TRANSIT</span><strong>105K</strong><p>Average weekday boardings reported in MAG’s 2024 regional overview.</p></article>
+          <article><span>04 · SCALE CHECK</span><strong>250K</strong><p>Weekly paid Waymo trips across four cities in May 2025—not Phoenix alone.</p></article>
+        </div>
+        <p class="baseline-note">The 130M regional VMT baseline includes more than personal cars. This concept model assumes 82% is potentially replaceable personal light-duty traffic; that share is an explicit planning assumption requiring MAG validation.</p>
+        <div class="utilization-case">
+          <div>
+            <p class="overline">Why sharing changes the fleet math</p>
+            <h3>Today’s cars are mostly parking.<br /><em>A public fleet keeps moving.</em></h3>
+          </div>
+          <div class="utilization-copy">
+            <p>Metro Phoenix households have about <strong>3.70 million personal vehicles</strong>. Most serve one household and sit parked between trips. A robotaxi can serve many households in the same day, so replacing trips does not require replacing private cars one-for-one. In the default model, each public vehicle substitutes for roughly <strong id="utilizationRatio">10 household vehicles</strong> at the 80% target.</p>
+            <p><strong>The commute peak still governs capacity.</strong> High all-day utilization cannot move a region whose riders all request solo cars at 8 AM and 5 PM. The network must pool commute trips into vans and buses, retain rail and high-capacity routes, reposition before demand surges and keep a reserve fleet. A real procurement model must be sized against the busiest service hour—not merely average daily mileage.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="model-section" id="model">
+        <div class="section-heading">
+          <div><p class="overline">Order-of-magnitude model · 2026 dollars</p><h2>Design the<br /><em>public fleet.</em></h2></div>
+          <p>Change the target, passenger-mile mix, empty repositioning and fare. Vehicle shares are normalized to 100%. Every result updates immediately.</p>
+        </div>
+
+        <div class="model-layout">
+          <form class="controls" onsubmit="return false">
+            <div class="control-head"><strong>Scenario controls</strong><button id="resetModel" type="button">Reset 80% case</button></div>
+            <label><span><b>Personal driving replaced</b><output id="replacementRateValue">80%</output></span><input id="replacementRate" type="range" min="5" max="80" value="80" step="5" /></label>
+            <div class="control-group"><p>Passenger-mile allocation</p>
+              <label><span><b>Waymo-scale cars</b><output id="carShareValue">45% normalized</output></span><input id="carShare" type="range" min="0" max="100" value="45" step="5" /></label>
+              <label><span><b>Shared vans</b><output id="vanShareValue">35% normalized</output></span><input id="vanShare" type="range" min="0" max="100" value="35" step="5" /></label>
+              <label><span><b>Neighborhood buses</b><output id="busShareValue">20% normalized</output></span><input id="busShare" type="range" min="0" max="100" value="20" step="5" /></label>
+            </div>
+            <label><span><b>Empty-mile assumption</b><output id="emptyMilesValue">100% of defaults</output></span><input id="emptyMilesFactor" type="range" min="50" max="200" value="100" step="10" /></label>
+            <label><span><b>Passenger fare</b><output id="fareValue">$0.25 / passenger-mile</output></span><input id="fare" type="range" min="0" max="0.75" value="0.25" step="0.05" /></label>
+          </form>
+
+          <div class="model-results">
+            <div class="hero-result"><span>INITIAL PUBLIC CAPITAL</span><strong id="capitalOutput">$82B</strong><p>Vehicles, 15% spare fleet, depots, charging, control systems and a 30% infrastructure allowance.</p></div>
+            <div class="result-grid">
+              <article><span>Fleet owned</span><strong id="fleetOutput">290K</strong></article>
+              <article><span>Annual operations</span><strong id="operatingOutput">$21B / yr</strong></article>
+              <article><span>Total regional VMT</span><strong id="trafficOutput">−25%</strong></article>
+              <article><span>Operating cost</span><strong id="costPerPassengerMile">$0.44 / passenger-mi</strong></article>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-line">
+          <div><span>SHIFTED DEMAND</span><strong id="shiftedOutput"></strong></div><b>→</b>
+          <div><span>PUBLIC FLEET MOVEMENT</span><strong id="fleetMilesOutput"></strong></div><b>→</b>
+          <div><span>FARE REVENUE</span><strong id="fareRevenueOutput"></strong></div><b>+</b>
+          <div><span id="subsidyLabel">NET OPERATING SUPPORT</span><strong id="subsidyOutput"></strong></div>
+        </div>
+
+        <div class="fleet-table">
+          <div class="table-title"><p class="overline">The mixed fleet</p><h3>Match vehicle size to demand density.</h3></div>
+          <div id="fleetRows"></div>
+          <div class="capital-split"><span>Vehicle procurement <strong id="vehicleCapitalOutput"></strong></span><span>Infrastructure allowance <strong id="infrastructureOutput"></strong></span></div>
+        </div>
+      </section>
+
+      <section class="peak-section" id="peak-model">
+        <div class="section-heading">
+          <div><p class="overline">Origin–destination stress test</p><h2>Can the fleet<br /><em>survive 8 AM?</em></h2></div>
+          <p>This planning simulation converts the selected 80% scenario into trips during the busiest hour, accounts for unequal origins and destinations across six Phoenix subregions, and compares the result with the daily-mile fleet. The larger requirement governs.</p>
+        </div>
+
+        <div class="peak-layout">
+          <form class="controls peak-controls" onsubmit="return false">
+            <div class="control-head"><strong>Peak assumptions</strong><button id="resetPeakModel" type="button">Reset peak case</button></div>
+            <label><span><b>Daily trips in busiest hour</b><output id="peakHourShareValue">10%</output></span><input id="peakHourShare" type="range" min="5" max="18" value="10" step="1" /></label>
+            <label><span><b>Average passenger trip</b><output id="averageTripMilesValue">9.5 miles</output></span><input id="averageTripMiles" type="range" min="5" max="16" value="9.5" step="0.5" /></label>
+            <label><span><b>Travel + pickup cycle</b><output id="cycleMinutesValue">34 minutes</output></span><input id="cycleMinutes" type="range" min="24" max="55" value="34" step="1" /></label>
+            <p class="control-note">The default cycle combines MAG’s 26-minute 2025 afternoon commute baseline with an eight-minute pickup, drop-off and repositioning allowance. The 10% peak share and zone distribution are transparent planning assumptions.</p>
+          </form>
+
+          <div class="peak-results">
+            <article><span>Daily-mile requirement</span><strong id="dailyFleetRequirement">291K</strong><p>Enough vehicles to deliver the modeled daily mileage.</p></article>
+            <article><span>Peak-hour requirement</span><strong id="peakFleetRequirement">350K</strong><p>Includes directional imbalance and the model’s 15% spare fleet.</p></article>
+            <article class="governing-result"><span>Governing public fleet</span><strong id="governingFleetRequirement">359K</strong><p id="governingFleetComparison">About 9.7% of today’s household vehicles.</p></article>
+            <article class="governing-result peak-capital-result"><span>Peak-sized initial capital</span><strong id="peakCapitalRequirement">$101B</strong><p>Scales vehicle procurement and infrastructure with the governing fleet. It remains a conceptual allowance—not a vendor quote.</p></article>
+          </div>
+        </div>
+
+        <div class="od-table">
+          <div class="table-title"><p class="overline">Morning directional load</p><h3>Vehicles begin where people live and accumulate where jobs are.</h3></div>
+          <div class="od-head"><span>Subregion</span><span>Trip origins</span><span>Trip destinations</span><span>Net pressure</span></div>
+          <div id="odRows"></div>
+          <p class="od-note"><strong id="imbalanceOutput">18% directional imbalance.</strong> This is a simplified six-zone allocation—not MAG’s activity-based model. It estimates the extra fleet tied up by spatial mismatch; procurement should use traffic-analysis-zone flows, time slices and roadway travel times supplied or validated by MAG.</p>
+        </div>
+      </section>
+
+      <section class="alternatives-section">
+        <div class="section-heading">
+          <div><p class="overline">Opportunity-cost comparison</p><h2>What else could<br /><em>that capital build?</em></h2></div>
+          <p>The comparison applies the peak-sized fleet budget—<strong id="comparisonBudget">about $101B</strong> in the default case—to recent transit construction benchmarks. Route-miles are a scale illustration, not equivalent service: fixed transit concentrates extraordinary capacity on corridors; the autonomous fleet provides distributed coverage.</p>
+        </div>
+        <div id="alternativeCards" class="alternative-cards"></div>
+
+        <div class="operating-comparison">
+          <div><p class="overline">Annual operations</p><h3>Actual transit performance versus a speculative autonomous model.</h3></div>
+          <div id="operatingRows" class="operating-rows"></div>
+        </div>
+
+        <div class="portfolio-case">
+          <strong>The useful answer is probably “both.”</strong>
+          <p>A Phoenix network should use rail or true BRT for the strongest peak corridors, pooled autonomous vans as feeders and cross-town service, and small robotaxis for low-density, accessible and late-night trips. Building the entire system as individual robotaxis wastes pooling; building only fixed corridors leaves much of metropolitan Phoenix beyond convenient walking access.</p>
+        </div>
+        <p class="comparison-warning"><strong>Do not read the operating-cost row as a forecast victory for autonomy.</strong> FTA figures are observed 2023 national expenses at actual ridership. The public-fleet figure is an engineering assumption that excludes capital amortization, vehicle replacement, financing, land, insurance uncertainty and proprietary autonomy licensing. Comparable alternatives require the same Phoenix ridership, service hours and lifecycle accounting.</p>
+      </section>
+
+      <section class="traffic-section">
+        <div class="section-heading">
+          <div><p class="overline">The congestion question</p><h2>Autonomy does not<br /><em>automatically help.</em></h2></div>
+          <p>Traffic falls only when higher occupancy saves more miles than empty repositioning adds. The comparison below reports the change in all regional VMT—not merely the miles inside the replaced slice.</p>
+        </div>
+        <div id="trafficCases" class="traffic-cases"></div>
+        <div class="traffic-rule"><strong>The binding rule</strong><p>Price solo rides higher, make pooled service the default, cap empty miles, reserve curbs and integrate vans with fixed-route rail and bus. Without those rules, a convenient public robotaxi can make Phoenix traffic worse.</p></div>
+      </section>
+
+      <section class="operations-section">
+        <div class="section-heading">
+          <div><p class="overline">How it would work</p><h2>One network.<br /><em>Three service patterns.</em></h2></div>
+          <p>The public authority sets coverage, fares, labor, accessibility and data rules. Autonomous-driving vendors compete to supply certified technology and fleet operations under auditable contracts.</p>
+        </div>
+        <div class="operations-grid">
+          <article><span>01</span><h3>Cars fill the gaps</h3><p>Door-to-door, accessible service for low-density areas, late nights, disability trips and connections that cannot pool efficiently.</p></article>
+          <article><span>02</span><h3>Vans pool corridors</h3><p>Dynamic stops and short walking windows combine nearby origins and destinations. Transfers occur at shaded neighborhood mobility hubs.</p></article>
+          <article><span>03</span><h3>Buses anchor demand</h3><p>High-frequency autonomous shuttles stay on repeatable trunk routes. Rail and full-size fixed-route buses remain where capacity is highest.</p></article>
+          <article><span>04</span><h3>The dispatcher orchestrates</h3><p>A regional platform forecasts demand, assigns the smallest adequate vehicle, protects maximum waits and prevents discriminatory service gaps.</p></article>
+          <article><span>05</span><h3>Depots keep it moving</h3><p>Distributed charging, cleaning, maintenance and remote assistance facilities operate around the clock with heat-resilient equipment and backup power.</p></article>
+          <article><span>06</span><h3>Every rider can enter</h3><p>App, web, phone, cash-compatible fare media and station kiosks. ADA service is a core fleet requirement, not a separate afterthought.</p></article>
+        </div>
+      </section>
+
+      <section class="phasing-section">
+        <div><p class="overline">A credible path</p><h2>Earn the right<br />to scale.</h2><p>The 80% case is a horizon test, not a launch plan. Expansion should stop automatically when pooling, safety, cost or service-quality gates fail.</p></div>
+        <ol>
+          <li><span>PILOT</span><strong>5,000 vehicles</strong><p>Airport, medical, university and late-night transit connections. Prove accessible dispatch and publish empty-mile data.</p></li>
+          <li><span>NETWORK</span><strong>25,000 vehicles</strong><p>Build shared mobility hubs and integrate fares with Valley Metro. Require at least 35% of passenger-miles in pooled vehicles.</p></li>
+          <li><span>REGIONAL</span><strong>75,000 vehicles</strong><p>Expand only after wait-time equity, safety, cost and congestion targets hold across a full Phoenix summer.</p></li>
+          <li><span>UTILITY</span><strong>Scale by evidence</strong><p>Move toward majority replacement only if empty mileage remains below 15% and total regional VMT is demonstrably falling.</p></li>
+        </ol>
+      </section>
+
+      <section class="risks-section">
+        <div class="section-heading"><div><p class="overline">What could break</p><h2>The hard parts are<br /><em>governance.</em></h2></div></div>
+        <div class="risk-grid">
+          <article><strong>Vendor lock-in</strong><p>Waymo does not currently sell an off-the-shelf public bus-and-van system. Separate vehicle ownership, dispatch data and autonomy licensing wherever technically possible.</p></article>
+          <article><strong>Induced demand</strong><p>Cheap, effortless trips create new travel and pull riders from walking and transit. Use fares, pooling defaults and road pricing to protect the VMT goal.</p></article>
+          <article><strong>Peak concentration</strong><p>A fleet sized for the morning peak sits idle later. Guarantee commute pooling and preserve high-capacity fixed routes instead of sizing every trip as a car.</p></article>
+          <article><strong>Safety + liability</strong><p>Require public incident reporting, independent audits, cyber standards, insurance and a clear authority to suspend unsafe software or routes.</p></article>
+          <article><strong>Labor transition</strong><p>Automation removes driving work but creates maintenance, cleaning, dispatch, rider-support and infrastructure roles. Bargain the transition before procurement.</p></article>
+          <article><strong>Extreme heat</strong><p>Air-conditioning load, battery degradation and charging reliability make Phoenix a demanding operating environment. Test through summer before each scale gate.</p></article>
+        </div>
+      </section>
+
+      <section class="method-section">
+        <div><p class="overline">Read the estimate correctly</p><h2>A feasibility model,<br />not a bid.</h2></div>
+        <div class="method-copy">
+          <p>Vehicle prices include planning allowances for autonomous hardware and fleet integration because no public Waymo procurement price exists. The default car is $160K, van $260K and 24-seat bus $850K. Direct operating assumptions are $0.80, $1.20 and $2.40 per fleet-mile, plus 15% administration. Capital adds a 15% spare fleet and 30% for charging, depots, control systems and contingency.</p>
+          <p>The default mix carries 45% of passenger-miles in cars averaging 1.8 occupants, 35% in vans averaging 5 and 20% in buses averaging 14. Empty miles are 22%, 15% and 8%. Outcomes are linearly scaled and do not model time-of-day peaks, roadway capacity, induced demand, capital financing, land, taxes, fleet replacement or proprietary autonomy licensing.</p>
+          <p><strong>Expected uncertainty:</strong> at least ±35% on initial capital and ±30% on annual operating cost before a Phoenix-specific request for information and microsimulation.</p>
+        </div>
+      </section>
+
+      <section class="sources-section">
+        <div><p class="overline">Evidence ledger</p><h2>Sources + anchors.</h2></div>
+        <div class="source-list">
+          <a href="https://azmag.gov/Portals/0/RAD/MAG-Region-Infographic-Jan2024-TextOnly.pdf?ver=Lp7nBu91RJmeZ_w6JUNpDg%3D%3D" target="_blank" rel="noreferrer"><span>MAG · 2024</span><strong>130M daily regional VMT and 105,400 weekday transit boardings</strong><i>↗</i></a>
+          <a href="https://www.census.gov/newsroom/press-releases/2026/2025-popest-metro-micro-counties.html" target="_blank" rel="noreferrer"><span>CENSUS · 2025</span><strong>Phoenix–Mesa–Chandler population estimate</strong><i>↗</i></a>
+          <a href="https://api.censusreporter.org/1.0/data/show/latest?table_ids=B25046&amp;geo_ids=31000US38060" target="_blank" rel="noreferrer"><span>ACS · 2024</span><strong>3.70M household vehicles available in Phoenix–Mesa–Chandler</strong><i>↗</i></a>
+          <a href="https://www.fhwa.dot.gov/policyinformation/nhstable.cfm" target="_blank" rel="noreferrer"><span>FHWA · 2022 NHTS</span><strong>1.52 mileage-weighted vehicle occupancy baseline</strong><i>↗</i></a>
+          <a href="https://azmag.gov/Portals/0/Documents/MagContent/Draft-MOMENTUM-2050-Update.pdf" target="_blank" rel="noreferrer"><span>MAG · 2025 MODEL</span><strong>26-minute PM commute baseline and regional peak-period congestion</strong><i>↗</i></a>
+          <a href="https://azmag.gov/Portals/0/Documents/MagContent/2017_MAG_HTS_Report_V1.pdf" target="_blank" rel="noreferrer"><span>MAG · TRAVEL SURVEY</span><strong>Regional trip purposes and time-of-day departure patterns</strong><i>↗</i></a>
+          <a href="https://azmag.gov/portals/0/Transportation/TIP/2025/FY-2026-2030-MAG-TIP-12-3-2025-FINAL.pdf" target="_blank" rel="noreferrer"><span>MAG · PROJECT COSTS</span><strong>South Central and Northwest light-rail mileage and approved budgets</strong><i>↗</i></a>
+          <a href="https://www.transit.dot.gov/sites/fta.dot.gov/files/2025-12/Public-CIG-Dashboard-01-02-2026.pdf" target="_blank" rel="noreferrer"><span>FTA · BRT PROJECTS</span><strong>Federal Boulevard and Wake Western Corridor capital benchmarks</strong><i>↗</i></a>
+          <a href="https://www.transit.dot.gov/funding/grants/grant-programs/capital-investments/bart-silicon-valley-phase-ii-project-profile" target="_blank" rel="noreferrer"><span>FTA · HEAVY RAIL</span><strong>BART Silicon Valley Phase II subway benchmark</strong><i>↗</i></a>
+          <a href="https://www.transit.dot.gov/sites/fta.dot.gov/files/2023-03/NY-New-York-Second-Avenue-Subway-Phase-2-NSE-Profile-FY24.pdf" target="_blank" rel="noreferrer"><span>FTA · SUBWAY</span><strong>Second Avenue Subway Phase II cost and operating plan</strong><i>↗</i></a>
+          <a href="https://www.transit.dot.gov/sites/fta.dot.gov/files/2024-12/2023%20National%20Transit%20Summaries%20and%20Trends_1.2.pdf" target="_blank" rel="noreferrer"><span>FTA · 2023 NTD</span><strong>Observed operating expense per passenger-mile by transit mode</strong><i>↗</i></a>
+          <a href="https://waymo.com/blog/2025/05/scaling-our-fleet-through-us-manufacturing/" target="_blank" rel="noreferrer"><span>WAYMO · MAY 2025</span><strong>250,000 paid weekly trips across Phoenix, San Francisco, Los Angeles and Austin</strong><i>↗</i></a>
+          <a href="https://rosap.ntl.bts.gov/view/dot/72467/dot_72467_DS1.pdf" target="_blank" rel="noreferrer"><span>USDOT · POOLING</span><strong>Evidence review on ride-pooling, VMT and empty-mile reduction</strong><i>↗</i></a>
+          <a href="https://www.itskrs.its.dot.gov/2021-b01576" target="_blank" rel="noreferrer"><span>USDOT · AV MODEL</span><strong>Pooled automated first/last-mile service simulation</strong><i>↗</i></a>
+          <a href="https://www.phoenix.gov/content/dam/phoenix/budgetsite/budget-books/2025-26-Summary-Budget-Book.pdf" target="_blank" rel="noreferrer"><span>PHOENIX · FY2026</span><strong>$420.2M Public Transit operating budget allowance</strong><i>↗</i></a>
+          <a href="https://www.transit.dot.gov/research-innovation/procuring-and-maintaining-battery-electric-buses-and-charging-systems-best" target="_blank" rel="noreferrer"><span>FTA · FLEET PRACTICE</span><strong>Battery-bus procurement, charging and maintenance guidance</strong><i>↗</i></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><p>DailySlop Policy Lab · September 2026</p><p>Concept model · not an official forecast or procurement estimate</p><a href="/job-bank-atlas">Job Bank Atlas ↑</a></footer>
+    <script type="module" src="/phoenix-public-mobility/app.js"></script>
+  </body>
+</html>
