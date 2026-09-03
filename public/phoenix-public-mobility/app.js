@@ -1,9 +1,11 @@
-import { BASELINE, VEHICLE_CLASSES, calculateScenario } from "./model.js";
+import { BASELINE, VEHICLE_CLASSES, calculatePeakScenario, calculateScenario, calculateTransitComparisons } from "./model.js";
 
 const controls = {
   replacementRate: document.querySelector("#replacementRate"), carShare: document.querySelector("#carShare"),
   vanShare: document.querySelector("#vanShare"), busShare: document.querySelector("#busShare"),
-  emptyMilesFactor: document.querySelector("#emptyMilesFactor"), fare: document.querySelector("#fare")
+  emptyMilesFactor: document.querySelector("#emptyMilesFactor"), fare: document.querySelector("#fare"),
+  peakHourShare: document.querySelector("#peakHourShare"), averageTripMiles: document.querySelector("#averageTripMiles"),
+  cycleMinutes: document.querySelector("#cycleMinutes")
 };
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
@@ -55,6 +57,51 @@ function renderTraffic(scenario) {
     return `<article class="traffic-case ${change <= 0 ? "reduction" : "increase"}"><div><strong>${name}</strong><span>${note}</span></div><b>${signedPercent(change)}</b><i><em style="width:${width}%"></em></i></article>`;
   }).join("");
 }
+function renderPeak(scenario) {
+  const peak = calculatePeakScenario(scenario, {
+    peakHourShare: Number(controls.peakHourShare.value) / 100,
+    averageTripMiles: Number(controls.averageTripMiles.value),
+    cycleMinutes: Number(controls.cycleMinutes.value)
+  });
+  document.querySelector("#peakHourShareValue").textContent = `${Math.round(peak.peakHourShare * 100)}%`;
+  document.querySelector("#averageTripMilesValue").textContent = `${number.format(peak.averageTripMiles)} miles`;
+  document.querySelector("#cycleMinutesValue").textContent = `${Math.round(peak.cycleMinutes)} minutes`;
+  document.querySelector("#dailyFleetRequirement").textContent = compactNumber(peak.dailyFleetOwned);
+  document.querySelector("#peakFleetRequirement").textContent = compactNumber(peak.peakFleetOwned);
+  document.querySelector("#governingFleetRequirement").textContent = compactNumber(peak.governingFleetOwned);
+  document.querySelector("#peakCapitalRequirement").textContent = compactMoney(peak.peakAdjustedCapital);
+  document.querySelector("#governingFleetComparison").textContent = `About ${(peak.householdFleetShare * 100).toFixed(1)}% of today’s household vehicles; ${peak.peakFleetOwned > peak.dailyFleetOwned ? "the peak hour governs" : "daily utilization governs"}.`;
+  document.querySelector("#imbalanceOutput").textContent = `${Math.round(peak.directionalImbalance * 100)}% directional imbalance.`;
+  document.querySelector("#odRows").innerHTML = peak.zones.map((zone) => {
+    const pressure = zone.destinationShare - zone.originShare;
+    const pressureLabel = pressure > 0 ? `+${Math.round(pressure * 100)} pts receiving` : pressure < 0 ? `${Math.round(pressure * 100)} pts sending` : "balanced";
+    return `<div class="od-row">
+      <strong>${zone.label}</strong>
+      <div><i style="width:${zone.originShare * 300}%"></i><span>${Math.round(zone.originShare * 100)}%</span></div>
+      <div><i style="width:${zone.destinationShare * 300}%"></i><span>${Math.round(zone.destinationShare * 100)}%</span></div>
+      <b class="${pressure > 0 ? "receiving" : "sending"}">${pressureLabel}</b>
+    </div>`;
+  }).join("");
+  renderAlternatives(scenario, peak);
+}
+function renderAlternatives(scenario, peak) {
+  const comparisons = calculateTransitComparisons(peak.peakAdjustedCapital);
+  document.querySelector("#comparisonBudget").textContent = `about ${compactMoney(peak.peakAdjustedCapital)}`;
+  document.querySelector("#alternativeCards").innerHTML = comparisons.map((item) => `
+    <article>
+      <span>${item.label}</span>
+      <strong>${number.format(item.routeMilesMin)}–${number.format(item.routeMilesMax)} <small>route-mi</small></strong>
+      <p>${item.use}</p>
+      <i>${item.basis} · ${compactMoney(item.capitalPerMileMin)}–${compactMoney(item.capitalPerMileMax)} per mile</i>
+    </article>`).join("");
+  const operatingModes = [
+    { label: "Modeled autonomous mix", value: scenario.operatingCostPerPassengerMile, note: "Concept assumption" },
+    ...comparisons.map((item) => ({ label: item.label, value: item.operatingCostPerPassengerMile, note: "FTA 2023 observed" }))
+  ];
+  const maximum = Math.max(...operatingModes.map((mode) => mode.value));
+  document.querySelector("#operatingRows").innerHTML = operatingModes.map((mode) => `
+    <div><strong>${mode.label}</strong><i><em style="width:${mode.value / maximum * 100}%"></em></i><b>${money.format(mode.value)} / passenger-mi</b><span>${mode.note}</span></div>`).join("");
+}
 function render() {
   const scenario = inputScenario();
   document.querySelector("#replacementRateValue").textContent = `${Math.round(scenario.replacementRate * 100)}%`;
@@ -63,6 +110,9 @@ function render() {
   scenario.fleet.forEach((vehicle) => { document.querySelector(`#${vehicle.id}ShareValue`).textContent = `${Math.round(vehicle.share * 100)}% normalized`; });
   document.querySelector("#capitalOutput").textContent = compactMoney(scenario.initialCapital);
   document.querySelector("#fleetOutput").textContent = compactNumber(scenario.fleet.reduce((sum, item) => sum + item.vehiclesOwned, 0));
+  const fleetOwned = scenario.fleet.reduce((sum, item) => sum + item.vehiclesOwned, 0);
+  const householdVehiclesPerFleetVehicle = BASELINE.householdVehicles * scenario.replacementRate / fleetOwned;
+  document.querySelector("#utilizationRatio").textContent = `${number.format(householdVehiclesPerFleetVehicle)} household vehicles`;
   document.querySelector("#operatingOutput").textContent = `${compactMoney(scenario.annualOperatingCost)} / yr`;
   document.querySelector("#trafficOutput").textContent = signedPercent(scenario.regionalVmtChange);
   document.querySelector("#shiftedOutput").textContent = `${compactNumber(scenario.shiftedPassengerMiles)} passenger-mi / day`;
@@ -75,6 +125,7 @@ function render() {
   document.querySelector("#infrastructureOutput").textContent = compactMoney(scenario.infrastructureCapital);
   renderFleet(scenario);
   renderTraffic(scenario);
+  renderPeak(scenario);
 }
 
 Object.values(controls).forEach((control) => control.addEventListener("input", render));
@@ -85,6 +136,12 @@ document.querySelector("#resetModel").addEventListener("click", () => {
   controls.busShare.value = VEHICLE_CLASSES[2].share * 100;
   controls.emptyMilesFactor.value = 100;
   controls.fare.value = 0.25;
+  render();
+});
+document.querySelector("#resetPeakModel").addEventListener("click", () => {
+  controls.peakHourShare.value = 10;
+  controls.averageTripMiles.value = 9.5;
+  controls.cycleMinutes.value = 34;
   render();
 });
 document.querySelector("#baselineVmt").textContent = `${compactNumber(BASELINE.regionalDailyVmt)} daily regional vehicle-miles`;
