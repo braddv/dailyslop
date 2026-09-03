@@ -8,28 +8,22 @@ const jobGuaranteeHtml = await readFile(new URL("../public/job-guarantee/index.h
 const jobAtlasHtml = await readFile(new URL("../public/job-bank-atlas/index.html", import.meta.url), "utf8");
 const vercel = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
 
-test("public Phoenix mobility page documents the network, congestion, logistics, and sources", () => {
-  assert.doesNotMatch(html, /FEASIBILITY READ/);
-  assert.match(html, /THE PUBLIC OPTION/);
-  assert.match(html, /35\.3 light-rail route-miles/);
-  assert.match(html, /≈ \$3\.83B/);
-  assert.match(html, /35th Avenue \+ Van Buren/);
-  assert.match(html, /Camelback Road \+ 24th Street/);
-  assert.match(html, /Thomas Road \+ 44th Street/);
-  assert.match(html, /Autonomy does not[\s\S]*automatically help/);
-  assert.match(html, /Today’s cars are mostly parking/);
-  assert.match(html, /The commute peak still governs capacity/);
-  assert.match(html, /busiest service hour/);
-  assert.match(html, /Origin–destination stress test/);
-  assert.match(html, /simplified six-zone allocation/);
-  assert.match(html, /Opportunity-cost comparison/);
-  assert.match(html, /use rail or true BRT for the strongest peak corridors/);
-  assert.match(html, /One network[\s\S]*Three service patterns/);
-  assert.match(html, /Waymo does not currently sell an off-the-shelf public bus-and-van system/);
-  assert.match(html, /Concept model · not an official forecast or procurement estimate/);
+test("public Phoenix mobility page presents the concise network, commute story, costs, and sources", () => {
+  assert.doesNotMatch(html, /subway/i);
+  assert.match(html, /Waymo[\s\S]*for/);
+  assert.match(html, /35\.3 miles of light rail/);
+  assert.match(html, /35th\/Van Buren/);
+  assert.match(html, /Camelback\/24th/);
+  assert.match(html, /Thomas\/44th/);
+  assert.match(html, /Mesa home[\s\S]*Tempe job/);
+  assert.match(html, /Gilbert Road station/);
+  assert.match(html, /≈261K/);
+  assert.match(html, /≈80K/);
+  assert.match(html, /≈18K/);
+  assert.match(html, /\$102\.0–102\.7B/);
+  assert.match(html, /\$13\.5B/);
+  assert.match(html, /Concept model · pooling required · not a procurement estimate/);
   assert.match(html, /azmag\.gov/);
-  assert.match(html, /fhwa\.dot\.gov/);
-  assert.match(html, /waymo\.com/);
 });
 
 test("peak simulation makes the larger daily or peak fleet requirement govern", () => {
