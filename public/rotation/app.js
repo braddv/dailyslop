@@ -90,7 +90,7 @@ function chartMarkup(points){
 function stat(label,value,detail){ return `<div class="stat"><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`; }
 function renderDetail(){
   const point=state.pointMap.get(state.selectedId); if(!point){ el.detailTitle.textContent=state.view==='sectors'?'Choose a sector':'Choose a subsector'; el.detailSubtitle.textContent='Tap a bubble to highlight its trail and inspect its relative returns.'; el.detailStats.innerHTML='';el.constituents.innerHTML='';return; }
-  el.detailTitle.textContent=point.label; el.detailSubtitle.textContent=`${point.sector}${point.symbol?` · ${point.symbol}`:''} · ${point.count} constituent${point.count===1?'':'s'} · ${point.quadrant}`;
+  el.detailTitle.textContent=point.label; el.detailSubtitle.textContent=`${point.sector}${point.symbol?` · ${point.symbol}`:''} · ${point.count} constituent${point.count===1?'':'s'} · ${point.quadrant}${point.leadershipQuality?` · ${point.leadershipQuality.classification} leadership`:''}`;
   el.detailStats.innerHTML=stat('5D vs SPY',pct(point.x),`group ${pct(point.return5)}`)+stat('20D vs SPY',pct(point.y),`group ${pct(point.return20)}`)+stat('SPY 5D',pct(currentFrame().spy5),'benchmark')+stat('SPY 20D',pct(currentFrame().spy20),'benchmark');
   el.constituents.innerHTML=point.constituents.slice().sort((a,b)=>a.symbol.localeCompare(b.symbol)).map((item)=>`<span title="${escapeHtml(item.security)}">${escapeHtml(item.symbol)}${item.subIndustry?` · ${escapeHtml(item.subIndustry)}`:''}</span>`).join('');
 }

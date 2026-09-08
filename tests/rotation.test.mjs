@@ -33,6 +33,8 @@ test('rotation model calculates sector and subsector returns relative to SPY', (
   assert.ok(subsector.x > sector.x);
   assert.equal(subsector.count, 2);
   assert.equal(subsector.quadrant, 'leaders');
+  assert.equal(sector.leadershipQuality.classification, 'Concentrated');
+  assert.equal(sector.leadershipQuality.memberCount, 2);
 });
 
 test('rotation page exposes selectable replay ranges, trails, and subsector drill-down', async () => {
