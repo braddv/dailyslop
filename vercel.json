@@ -39,6 +39,14 @@
       "destination": "/public/regime/:path*"
     },
     {
+      "source": "/rotation",
+      "destination": "/public/rotation/index.html"
+    },
+    {
+      "source": "/rotation/:path*",
+      "destination": "/public/rotation/:path*"
+    },
+    {
       "source": "/sectoral-balances",
       "destination": "/public/sectoral-balances/index.html"
     },

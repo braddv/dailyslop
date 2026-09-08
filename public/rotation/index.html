@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/rotation/" />
+    <title>DailySlop Sector Rotation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/rotation/styles.css" />
+  </head>
+  <body>
+    <div class="glow glow-one"></div><div class="glow glow-two"></div>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <nav class="breadcrumb" aria-label="DailySlop pages"><a href="/sp500ad">S&amp;P 500</a><span>/</span><a href="/intermarket">Macro Radar</a><span>/</span><a href="/regime">Regime History</a><span>/</span><strong>Sector Rotation</strong><span>/</span><a href="/playbook">Playbook</a></nav>
+          <p class="eyebrow">Relative-strength trajectory</p>
+          <h1>Sector Rotation</h1>
+          <p class="subhead">Watch leadership develop, fade, recover and break down across the last three months.</p>
+        </div>
+        <div class="meta"><div class="meta-card"><span>Frame</span><strong id="frameDate">Loading…</strong></div><div class="meta-card"><span>Universe</span><strong id="universeLabel">11 sectors</strong></div></div>
+      </header>
+
+      <section class="rotation-panel">
+        <div class="panel-heading">
+          <div><p class="section-kicker">5D × 20D relative to SPY</p><h2 id="chartTitle">S&amp;P sector ETFs</h2><p id="chartDescription">Click a sector to inspect its sub-industries.</p></div>
+          <div class="view-toggle" id="viewToggle"><button class="active" type="button" data-view="sectors">Sectors</button><button type="button" data-view="subIndustries">Subsectors</button></div>
+        </div>
+        <div class="sector-filter" id="sectorFilter" hidden></div>
+        <div class="transport" id="transport">
+          <button class="play" id="playButton" type="button"><span aria-hidden="true">Ⅱ</span><span>Pause</span></button>
+          <input id="scrubber" type="range" min="0" max="0" value="0" step="1" aria-label="Sector rotation timeline" />
+          <label>Speed <select id="speed"><option value="1100">0.5×</option><option value="700" selected>1×</option><option value="350">2×</option></select></label>
+        </div>
+        <div class="frame-readout"><strong id="readoutDate">--</strong><span id="readoutState">Playing</span><small>Bubble size represents S&amp;P 500 market capitalization.</small></div>
+        <div class="chart-wrap"><svg id="rotationChart" viewBox="0 0 900 650" role="img" aria-label="Sector rotation chart"></svg></div>
+        <div class="legend"><span><i class="leaders"></i>Leaders</span><span><i class="fading"></i>Fading</span><span><i class="laggards"></i>Laggards</span><span><i class="recovering"></i>Recovering</span></div>
+      </section>
+
+      <section class="detail-panel" id="detailPanel">
+        <div><p class="section-kicker">Selected group</p><h2 id="detailTitle">Choose a bubble</h2><p id="detailSubtitle">Tap any sector or subsector to inspect it.</p></div>
+        <div class="detail-stats" id="detailStats"></div>
+        <div class="constituents" id="constituents"></div>
+      </section>
+
+      <section class="method-panel"><p class="section-kicker">How to read it</p><h2>Movement matters more than one frame.</h2><p>Upper-right groups lead SPY over both five and twenty sessions. Upper-left groups remain long-term leaders but are fading recently. Lower-left groups lag on both horizons. Lower-right groups are recovering short term while still behind over twenty sessions. Subsector returns are market-cap-weighted across their S&amp;P 500 constituents.</p></section>
+      <footer><button id="refreshButton" type="button">Refresh</button><span id="statusText">Loading sector history…</span></footer>
+    </main>
+    <script type="module" src="/rotation/app.js"></script>
+  </body>
+</html>
+
