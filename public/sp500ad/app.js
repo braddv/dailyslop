@@ -138,6 +138,11 @@ const actionPeriodRowsCache = new Map();
 const watchlistSymbols = new Set();
 const watchlistActionSignals = new Map();
 const watchlistConfluence = new Map();
+const factorMomentumBySymbol = new Map();
+const factorDetailBySymbol = new Map();
+const factorDetailPromises = new Map();
+let factorMomentumAsOf = null;
+let factorMomentumPromise = null;
 const WATCHLIST_KEY = `${APP_CONFIG.universe}-watchlist-v1`;
 
 const REPLAY_PERIODS = {
@@ -1845,6 +1850,26 @@ function rankActionCandidates(rows) {
   });
 }
 
+function factorConfirmation(symbol, bucketKey) {
+  const factor = factorMomentumBySymbol.get(symbol);
+  if (!factor) return null;
+  const bullish = ['acceleration', 'leaders', 'pullback', 'breakout'].includes(bucketKey);
+  const positive = factor.decile <= 2 || (factor.isTrending && factor.trendDirection > 0);
+  const negative = factor.decile >= 9 || (factor.isTrending && factor.trendDirection < 0);
+  const aligned = bullish ? positive : negative;
+  const opposed = bullish ? negative : positive;
+  return { key: aligned ? 'confirmed' : opposed ? 'opposed' : 'mixed', label: aligned ? 'Factor confirmed' : opposed ? 'Factor opposed' : 'Factor mixed', factor };
+}
+
+function renderFactorConfirmation(symbol, bucketKey) {
+  const context = factorConfirmation(symbol, bucketKey);
+  if (!context) return '';
+  const score = Number.isFinite(context.factor.momentumScore)
+    ? `${context.factor.momentumScore >= 0 ? '+' : ''}${(context.factor.momentumScore * 100).toFixed(1)}% residual score`
+    : 'Residual momentum';
+  return `<small class="factor-confirmation ${context.key}" title="FactorsToday Base + Sector residual momentum${factorMomentumAsOf ? ` · ${factorMomentumAsOf}` : ''}">${context.label} · D${context.factor.decile || '--'} · ${score}</small>`;
+}
+
 function renderActionBucket(target, rows, scoreLabel, bucketKey) {
   if (!target) return;
   if (!rows.length) {
@@ -1861,6 +1886,7 @@ function renderActionBucket(target, rows, scoreLabel, bucketKey) {
           ? row.stock.subIndustry || row.stock.sector
           : row.stock.sector}</small>
         <small class="sector-designation ${row.sectorAlignment?.key || "specific"}" title="Sector alignment affects candidate order">${row.relativeClassification || ""}</small>
+        ${renderFactorConfirmation(row.symbol, bucketKey)}
       </span>
           <span class="action-relative-strength">
             ${(row.relativeStrength || []).map((context) => `
@@ -2663,6 +2689,76 @@ function renderSectorLeadershipQuality(stock) {
   `;
 }
 
+function loadingFactorContext() {
+  return `<section class="bubble-detail-section factor-detail-section"><div class="bubble-detail-heading"><h3>Factor context</h3><span>FactorsToday</span></div><p class="bubble-detail-empty">Loading factor exposures and specific risk…</p></section>`;
+}
+
+function factorLoadingRows(payload) {
+  const candidates = [payload?.loadings, payload?.data?.loadings, payload?.data, payload];
+  const rows = candidates.find(Array.isArray) || [];
+  return rows.map((row) => ({ name: row.factorName || row.factor_name || row.factor || row.name || row.display_name, value: Number(row.beta ?? row.loading ?? row.exposure ?? row.value) }))
+    .filter((row) => row.name && Number.isFinite(row.value)).sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+}
+
+function renderStockFactorContext(stock) {
+  if (stock.isBenchmark || stock.isSubIndustry) return '';
+  const details = factorDetailBySymbol.get(stock.symbol);
+  const residual = factorMomentumBySymbol.get(stock.symbol);
+  if (!details) return loadingFactorContext();
+  const loadings = factorLoadingRows(details.loadings).slice(0, 5);
+  const volatility = details.specificVolatility || {};
+  const specificVol = Number(volatility.specific_vol_annual ?? volatility.specificVolAnnual);
+  const rSquared = Number(details.loadings?.[0]?.rSquared ?? volatility.r_squared);
+  return `
+    <section class="bubble-detail-section factor-detail-section">
+      <div class="bubble-detail-heading"><h3>Factor context</h3><span>FactorsToday${factorMomentumAsOf ? ` · ${factorMomentumAsOf}` : ''}</span></div>
+      <div class="factor-detail-summary">
+        <div><small>Residual momentum</small><strong>${residual?.decile ? `Decile ${residual.decile}` : '--'}</strong></div>
+        <div><small>Residual score</small><strong>${Number.isFinite(residual?.momentumScore) ? formatPerf(residual.momentumScore * 100) : '--'}</strong></div>
+        <div><small>Specific volatility</small><strong>${Number.isFinite(specificVol) ? `${(specificVol * 100).toFixed(1)}%` : '--'}</strong></div>
+        <div><small>Base + Sector R²</small><strong>${Number.isFinite(rSquared) ? `${(rSquared * 100).toFixed(0)}%` : '--'}</strong></div>
+      </div>
+      ${loadings.length ? `<div class="factor-loading-list">${loadings.map((row) => `<span>${row.name}<strong>${row.value >= 0 ? '+' : ''}${row.value.toFixed(2)}</strong></span>`).join('')}</div>` : `<p class="bubble-detail-empty">Factor loadings unavailable for this ticker.</p>`}
+      <a class="factor-source-link" href="https://www.factorstoday.com/" target="_blank" rel="noopener">View FactorsToday methodology ↗</a>
+    </section>`;
+}
+
+async function loadFactorDetails(symbol) {
+  if (!symbol || factorDetailBySymbol.has(symbol)) return;
+  if (factorDetailPromises.has(symbol)) return factorDetailPromises.get(symbol);
+  const request = fetch(`/api/factors?tickers=${encodeURIComponent(symbol)}`)
+    .then(readApiJson)
+    .then((payload) => factorDetailBySymbol.set(symbol, payload.details?.[symbol] || { loadings: null, specificVolatility: null }))
+    .catch(() => factorDetailBySymbol.set(symbol, { loadings: null, specificVolatility: null }))
+    .finally(() => {
+      factorDetailPromises.delete(symbol);
+      if (activeActionDetail?.stock?.symbol === symbol && actionDrawer && !actionDrawer.hidden) renderSharedDrawerContent(activeActionDetail.stock, activeActionDetail);
+    });
+  factorDetailPromises.set(symbol, request);
+  return request;
+}
+
+async function loadResidualMomentum() {
+  if (factorMomentumPromise) return factorMomentumPromise;
+  const symbols = [...new Set(lastStocks
+    .filter((stock) => !stock.isBenchmark && !stock.isSubIndustry)
+    .map((stock) => stock.symbol)
+    .filter(Boolean))];
+  const query = new URLSearchParams({ residual: 'true' });
+  if (symbols.length) query.set('symbols', symbols.join(','));
+  factorMomentumPromise = fetch(`/api/factors?${query}`)
+    .then(readApiJson)
+    .then((payload) => {
+      const residual = payload.residualMomentum || {};
+      factorMomentumAsOf = residual.asOfDate || null;
+      factorMomentumBySymbol.clear();
+      Object.entries(residual.byTicker || {}).forEach(([symbol, row]) => factorMomentumBySymbol.set(symbol, row));
+      if (appView === 'action' && lastStocks.length) renderConfluenceScanner();
+      if (activeActionDetail?.stock && actionDrawer && !actionDrawer.hidden) renderSharedDrawerContent(activeActionDetail.stock, activeActionDetail);
+    }).catch(() => null).finally(() => { factorMomentumPromise = null; });
+  return factorMomentumPromise;
+}
+
 function renderSharedDrawerContent(
   stock,
   { parentSubIndustry = null, actionRow = null, parentActionRow = null } = {}
@@ -2705,6 +2801,7 @@ function renderSharedDrawerContent(
       </div>
     ` : ""}
     ${renderLatestDrawerSignals(stock, actionRow)}
+    ${renderStockFactorContext(stock)}
     ${renderSectorLeadershipQuality(stock)}
     <div class="action-detail-grid bubble-metric-grid">
       <div><small>1D</small><strong class="${(stock.changePercent || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.changePercent)}</strong></div>
@@ -2724,6 +2821,8 @@ function openSharedDrawer(stock, options = {}) {
   actionDrawer.hidden = false;
   actionDrawerBackdrop.hidden = false;
   document.body.classList.add("drawer-open");
+  if (!stock.isBenchmark && !stock.isSubIndustry) loadFactorDetails(stock.symbol);
+  loadResidualMomentum();
   const availableSessions = preferredDrawerHistoryData()?.sessions?.length || 0;
   if (availableSessions < 20 && actionHistoryLimit < 20 && !drawerHistoryLoaded) {
     loadSignalHistory("drawer");
@@ -3727,6 +3826,7 @@ async function loadData(forceRefresh = false) {
     lastStocks = data.stocks || [];
     lastBenchmarks = data.benchmarks || [];
     lastSubIndustries = buildSubIndustryStocks(lastStocks);
+    loadResidualMomentum();
     actionPeriodRowsCache.clear();
     populateTickerSearch();
     const requestedPin = new URLSearchParams(window.location.search).get("pin")?.trim().toUpperCase();

@@ -953,6 +953,19 @@ h1 {
 .leadership-quality-summary strong.broad { color: #65d6a6; border-color: rgba(101, 214, 166, 0.28); }
 .leadership-quality-summary strong.concentrated { color: #f6bd68; border-color: rgba(246, 189, 104, 0.28); }
 
+.factor-confirmation { margin-top: 4px; color: var(--muted); }
+.factor-confirmation.confirmed { color: #65d6a6; }
+.factor-confirmation.opposed { color: #ff8f9c; }
+.factor-confirmation.mixed { color: #f6bd68; }
+.factor-detail-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.factor-detail-summary > div { padding: 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: rgba(7,11,18,.46); }
+.factor-detail-summary small,.factor-detail-summary strong { display: block; }
+.factor-detail-summary small { margin-bottom: 5px; color: var(--muted); font-size: .58rem; }
+.factor-loading-list { display: grid; gap: 6px; }
+.factor-loading-list span { display: flex; justify-content: space-between; gap: 12px; padding: 7px 9px; border-radius: 8px; background: rgba(7,11,18,.42); color: var(--muted); font-size: .65rem; }
+.factor-loading-list strong { color: var(--text); }
+.factor-source-link { color: #56c2ff; font-size: .65rem; text-decoration: none; }
+
 .bubble-signal-timeline {
   max-width: 100%;
   overflow-x: auto;
