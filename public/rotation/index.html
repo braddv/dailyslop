@@ -18,7 +18,7 @@
           <nav class="breadcrumb" aria-label="DailySlop pages"><a href="/sp500ad">S&amp;P 500</a><span>/</span><a href="/intermarket">Macro Radar</a><span>/</span><a href="/regime">Regime History</a><span>/</span><strong>Sector Rotation</strong><span>/</span><a href="/playbook">Playbook</a></nav>
           <p class="eyebrow">Relative-strength trajectory</p>
           <h1>Sector Rotation</h1>
-          <p class="subhead">Watch leadership develop, fade, recover and break down across the last three months.</p>
+          <p class="subhead">Watch leadership develop, fade, recover and break down across selectable playback windows.</p>
         </div>
         <div class="meta"><div class="meta-card"><span>Frame</span><strong id="frameDate">Loading…</strong></div><div class="meta-card"><span>Universe</span><strong id="universeLabel">11 sectors</strong></div></div>
       </header>
@@ -26,9 +26,10 @@
       <section class="rotation-panel">
         <div class="panel-heading">
           <div><p class="section-kicker">5D × 20D relative to SPY</p><h2 id="chartTitle">S&amp;P sector ETFs</h2><p id="chartDescription">Click a sector to inspect its sub-industries.</p></div>
-          <div class="view-toggle" id="viewToggle"><button class="active" type="button" data-view="sectors">Sectors</button><button type="button" data-view="subIndustries">Subsectors</button></div>
+          <div class="heading-controls"><div class="view-toggle" id="viewToggle"><button class="active" type="button" data-view="sectors">Sectors</button><button type="button" data-view="subIndustries">Subsectors</button></div><div class="range-toggle" id="rangeToggle" aria-label="Playback range"><button type="button" data-range="1m">1M</button><button class="active" type="button" data-range="3m">3M</button><button type="button" data-range="6m">6M</button><button type="button" data-range="1y">1Y</button></div></div>
         </div>
-        <div class="sector-filter" id="sectorFilter" hidden></div>
+        <div class="sector-filter" id="sectorFilter"></div>
+        <div class="sector-filter subsector-filter" id="subIndustryFilter" hidden></div>
         <div class="transport" id="transport">
           <button class="play" id="playButton" type="button"><span aria-hidden="true">Ⅱ</span><span>Pause</span></button>
           <input id="scrubber" type="range" min="0" max="0" value="0" step="1" aria-label="Sector rotation timeline" />
@@ -51,4 +52,3 @@
     <script type="module" src="/rotation/app.js"></script>
   </body>
 </html>
-
