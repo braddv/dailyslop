@@ -1,3 +1,5 @@
+import '../shared/leadership-quality.js';
+
 export const ROTATION_SESSIONS = 66;
 
 const SECTOR_SYMBOLS = {
@@ -55,13 +57,13 @@ function quadrant(x, y) {
   return 'recovering';
 }
 
-function point({ id, label, sector, symbol = null, return5, return20, spy5, spy20, marketCap, count, constituents = [] }) {
+function point({ id, label, sector, symbol = null, return5, return20, spy5, spy20, marketCap, count, constituents = [], leadershipQuality = null }) {
   if (![return5, return20, spy5, spy20].every(finite)) return null;
   const x = return5 - spy5;
   const y = return20 - spy20;
   return {
     id, label, sector, symbol, x, y, return5, return20, marketCap,
-    count, constituents, quadrant: quadrant(x, y),
+    count, constituents, quadrant: quadrant(x, y), leadershipQuality,
   };
 }
 
@@ -121,6 +123,14 @@ export function buildRotationData(payload, sessionCount = ROTATION_SESSIONS) {
       return5: trailingReturn(item.prices, allDates, index, 5),
       return20: trailingReturn(item.prices, allDates, index, 20),
       spy5, spy20,
+      leadershipQuality: globalThis.DailySlopLeadershipQuality?.calculateLeadershipQuality({
+        benchmarkReturn: spy20,
+        groupReturn: trailingReturn(item.prices, allDates, index, 20),
+        members: members.filter((member) => member.sector === item.sector).map((member) => ({
+          returnValue: trailingReturn(member.prices, allDates, index, 20),
+          marketCap: member.marketCap,
+        })),
+      }) || null,
     })).filter(Boolean);
     const subIndustries = subIndustryDefinitions.map((item) => point({
       ...item,

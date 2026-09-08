@@ -2618,6 +2618,51 @@ function renderLatestDrawerSignals(stock, actionRow = null) {
   `;
 }
 
+function leadershipQualityForSector(stock) {
+  if (!stock?.isBenchmark || stock.symbol === APP_CONFIG.broadSymbol || !stock.sector) return null;
+  const metric = replayActive
+    ? { label: REPLAY_PERIODS[replayPeriod]?.label || 'Replay', value: (item) => getReplayValue(item, replayFrames[replayFrameIndex]) }
+    : ['changePercent', 'perf1w', 'perf1m', 'perf3m'].includes(selectedMetric)
+      ? { label: METRICS[selectedMetric].label, value: (item) => Number(item[selectedMetric]) }
+      : { label: '1D', value: (item) => Number(item.changePercent) };
+  const spy = lastBenchmarks.find((item) => item.symbol === APP_CONFIG.broadSymbol);
+  const benchmarkReturn = metric.value(spy);
+  return {
+    label: metric.label,
+    result: window.DailySlopLeadershipQuality?.calculateLeadershipQuality({
+      benchmarkReturn,
+      groupReturn: metric.value(stock),
+      members: lastStocks
+        .filter((member) => member.sector === stock.sector)
+        .map((member) => ({ returnValue: metric.value(member), marketCap: member.marketCap })),
+    }) || null,
+  };
+}
+
+function renderSectorLeadershipQuality(stock) {
+  const quality = leadershipQualityForSector(stock);
+  if (!quality?.result) return '';
+  const result = quality.result;
+  return `
+    <section class="bubble-detail-section leadership-quality-section">
+      <div class="bubble-detail-heading">
+        <h3>Leadership quality</h3>
+        <span>${quality.label} horizon</span>
+      </div>
+      <div class="leadership-quality-summary">
+        <strong class="${result.classification.toLowerCase()}">${result.classification}</strong>
+        <span>${Math.round(result.participation)}% of constituents outperforming ${APP_CONFIG.broadSymbol}</span>
+      </div>
+      <div class="action-detail-grid">
+        <div><small>Sector vs ${APP_CONFIG.broadSymbol}</small><strong class="${result.relativeReturn >= 0 ? 'positive' : 'negative'}">${formatPerf(result.relativeReturn)}</strong></div>
+        <div><small>Cap vs equal weight</small><strong class="${result.weightingGap >= 0 ? 'positive' : 'negative'}">${formatPerf(result.weightingGap)}</strong></div>
+        <div><small>Participation</small><strong>${Math.round(result.participation)}%</strong></div>
+        <div><small>Top-5 move share</small><strong>${Math.round(result.topFiveShare)}%</strong></div>
+      </div>
+    </section>
+  `;
+}
+
 function renderSharedDrawerContent(
   stock,
   { parentSubIndustry = null, actionRow = null, parentActionRow = null } = {}
@@ -2660,6 +2705,7 @@ function renderSharedDrawerContent(
       </div>
     ` : ""}
     ${renderLatestDrawerSignals(stock, actionRow)}
+    ${renderSectorLeadershipQuality(stock)}
     <div class="action-detail-grid bubble-metric-grid">
       <div><small>1D</small><strong class="${(stock.changePercent || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.changePercent)}</strong></div>
       <div><small>1W</small><strong class="${(stock.perf1w || 0) >= 0 ? "positive" : "negative"}">${formatPerf(stock.perf1w)}</strong></div>
