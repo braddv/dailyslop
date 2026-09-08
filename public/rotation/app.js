@@ -89,7 +89,7 @@ function chartMarkup(points){
 
 function stat(label,value,detail){ return `<div class="stat"><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`; }
 function renderDetail(){
-  const point=state.pointMap.get(state.selectedId); if(!point){ el.detailTitle.textContent=state.view==='sectors'?'Choose a sector':'Choose a subsector'; el.detailSubtitle.textContent=state.view==='sectors'?'Tap a bubble to drill into its sub-industries.':'Tap a bubble to see relative returns and constituents.'; el.detailStats.innerHTML='';el.constituents.innerHTML='';return; }
+  const point=state.pointMap.get(state.selectedId); if(!point){ el.detailTitle.textContent=state.view==='sectors'?'Choose a sector':'Choose a subsector'; el.detailSubtitle.textContent='Tap a bubble to highlight its trail and inspect its relative returns.'; el.detailStats.innerHTML='';el.constituents.innerHTML='';return; }
   el.detailTitle.textContent=point.label; el.detailSubtitle.textContent=`${point.sector}${point.symbol?` · ${point.symbol}`:''} · ${point.count} constituent${point.count===1?'':'s'} · ${point.quadrant}`;
   el.detailStats.innerHTML=stat('5D vs SPY',pct(point.x),`group ${pct(point.return5)}`)+stat('20D vs SPY',pct(point.y),`group ${pct(point.return20)}`)+stat('SPY 5D',pct(currentFrame().spy5),'benchmark')+stat('SPY 20D',pct(currentFrame().spy20),'benchmark');
   el.constituents.innerHTML=point.constituents.slice().sort((a,b)=>a.symbol.localeCompare(b.symbol)).map((item)=>`<span title="${escapeHtml(item.security)}">${escapeHtml(item.symbol)}${item.subIndustry?` · ${escapeHtml(item.subIndustry)}`:''}</span>`).join('');
@@ -109,12 +109,12 @@ function renderFrame(){
   el.universeLabel.textContent=state.view==='sectors'?`${points.length} sectors`:`${points.length} subsectors`;
   const sectorNames=[...state.selectedSectors];
   el.chartTitle.textContent=state.view==='sectors'?'S&P sector ETFs':sectorNames.length===1?`${sectorNames[0]} subsectors`:'Selected subsectors';
-  el.chartDescription.textContent=state.view==='sectors'?'Toggle sector chips to compare any combination, or click a bubble to drill into its sub-industries.':'Toggle subsector chips to compare only the paths you want to follow.';
+  el.chartDescription.textContent=state.view==='sectors'?'Toggle sector chips to compare paths; tap a bubble to highlight its trail. Use Subsectors and the chips to drill down.':'Toggle subsector chips to compare only the paths you want to follow.';
   el.rotationChart.innerHTML=chartMarkup(points); updateControls(); renderFilters(); renderDetail();
 }
 function setView(view,sector=null){ state.view=view;if(sector)state.selectedSectors=new Set([sector]);else if(view==='subIndustries'&&!state.selectedSectors.size)state.selectedSectors=new Set([state.data.sectors[0]?.sector].filter(Boolean));state.selectedSubIndustries.clear();state.selectedId=null;el.viewToggle.querySelectorAll('[data-view]').forEach((button)=>button.classList.toggle('active',button.dataset.view===view));renderFrame(); }
 
-el.rotationChart.addEventListener('click',(event)=>{ const group=event.target.closest('[data-point-id]');if(!group)return;const point=state.pointMap.get(group.dataset.pointId);if(!point)return;if(state.view==='sectors')setView('subIndustries',point.sector);else{state.selectedId=point.id;renderFrame();} });
+el.rotationChart.addEventListener('click',(event)=>{const group=event.target.closest('[data-point-id]');if(!group)return;const point=state.pointMap.get(group.dataset.pointId);if(!point)return;state.selectedId=point.id;renderFrame();});
 el.rotationChart.addEventListener('keydown',(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.target.closest('[data-point-id]')?.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
 el.viewToggle.addEventListener('click',(event)=>{const button=event.target.closest('[data-view]');if(button)setView(button.dataset.view);});
 el.rangeToggle.addEventListener('click',(event)=>{const button=event.target.closest('[data-range]');if(!button)return;state.range=button.dataset.range;state.frameIndex=0;state.selectedId=null;el.rangeToggle.querySelectorAll('[data-range]').forEach((item)=>item.classList.toggle('active',item===button));renderFrame();if(state.playing)schedule();});

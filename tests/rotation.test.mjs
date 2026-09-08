@@ -52,6 +52,8 @@ test('rotation page exposes selectable replay ranges, trails, and subsector dril
   assert.match(html, /Recovering/);
   const app = await readFile(new URL('../public/rotation/app.js', import.meta.url), 'utf8');
   assert.match(app, /bubble-trail/);
+  assert.match(app, /state\.selectedId=point\.id;renderFrame\(\)/);
+  assert.doesNotMatch(app, /if\(state\.view==='sectors'\)setView/);
   const rewrites = vercel.rewrites.map(({ source, destination }) => `${source} -> ${destination}`);
   assert.ok(rewrites.includes('/rotation -> /public/rotation/index.html'));
   assert.ok(rewrites.includes('/rotation/:path* -> /public/rotation/:path*'));
