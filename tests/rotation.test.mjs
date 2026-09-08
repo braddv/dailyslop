@@ -35,17 +35,24 @@ test('rotation model calculates sector and subsector returns relative to SPY', (
   assert.equal(subsector.quadrant, 'leaders');
 });
 
-test('rotation page exposes three-month replay and subsector drill-down', () => {
+test('rotation page exposes selectable replay ranges, trails, and subsector drill-down', async () => {
   assert.match(html, /Sector Rotation/);
   assert.match(html, /5D × 20D relative to SPY/);
   assert.match(html, /data-view="subIndustries"/);
+  assert.match(html, /id="subIndustryFilter"/);
+  assert.match(html, /id="sectorFilter"/);
+  assert.match(html, /data-range="1m"/);
+  assert.match(html, /data-range="3m"/);
+  assert.match(html, /data-range="6m"/);
+  assert.match(html, /data-range="1y"/);
   assert.match(html, /Sector rotation timeline/);
   assert.match(html, /Leaders/);
   assert.match(html, /Fading/);
   assert.match(html, /Laggards/);
   assert.match(html, /Recovering/);
+  const app = await readFile(new URL('../public/rotation/app.js', import.meta.url), 'utf8');
+  assert.match(app, /bubble-trail/);
   const rewrites = vercel.rewrites.map(({ source, destination }) => `${source} -> ${destination}`);
   assert.ok(rewrites.includes('/rotation -> /public/rotation/index.html'));
   assert.ok(rewrites.includes('/rotation/:path* -> /public/rotation/:path*'));
 });
-
