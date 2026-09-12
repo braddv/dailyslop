@@ -95,6 +95,14 @@
       "destination": "/public/phoenix-public-mobility/:path*"
     },
     {
+      "source": "/alchemy",
+      "destination": "/public/alchemy/index.html"
+    },
+    {
+      "source": "/alchemy/:path*",
+      "destination": "/public/alchemy/:path*"
+    },
+    {
       "source": "/slop",
       "destination": "/public/slop.html"
     },
