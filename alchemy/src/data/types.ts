@@ -17,6 +17,8 @@ export interface PlantDefinition {
   accent: string;
   forestTags: string[];
   parts: Record<PlantPartId, PlantPartDefinition>;
+  rarity: 'common' | 'uncommon' | 'rare';
+  clue: string;
 }
 export interface IngredientInstance {
   id: string;
@@ -55,4 +57,23 @@ export interface SaveData {
   potions: PotionInstance[];
   discoveredPlants: string[];
   unlockedPortals: string[];
+}
+
+export interface NightPlantInstance {
+  instanceId: string;
+  plantId: string;
+  x: number;
+  z: number;
+  harvested: boolean;
+  discovered: boolean;
+}
+
+export interface NightLayout {
+  seed: number;
+  title: string;
+  condition: string;
+  tint: number;
+  fog: number;
+  plants: NightPlantInstance[];
+  landmarks: Array<{ type: 'pool' | 'stones' | 'fallen-log'; x: number; z: number }>;
 }
