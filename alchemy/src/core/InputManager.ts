@@ -8,7 +8,7 @@ export class InputManager {
   }
   update(): MoveVector {
     const keyX = Number(this.keys.has('d') || this.keys.has('arrowright')) - Number(this.keys.has('a') || this.keys.has('arrowleft'));
-    const keyY = Number(this.keys.has('w') || this.keys.has('arrowup')) - Number(this.keys.has('s') || this.keys.has('arrowdown'));
+    const keyY = Number(this.keys.has('w') || this.keys.has('arrowup') || this.keys.has(' ')) - Number(this.keys.has('s') || this.keys.has('arrowdown'));
     return { x: Math.max(-1, Math.min(1, keyX + this.move.x)), y: Math.max(-1, Math.min(1, keyY + this.move.y)) };
   }
   bindJoystick(element: HTMLElement): void {
@@ -23,5 +23,9 @@ export class InputManager {
     element.addEventListener('pointermove', (event) => { if (active) update(event); });
     const end = () => { active = false; this.move = { x: 0, y: 0 }; element.style.setProperty('--stick-x', '0px'); element.style.setProperty('--stick-y', '0px'); };
     element.addEventListener('pointerup', end); element.addEventListener('pointercancel', end);
+  }
+  bindSideScroller(left:HTMLElement,right:HTMLElement,jump:HTMLElement,onJump:()=>void):void {
+    const bindDirection=(element:HTMLElement,value:number)=>{const start=(event:PointerEvent)=>{event.preventDefault();element.setPointerCapture(event.pointerId);this.move.x=value;};const end=()=>{if(this.move.x===value)this.move.x=0;};element.addEventListener('pointerdown',start);element.addEventListener('pointerup',end);element.addEventListener('pointercancel',end);};
+    bindDirection(left,-1);bindDirection(right,1);jump.addEventListener('pointerdown',(event)=>{event.preventDefault();onJump();});
   }
 }

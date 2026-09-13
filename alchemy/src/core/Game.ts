@@ -1,32 +1,40 @@
 import { CUSTOMERS } from '../data/customers';
 import { getPlant, PLANTS } from '../data/plants';
-import type { CustomerDefinition, ExpeditionNode, GameState, NightLayout, NightPlantInstance, PlantPartId, PotionInstance, SaveData } from '../data/types';
+import type { CustomerDefinition, GameState, NightLayout, NightPlantInstance, PlantPartId, PotionInstance, SaveData } from '../data/types';
 import { ExtractionController } from '../extraction/ExtractionController';
 import { PathEditor } from '../extraction/PathEditor';
 import type { ExtractionScores } from '../extraction/PathTypes';
 import { PortalHubScene } from '../scenes/PortalHubScene';
+import { SideScrollerScene, type SideScrollState } from '../scenes/SideScrollerScene';
 import { ThreeStage } from '../scenes/ThreeStage';
 import { CustomerEvaluationSystem, type Evaluation } from '../systems/CustomerEvaluationSystem';
 import { EconomySystem } from '../systems/EconomySystem';
 import { InventorySystem } from '../systems/InventorySystem';
 import { NightSystem } from '../systems/NightSystem';
 import { PotionSystem } from '../systems/PotionSystem';
+import { PotionEffectSystem, type PotionTraversal } from '../systems/PotionEffectSystem';
 import { TraitSystem } from '../systems/TraitSystem';
 import { qualityBand, traitsHTML } from '../utils/format';
 import { GameStateManager } from './GameStateManager';
 import { SaveSystem } from './SaveSystem';
+import { InputManager } from './InputManager';
+import { WHISPERWOOD_MAP } from '../world/WhisperwoodMap';
 
 export class Game {
   private state=new GameStateManager();
+  private input=new InputManager();
   private saves=new SaveSystem();
   private data:SaveData;
   private inventory:InventorySystem;
   private stage?:ThreeStage;
+  private sideScene?:SideScrollerScene;
   private extraction?:ExtractionController;
   private selectedPlant='glowlily';
   private selectedInstance?:NightPlantInstance;
   private editorPart:PlantPartId='stem';
   private night?:NightLayout;
+  private selectedFieldPotion?:string;
+  private traversal:PotionTraversal={id:'none',name:'No field potion',description:'Standard movement only'};
   private shopQueue:CustomerDefinition[]=[];
   private shopIndex=0;
   private dayEvaluations:Evaluation[]=[];
@@ -40,7 +48,7 @@ export class Game {
 
   private persist():void{this.saves.save(this.data);this.updateHud();}
   private render(state:GameState):void{
-    this.extraction?.destroy();this.extraction=undefined;this.stage?.destroy();this.stage=undefined;
+    this.extraction?.destroy();this.extraction=undefined;this.stage?.destroy();this.stage=undefined;this.sideScene=undefined;
     this.root.innerHTML=`<section class="game-shell"><div class="ambient-grain"></div><header class="hud"><div><span class="eyebrow">Moonroot Apothecary</span><strong>Night ${this.data.day}</strong></div><div class="hud__stats"><span>◉ ${this.data.gold}</span><span>✦ ${this.data.reputation}</span><span>⚗ ${this.data.potions.length}</span></div></header><div class="scene" id="scene"></div></section>`;
     const views:Record<GameState,()=>void>={HUB:()=>this.hub(),FOREST:()=>this.forest(),EXTRACTION:()=>this.extractionView(),LAB:()=>this.lab(),SHOP:()=>this.shop(),RESULTS:()=>this.results(),EDITOR:()=>this.editor()};views[state]();
   }
@@ -50,32 +58,24 @@ export class Game {
   private hub():void{
     this.prepareShopQueue();
     const forecast=new NightSystem().create(this.data.day,this.shopQueue);
-    this.sceneHTML(`<div id="three-stage" class="three-stage"></div><div class="scene-copy scene-copy--hub"><p class="eyebrow">Tonight · ${forecast.title}</p><h1>The Whisperwood</h1><p>${forecast.condition} Five moonsteps. Choose a route, gather for the people coming tomorrow, and get home.</p><button class="primary" id="enter">Plan tonight's route <span>→</span></button><button class="ghost" id="editor">Path workshop</button></div><div class="rumor-board"><span class="eyebrow">Tomorrow's rumors</span>${this.shopQueue.map(customer=>`<article><i>${customer.portrait}</i><div><b>${customer.role}</b><small>“${customer.dialogue}”</small></div></article>`).join('')}</div><div class="field-journal"><span class="eyebrow">Field journal · ${this.data.discoveredPlants.length}/${PLANTS.length} known</span><div>${PLANTS.map(p=>`<figure class="journal-plant ${this.data.discoveredPlants.includes(p.id)?'is-known':''}"><img src="${p.image}" alt="${p.name}"><figcaption>${this.data.discoveredPlants.includes(p.id)?p.name:'Unknown'}</figcaption></figure>`).join('')}</div></div>`);
+    const effects=new PotionEffectSystem();
+    this.sceneHTML(`<div id="three-stage" class="three-stage"></div><div class="scene-copy scene-copy--hub"><p class="eyebrow">Tonight · ${forecast.title}</p><h1>The Whisperwood</h1><p>Walk, jump, gather, and physically reach the return gate. Drink a bottle for traversal—or save it for tomorrow's sale.</p><button class="primary" id="enter">Enter the forest <span>→</span></button><button class="ghost" id="editor">Path workshop</button></div><div class="rumor-board"><span class="eyebrow">Tomorrow's rumors</span>${this.shopQueue.map(customer=>`<article><i>${customer.portrait}</i><div><b>${customer.role}</b><small>“${customer.dialogue}”</small></div></article>`).join('')}</div><div class="field-kit"><span class="eyebrow">Drink before departure · optional</span><div>${this.data.potions.map(potion=>{const effect=effects.effect(potion);return `<button data-field-potion="${potion.id}" class="field-potion ${this.selectedFieldPotion===potion.id?'is-selected':''}"><i>◒</i><span><b>${effect.name}</b><small>${effect.description}</small></span></button>`;}).join('')||'<p>No traversal potions yet. The creek route is always open.</p>'}</div></div>`);
     new PortalHubScene(this.makeStage()).enter();
-    this.on('#enter','click',()=>{this.night=new NightSystem().create(this.data.day,this.shopQueue);this.shopIndex=0;this.dayEvaluations=[];this.state.set('FOREST');});
+    this.on('#enter','click',()=>{const potion=this.data.potions.find(item=>item.id===this.selectedFieldPotion);this.traversal=effects.effect(potion);if(potion)this.inventory.removePotion(potion.id);this.selectedFieldPotion=undefined;this.night=new NightSystem().create(this.data.day,this.shopQueue);this.night.plants=WHISPERWOOD_MAP.plants.map(item=>({instanceId:item.id,plantId:item.plantId,x:item.x,z:0,harvested:false,discovered:false}));this.shopIndex=0;this.dayEvaluations=[];this.state.set('FOREST');});
+    this.root.querySelectorAll<HTMLButtonElement>('[data-field-potion]').forEach(button=>button.addEventListener('click',()=>{this.selectedFieldPotion=this.selectedFieldPotion===button.dataset.fieldPotion?undefined:button.dataset.fieldPotion;this.root.querySelectorAll('[data-field-potion]').forEach(item=>item.classList.toggle('is-selected',item===button&&!!this.selectedFieldPotion));}));
     this.on('#editor','click',()=>this.state.set('EDITOR'));
   }
 
   private forest():void{
-    this.prepareShopQueue();this.night??=new NightSystem().create(this.data.day,this.shopQueue);
-    const current=this.night.routeNodes.find(node=>node.id===this.night?.currentNodeId)??this.night.routeNodes[0],available=new Set(current.links),harvested=this.night.plants.filter(plant=>plant.harvested).length;
-    const edges=this.night.routeNodes.flatMap(node=>node.links.map(link=>{const target=this.night!.routeNodes.find(item=>item.id===link)!;return `<line x1="${node.x}" y1="${node.y}" x2="${target.x}" y2="${target.y}" class="${node.visited&&target.visited?'is-traveled':available.has(target.id)?'is-open':''}"/>`;})).join('');
-    const nodes=this.night.routeNodes.map(node=>{const plant=node.plant?getPlant(node.plant.plantId):undefined,isAvailable=available.has(node.id)&&this.night!.stepsLeft>0,isKnown=(node.visited||node.revealed)&&plant;return `<button class="route-node ${node.id===current.id?'is-current':''} ${node.visited?'is-visited':''} ${node.revealed&&!node.visited?'is-revealed':''} ${isAvailable?'is-available':''}" style="--x:${node.x}%;--y:${node.y}%" data-node="${node.id}" ${isAvailable?'':'disabled'} aria-label="${isKnown?plant.name:node.title}">${isKnown?`<img src="${plant.image}" alt=""><b>${plant.name}</b>`:`<i>${node.id==='gate'?'☾':'?'}</i><b>${node.title}</b>`}</button>`;}).join('');
-    this.sceneHTML(`<div class="expedition" style="--night-tint:#${this.night.tint.toString(16).padStart(6,'0')}"><header class="expedition__header"><div><span class="eyebrow">${this.night.title}</span><h2>The Whisperwood</h2><small>${this.night.condition}</small></div><div class="moonsteps"><span>Moonsteps</span><div>${Array.from({length:this.night.maxSteps},(_,i)=>`<i class="${i<this.night!.stepsLeft?'is-full':''}">☽</i>`).join('')}</div></div><div class="satchel-count">${harvested} specimens gathered</div></header><section class="route-map"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${edges}</svg><div class="map-texture"></div>${nodes}<div class="map-legend">Choose one glowing trail · every journey costs a moonstep</div></section>${this.clearingHTML(current)}<aside class="night-rumors"><span class="eyebrow">Gather for tomorrow</span>${this.shopQueue.map(customer=>`<p><i>${customer.portrait}</i><span><b>${customer.role}</b><small>${customer.clue}</small></span></p>`).join('')}</aside></div>`);
-    this.root.querySelectorAll<HTMLButtonElement>('[data-node]:not(:disabled)').forEach(button=>button.addEventListener('click',()=>this.travelTo(button.dataset.node!)));
-    this.on('#return-home','click',()=>this.state.set('LAB'));
-    if(current.plant&&!current.plant.harvested)this.on('#extract','click',()=>{this.selectedInstance=current.plant;this.selectedPlant=current.plant!.plantId;this.state.set('EXTRACTION');});
+    this.prepareShopQueue();this.night??=new NightSystem().create(this.data.day,this.shopQueue);if(!this.night.plants.some(item=>item.instanceId.startsWith('map-')))this.night.plants=WHISPERWOOD_MAP.plants.map(item=>({instanceId:item.id,plantId:item.plantId,x:item.x,z:0,harvested:false,discovered:false}));
+    const harvested=this.night.plants.filter(plant=>plant.harvested).length;
+    this.sceneHTML(`<div class="side-night"><div id="three-stage" class="three-stage"></div><div class="side-night__title"><span class="eyebrow">${this.night.title} · ${this.traversal.name}</span><h2>The Whisperwood</h2></div><div id="side-hint" class="side-hint">Walk right. Follow the lantern grass.</div><div class="side-progress"><i id="side-progress-fill"></i><span>Gate</span></div><div id="side-discovery" class="side-discovery" hidden></div><div class="side-controls"><button id="move-left" aria-label="Move left">←</button><button id="move-right" aria-label="Move right">→</button><button id="jump" class="jump" aria-label="Jump">↑</button></div><button id="extract" class="primary side-extract" hidden>Extract specimen</button><button id="return-home" class="secondary side-return" hidden>Return home · ${harvested} gathered</button><div class="effect-chip"><b>${this.traversal.name}</b><small>${this.traversal.description}</small></div></div>`);
+    this.sideScene=new SideScrollerScene(this.makeStage(),this.input);this.sideScene.enter(this.night,this.traversal.id,state=>this.updateSideForest(state));this.input.bindSideScroller(this.q('#move-left'),this.q('#move-right'),this.q('#jump'),()=>this.sideScene?.requestJump());
+    this.on('#extract','click',()=>{if(this.selectedInstance){this.selectedPlant=this.selectedInstance.plantId;this.state.set('EXTRACTION');}});this.on('#return-home','click',()=>this.state.set('LAB'));
   }
-  private clearingHTML(node:ExpeditionNode):string{
-    if(!this.night)return '';
-    if(!node.plant)return `<aside class="clearing-card clearing-card--gate"><div class="clearing-art"><span>☾</span></div><span class="eyebrow">Safe threshold</span><h3>${node.title}</h3><p>${node.description}</p><p class="encounter-note">Two trails open. Your customers' rumors are your only map.</p><button class="secondary" id="return-home">Return before entering</button></aside>`;
-    const plant=getPlant(node.plant.plantId),encounter={whisper:'A forest whisper reveals the specimens waiting on both trails ahead.',moonwell:'Silver water restores one moonstep. You can push farther tonight.',thorns:'The hooked shortcut cost an extra moonstep, but dangerous ground favors rare growth.',none:'The clearing is quiet enough to hear the roots drink.'}[node.encounter];
-    return `<aside class="clearing-card"><div class="clearing-art"><img src="${plant.image}" alt="Botanical plate of ${plant.name}"><span class="rarity rarity--${plant.rarity}">${plant.rarity}</span></div><span class="eyebrow">${node.title}</span><h3>${plant.name}</h3><p>${node.description}</p><p class="encounter-note">${encounter}</p>${node.plant.harvested?'<div class="harvested-stamp">EXTRACTED</div>':'<button class="primary" id="extract">Examine & extract</button>'}<button class="ghost" id="return-home">End expedition · keep everything</button></aside>`;
-  }
-  private travelTo(nodeId:string):void{
-    if(!this.night||this.night.stepsLeft<=0)return;const current=this.night.routeNodes.find(node=>node.id===this.night!.currentNodeId);if(!current?.links.includes(nodeId))return;
-    const node=this.night.routeNodes.find(item=>item.id===nodeId);if(!node)return;this.night.currentNodeId=nodeId;this.night.stepsLeft--;node.visited=true;if(node.plant)node.plant.discovered=true;
-    if(node.encounter==='moonwell')this.night.stepsLeft=Math.min(this.night.maxSteps,this.night.stepsLeft+1);if(node.encounter==='thorns')this.night.stepsLeft=Math.max(0,this.night.stepsLeft-1);if(node.encounter==='whisper')node.links.forEach(link=>{const revealed=this.night?.routeNodes.find(item=>item.id===link);if(revealed)revealed.revealed=true;});this.forest();
+  private updateSideForest(state:SideScrollState):void {
+    this.selectedInstance=state.plant;this.q('#side-hint').textContent=state.hint;this.q<HTMLElement>('#side-progress-fill').style.width=`${Math.min(100,state.progress*100)}%`;const extract=this.q<HTMLButtonElement>('#extract'),back=this.q<HTMLButtonElement>('#return-home'),card=this.q<HTMLDivElement>('#side-discovery');extract.hidden=!state.plant;back.hidden=!state.atPortal;
+    if(state.plant){const plant=getPlant(state.plant.plantId);card.hidden=false;card.innerHTML=`<img src="${plant.image}" alt="${plant.name}"><div><span class="eyebrow">specimen found</span><b>${plant.name}</b><small>${plant.clue}</small></div>`;}else card.hidden=true;
   }
 
   private extractionView():void{
@@ -125,7 +125,7 @@ export class Game {
   private results():void{
     const gold=this.dayEvaluations.reduce((sum,e)=>sum+e.gold,0),reputation=this.dayEvaluations.reduce((sum,e)=>sum+e.reputation,0),outcomes=this.dayEvaluations.map(e=>e.outcome);
     this.sceneHTML(`<div class="day-results"><p class="eyebrow">The ledger closes</p><h1>Day ${this.data.day}</h1><div class="moon-divider">☾ ✦ ☽</div><div class="outcome-row">${outcomes.map(value=>`<span>${value}</span>`).join('')}</div><div class="ledger"><span>Customers served <b>${this.dayEvaluations.length}</b></span><span>Gold earned <b>${gold}</b></span><span>Reputation change <b>${reputation}</b></span><span>Extracts carried over <b>${this.data.ingredients.length}</b></span><span>Potions carried over <b>${this.data.potions.length}</b></span></div><p>Tomorrow's paths, weather, specimens, and rare growth will be different.</p><button class="primary" id="next-night">Begin night ${this.data.day+1}</button></div>`);
-    this.on('#next-night','click',()=>{this.data.day++;this.night=undefined;this.shopQueue=[];this.dayEvaluations=[];this.persist();this.state.set('HUB');});
+    this.on('#next-night','click',()=>{this.data.day++;this.night=undefined;this.shopQueue=[];this.dayEvaluations=[];this.traversal=new PotionEffectSystem().effect();this.persist();this.state.set('HUB');});
   }
 
   private editor():void{
