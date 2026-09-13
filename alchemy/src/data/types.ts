@@ -68,6 +68,20 @@ export interface NightPlantInstance {
   discovered: boolean;
 }
 
+export type ExpeditionEncounter = 'whisper' | 'moonwell' | 'thorns' | 'none';
+export interface ExpeditionNode {
+  id: string;
+  title: string;
+  description: string;
+  x: number;
+  y: number;
+  links: string[];
+  plant?: NightPlantInstance;
+  encounter: ExpeditionEncounter;
+  visited: boolean;
+  revealed: boolean;
+}
+
 export interface NightLayout {
   seed: number;
   title: string;
@@ -76,4 +90,8 @@ export interface NightLayout {
   fog: number;
   plants: NightPlantInstance[];
   landmarks: Array<{ type: 'pool' | 'stones' | 'fallen-log'; x: number; z: number }>;
+  routeNodes: ExpeditionNode[];
+  currentNodeId: string;
+  stepsLeft: number;
+  maxSteps: number;
 }
