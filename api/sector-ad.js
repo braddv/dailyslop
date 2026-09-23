@@ -2,7 +2,7 @@ const { readSharedCache, writeSharedCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
 const smallCapSeedData = require('../public/smallcaps/data/universe.json');
 
-const DAILY_CACHE_KEY = 'sector_ad_yahoo_daily_v2';
+const DAILY_CACHE_KEY = 'sector_ad_yahoo_daily_v3';
 const INTRADAY_CACHE_KEY = 'sector_ad_yahoo_intraday_v5';
 const DAILY_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const INTRADAY_MARKET_TTL_MS = 10 * 60 * 1000;
