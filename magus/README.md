@@ -109,4 +109,4 @@ The root `vercel.json` retains existing apps and APIs, adds `/magus` routes foll
 3. Deploy the `feat/magus-chapter-one` branch for a preview. Open **`<preview-url>/magus`** and verify the game.
 4. Merge the reviewed branch into the configured production branch (normally `main`) to publish **`https://dailyslop.ai/magus`**.
 
-A branch push can trigger an existing Vercel Git integration; it does not itself guarantee a production deployment. This implementation does not merge into main. Direct Vercel management requires the Vercel connection to be enabled; deployment instructions remain usable without it.
+A branch push can trigger an existing Vercel Git integration; it does not itself guarantee a production deployment. An approved merge to main triggers the existing GitHub–Vercel production deployment. Direct Vercel management requires the Vercel connection to be enabled; deployment instructions remain usable without it.
