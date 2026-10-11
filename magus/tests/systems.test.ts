@@ -1,0 +1,31 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {initialState,addItem,isNight,weather,day} from '../src/systems/state';
+import {experiment} from '../src/systems/experiments';
+import {advance,sleepUntil,tick} from '../src/systems/time';
+import {collaborate,isOpen} from '../src/systems/town';
+import {observeSky,proposeSky} from '../src/systems/astronomy';
+import {serialize,deserialize} from '../src/systems/save';
+import {npcSchedule} from '../src/systems/schedules';
+import {specimens} from '../src/data/specimens';
+import {fieldNodes,shortestRoutes,WALK_SPEED,routes,alongRoute,isWalkable} from '../src/world/geography';
+import {collectNode,available} from '../src/systems/field';
+const prepare=()=>{const s=initialState();for(const p of specimens)addItem(s,p.id,15);addItem(s,'water',30);return s;};
+test('six linked findings, farmer payment, both artisan instruments and repeatable anomaly',()=>{
+ const s=prepare();const trial=(a:string,p:Parameters<typeof experiment>[2],c='cool',b?:string)=>{const r=experiment(s,a,p,c,b);assert.equal(r.ok,true,r.message);};
+ trial('wildflower','Soak');assert.equal(s.inventory['wildflower:extract'],undefined);advance(s,20);assert.equal(s.inventory['wildflower:extract'],1);
+ for(let i=0;i<4;i++){trial('wildflower','Soak');}advance(s,20);
+ trial('wildflower:extract','Mix','cool','root');trial('wildflower:extract','Mix','cool','limestone');assert(!s.discoveries.includes('pigments'),'control is required');trial('wildflower:extract','Mix','cool','water');assert(s.discoveries.includes('pigments'));
+ collaborate(s,'farmer','accept');trial('wildflower:extract','Mix','cool','fieldsoil');trial('wildflower:extract','Mix','cool','soil');assert(s.discoveries.includes('soil'));assert.match(collaborate(s,'farmer','report'),/24 crowns/);assert.equal(s.money,42);collaborate(s,'farmer','report');assert.equal(s.money,42,'cannot repeatedly claim commission');
+ trial('ash','Cut');trial('ash:cut','Dry');assert.match(collaborate(s,'carpenter','staff-ash'),/Missing/);advance(s,45);assert.match(collaborate(s,'carpenter','staff-ash'),/Commissioned/);assert.match(collaborate(s,'carpenter','collect:staff-ash'),/still working/);advance(s,180);assert.match(collaborate(s,'carpenter','collect:staff-ash'),/Collected/);assert(s.discoveries.includes('staff'));
+ trial('quartz','Magnify');trial('pyrite','Magnify');trial('resin','Heat','gentle');assert(s.discoveries.includes('optics'));collaborate(s,'glassmaker','optics-report');trial('ironstone','Heat','strong');collaborate(s,'smith','mineral-report');assert.match(collaborate(s,'glassmaker','lens'),/Commissioned/);assert.match(collaborate(s,'smith','arc'),/Commissioned/);advance(s,180);assert.match(collaborate(s,'glassmaker','collect:lens'),/Collected/);assert.match(collaborate(s,'smith','collect:arc'),/Collected/);assert(s.lens&&s.arc);
+ s.minutes=22*60;observeSky(s,'cabin','planet');observeSky(s,'cabin','planet');assert.equal(s.sky.length,1,'same-night clicking supplies no extra evidence');s.minutes=1440+22*60;observeSky(s,'ridge','planet');assert.match(proposeSky(s),/Hypothesis/);s.minutes=3*1440+22*60;observeSky(s,'ridge','planet');assert(s.discoveries.includes('astronomy'));
+ s.minutes=3*1440+11*60;assert.match(collaborate(s,'bookseller','book'),/purchase/);s.evidence.push('marker-read');
+ for(let i=0;i<3;i++){trial('moonwort','Soak');trial('crystal','Crush');}advance(s,20);trial('moonwort:extract','Mix','cool','crystal:powder');assert(s.evidence.includes('reaction-control'));s.minutes=3*1440+22*60;trial('moonwort:extract','Mix','cool','crystal:powder');assert(!s.discoveries.includes('anomaly'),'requires independent repetition');trial('moonwort:extract','Mix','cool','crystal:powder');assert(s.discoveries.includes('anomaly'));assert.equal(s.discoveries.length,6);
+ const restored=deserialize(serialize(s));assert.deepEqual(restored,s);
+});
+test('bounded hiking routes and every centreline is traversable',()=>{const times=shortestRoutes();assert(times.moss/WALK_SPEED>=120&&times.moss/WALK_SPEED<=180);assert(times.ridge/WALK_SPEED>=300&&times.ridge/WALK_SPEED<=420);assert(times.town/WALK_SPEED>=180&&times.town/WALK_SPEED<=300);assert(times.observatory/WALK_SPEED>=480&&times.observatory/WALK_SPEED<=720);for(const r of routes)for(let i=0;i<=500;i++)assert(isWalkable(alongRoute(r,i/500)),r.name);console.log('Walking minutes:',Object.fromEntries(Object.entries(times).map(([k,v])=>[k,+(v/WALK_SPEED/60).toFixed(2)])));});
+test('32 species, weather-dependent specimens and renewable samples',()=>{assert(specimens.length>=24);const s=initialState(),moon=fieldNodes.find(n=>n.specimen==='moonwort')!,raincap=fieldNodes.find(n=>n.specimen==='raincap')!,flower=fieldNodes.find(n=>n.specimen==='wildflower')!;assert(!available(s,moon));sleepUntil(s,22);assert(isNight(s));assert(available(s,moon));assert(!available(s,raincap));s.minutes=2*1440+22*60;assert.equal(weather(s),'rain');assert(available(s,raincap));collectNode(s,flower);assert.equal(s.inventory.wildflower,6);assert(!available(s,flower));advance(s,1440);assert(available(s,flower));});
+test('clock, workshop schedules, migration and malformed saves',()=>{const s=initialState();tick(s,22*60*1000);assert.equal(day(s),2);s.minutes=21*60;assert(!isOpen(s,'carpenter'));assert.match(collaborate(s,'carpenter','staff-ash'),/closed/);const migrated=deserialize(JSON.stringify({version:1,x:12000,y:16000,minutes:480}));assert.equal(migrated.version,2);assert.deepEqual(migrated.jobs,[]);assert.throws(()=>deserialize('{broken'));assert.throws(()=>deserialize(JSON.stringify({...s,version:99})));});
+
+test('artisans walk to work, return to the garden and rest at home',()=>{const s=initialState(),work={x:10,y:20},home={x:100,y:200};s.minutes=7.5*60;const travel=npcSchedule(s,'carpenter',work,home);assert.equal(travel.activity,'Walking to work');assert.deepEqual(travel.position,{x:55,y:110});s.minutes=12*60;assert.deepEqual(npcSchedule(s,'carpenter',work,home).position,work);s.minutes=18.5*60;assert.equal(npcSchedule(s,'carpenter',work,home).activity,'Walking home');s.minutes=23*60;assert.equal(npcSchedule(s,'carpenter',work,home).activity,'At home');});

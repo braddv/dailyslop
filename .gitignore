@@ -2,3 +2,6 @@
 .cache/
 .vercel/
 node_modules/
+
+# MAGUS browser test artifacts
+magus/test-results/
