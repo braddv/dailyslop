@@ -1,0 +1,2 @@
+import {defineConfig,devices} from '@playwright/test';
+export default defineConfig({testDir:'./tests',testMatch:'mobile.spec.ts',timeout:45000,workers:1,reporter:'list',outputDir:'./test-results/mobile',use:{baseURL:'http://localhost:5173/magus/',headless:true,launchOptions:{args:['--no-sandbox']}},projects:[{name:'iphone-portrait',use:{...devices['iPhone 13'],defaultBrowserType:'chromium'}},{name:'android-portrait',use:{...devices['Pixel 5']}},{name:'phone-landscape',use:{...devices['iPhone 13 landscape'],defaultBrowserType:'chromium'}}]});

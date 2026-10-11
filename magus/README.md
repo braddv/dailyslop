@@ -13,7 +13,7 @@ npm ci
 npm run dev:magus
 ```
 
-Open http://localhost:5173/magus/. Desktop and keyboard are recommended.
+Open http://localhost:5173/magus/. Keyboard and touch controls are supported on desktop and phones.
 
 ```sh
 npm run build:magus       # TypeScript check and Vite production build
@@ -21,6 +21,7 @@ npm run build             # Build MAGUS and existing applications
 npm run test:magus        # Research, economy, ecology, schedules, saves and route tests
 npx playwright install chromium
 npm run test:magus:browser # Development server must already be running
+npm run test:magus:mobile  # Chromium touch emulation: portrait and landscape phones
 ```
 
 The production output is `public/magus/`. All graphics are original, reusable pixel textures generated locally; all ambience is synthesized locally. Nothing is fetched from an external art, font, or audio host at runtime. Phaser is bundled. The production build exposes no development jump/time controls.
@@ -36,6 +37,8 @@ The production output is `public/magus/`. All graphics are original, reusable pi
 | M | Regional trail map |
 | O | Settings and save backups |
 | Escape | Close a panel |
+
+On phones, drag the lower-left thumb pad to walk and tap the lower-right contextual button to interact. Journal, Satchel, Map, and Settings are at the top. Panels scroll within the screen in portrait and landscape; rotating, switching apps, cancelling a touch, or opening a notebook resets movement.
 
 Reading and complex panels pause the game clock. One day is 22 real minutes by default, adjustable to 20, 25, or 30. Sleeping chooses a wake-up hour. There is no forced bedtime. The first key or click enables ambient audio; it can be muted in Settings.
 
@@ -98,7 +101,7 @@ The 30–60-minute chapter length is a **design estimate**, not a measured human
 
 The release checks cover the entire six-finding chain and serialization, a paid farmer commission, ordinary staff delivery, both observing instruments, controlled pigment/soil tests, repeated and negative-control anomaly trials, weather/time ecology, schedules, and measured route bounds. Playwright operates actual collection, lab, NPC, journal, save/reload, and astronomical controls. The browser screenshots are captured in `screenshots/` and reviewed for scale, layering, readable UI, and visual consistency; browser errors are checked. Production smoke checks additionally load the built static game.
 
-This is an initial chapter, not a finished commercial RPG. Workshop interiors beyond the cabin are not enterable. Relationships use collaboration counts and authored dialogue, without a branching dialogue tree. Specimen storage is a shared persistent inventory, not a second container-management game. No touch movement controller is included. The quarry, upper forest, marsh, and observatory interior are future connections, marked by damaged routes. The simulation is deliberately approachable rather than a model of real laboratory safety or accurate celestial mechanics. A full-duration manual playtest and broad browser/device testing remain unverified.
+This is an initial chapter, not a finished commercial RPG. Workshop interiors beyond the cabin are not enterable. Relationships use collaboration counts and authored dialogue, without a branching dialogue tree. Specimen storage is a shared persistent inventory, not a second container-management game. The quarry, upper forest, marsh, and observatory interior are future connections, marked by damaged routes. The simulation is deliberately approachable rather than a model of real laboratory safety or accurate celestial mechanics. Six mobile browser scenarios pass in Chromium with iPhone 13 portrait/landscape and Pixel 5 touch/viewport emulation. They cover movement, collisions, collection, touch cancellation, pause/reset, save/reload, lab selections, scrolling research pages, sky observations, sleep, shops, and rotation. Physical phone performance and iOS Safari remain unverified, as does a full-duration manual playtest.
 
 ## Vercel deployment in dailyslop
 
@@ -106,7 +109,7 @@ The root `vercel.json` retains existing apps and APIs, adds `/magus` routes foll
 
 1. Open the existing Vercel project connected to `braddv/dailyslop`.
 2. Keep **Root Directory** at repository root, **Build Command** `npm run build`, **Install Command** `npm ci`, and **Output Directory** `public`. No MAGUS environment variables are required.
-3. Deploy the `feat/magus-chapter-one` branch for a preview. Open **`<preview-url>/magus`** and verify the game.
+3. Deploy the feature branch for a preview. Open **`<preview-url>/magus`** and verify the game.
 4. Merge the reviewed branch into the configured production branch (normally `main`) to publish **`https://dailyslop.ai/magus`**.
 
-A branch push can trigger an existing Vercel Git integration; it does not itself guarantee a production deployment. This implementation does not merge into main. Direct Vercel management requires the Vercel connection to be enabled; deployment instructions remain usable without it.
+A branch push can trigger an existing Vercel Git integration; it does not itself guarantee a production deployment. Direct Vercel management requires the Vercel connection to be enabled; deployment instructions remain usable without it.

@@ -7,7 +7,8 @@
     "build:magus": "tsc -p magus/tsconfig.json --noEmit && vite build --config magus/vite.config.ts",
     "dev:magus": "vite --config magus/vite.config.ts --host 0.0.0.0",
     "test:magus": "node --import tsx magus/tests/systems.test.ts",
-    "test:magus:browser": "playwright test --config magus/playwright.config.ts"
+    "test:magus:browser": "playwright test --config magus/playwright.config.ts",
+    "test:magus:mobile": "playwright test --config magus/playwright.mobile.config.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
