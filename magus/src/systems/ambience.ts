@@ -1,0 +1,7 @@
+// Original, locally synthesized woodland ambience. No runtime asset downloads.
+export class Ambience {
+ private context?:AudioContext;private master?:GainNode;private timer=0;
+ start(){if(this.context){void this.context.resume();return;}try{const c=this.context=new AudioContext();this.master=c.createGain();this.master.gain.value=0;this.master.connect(c.destination);const buffer=c.createBuffer(1,c.sampleRate*4,c.sampleRate),data=buffer.getChannelData(0);let last=0;for(let i=0;i<data.length;i++){last=(last+Math.random()*0.08-.04)/1.02;data[i]=last;}const noise=c.createBufferSource();noise.buffer=buffer;noise.loop=true;const filter=c.createBiquadFilter();filter.type='lowpass';filter.frequency.value=380;const gain=c.createGain();gain.gain.value=.06;noise.connect(filter).connect(gain).connect(this.master);noise.start();}catch{}}
+ update(delta:number,volume:number,night:boolean){if(!this.context||!this.master)return;this.master.gain.setTargetAtTime(volume,this.context.currentTime,.4);this.timer+=delta;if(this.timer>4200){this.timer=0;const c=this.context,o=c.createOscillator(),g=c.createGain();o.type='sine';const t=c.currentTime;o.frequency.setValueAtTime(night?1700:2400,t);o.frequency.exponentialRampToValueAtTime(night?2100:3900,t+.07);o.frequency.exponentialRampToValueAtTime(night?1500:2100,t+.16);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(night?.016:.028,t+.04);g.gain.exponentialRampToValueAtTime(.0001,t+.2);o.connect(g).connect(this.master);o.start();o.stop(t+.22);}}
+ suspend(){void this.context?.suspend();}
+}

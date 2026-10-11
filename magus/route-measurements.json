@@ -1,0 +1,136 @@
+{
+  "seed": 314159,
+  "baseSpeedPixelsPerSecond": 64,
+  "method": "Shortest trail-graph paths; edge length is sum of traversable polyline segments. 501 centreline samples per edge tested. Browser keyboard speed separately checked.",
+  "browserMeasurement": {
+    "pixels": 191.956693333363,
+    "seconds": 3,
+    "framesPerSecond": 59.0625
+  },
+  "fromCabin": {
+    "cabin": {
+      "pixels": 0,
+      "seconds": 0,
+      "minutes": 0
+    },
+    "west": {
+      "pixels": 6368.99,
+      "seconds": 99.52,
+      "minutes": 1.66
+    },
+    "moss": {
+      "pixels": 9600.6,
+      "seconds": 150.01,
+      "minutes": 2.5
+    },
+    "creek": {
+      "pixels": 20323.03,
+      "seconds": 317.55,
+      "minutes": 5.29
+    },
+    "pool": {
+      "pixels": 18748.82,
+      "seconds": 292.95,
+      "minutes": 4.88
+    },
+    "meadow": {
+      "pixels": 9513.46,
+      "seconds": 148.65,
+      "minutes": 2.48
+    },
+    "town": {
+      "pixels": 18221.21,
+      "seconds": 284.71,
+      "minutes": 4.75
+    },
+    "ridge": {
+      "pixels": 20557.51,
+      "seconds": 321.21,
+      "minutes": 5.35
+    },
+    "marker": {
+      "pixels": 31832.11,
+      "seconds": 497.38,
+      "minutes": 8.29
+    },
+    "observatory": {
+      "pixels": 42775.78,
+      "seconds": 668.37,
+      "minutes": 11.14
+    }
+  },
+  "edges": [
+    {
+      "from": "cabin",
+      "to": "west",
+      "name": "The Bracken Way",
+      "pixels": 6368.99
+    },
+    {
+      "from": "cabin",
+      "to": "moss",
+      "name": "The Hollow Descent",
+      "pixels": 9600.6
+    },
+    {
+      "from": "moss",
+      "to": "creek",
+      "name": "The Wetwood Loop",
+      "pixels": 10722.43
+    },
+    {
+      "from": "creek",
+      "to": "pool",
+      "name": "The Watercourse",
+      "pixels": 8344.86
+    },
+    {
+      "from": "pool",
+      "to": "meadow",
+      "name": "The Reed Road",
+      "pixels": 9235.36
+    },
+    {
+      "from": "cabin",
+      "to": "meadow",
+      "name": "The Pollinator Trail",
+      "pixels": 9513.46
+    },
+    {
+      "from": "meadow",
+      "to": "town",
+      "name": "The Market Path",
+      "pixels": 8707.75
+    },
+    {
+      "from": "west",
+      "to": "ridge",
+      "name": "The Rowan Ascent",
+      "pixels": 14188.52
+    },
+    {
+      "from": "ridge",
+      "to": "marker",
+      "name": "The Surveyor’s Traverse",
+      "pixels": 11274.59
+    },
+    {
+      "from": "marker",
+      "to": "observatory",
+      "name": "The Lost Meridian",
+      "pixels": 10943.68
+    },
+    {
+      "from": "west",
+      "to": "moss",
+      "name": "The Old Forester’s Loop",
+      "pixels": 9781.64
+    },
+    {
+      "from": "marker",
+      "to": "town",
+      "name": "The Cartographer’s Road",
+      "pixels": 16356.04
+    }
+  ]
+}

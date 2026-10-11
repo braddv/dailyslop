@@ -8,6 +8,14 @@
       "destination": "/api/:path*"
     },
     {
+      "source": "/magus",
+      "destination": "/public/magus/index.html"
+    },
+    {
+      "source": "/magus/:path*",
+      "destination": "/public/magus/:path*"
+    },
+    {
       "source": "/sp500ad",
       "destination": "/public/sp500ad/index.html"
     },
@@ -140,7 +148,10 @@
     {
       "source": "/dailyslop.mp4",
       "headers": [
-        { "key": "Content-Type", "value": "video/mp4" }
+        {
+          "key": "Content-Type",
+          "value": "video/mp4"
+        }
       ]
     }
   ],
@@ -149,5 +160,6 @@
       "memory": 1024,
       "maxDuration": 60
     }
-  }
+  },
+  "buildCommand": "npm run build"
 }
