@@ -1,0 +1,821 @@
+{
+  "asOf": null,
+  "source": {
+    "constituents": "https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies",
+    "retrievedOn": "2026-11-02",
+    "note": "Nasdaq-100 equity membership proxy for QQQ; excludes fund cash and derivatives. Quotes are fetched independently; membership does not imply a current quote. GICS classifications reused where available; remaining ICB industries mapped to chart sectors."
+  },
+  "cacheFresh": false,
+  "stocks": [
+    {
+      "symbol": "ADBE",
+      "security": "Adobe Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 108359.68500000001,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMD",
+      "security": "Advanced Micro Devices",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 338016.7894470432,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ABNB",
+      "security": "Airbnb",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Hotels, Resorts & Cruise Lines",
+      "marketCap": 74696.96332200155,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ALNY",
+      "security": "Alnylam Pharmaceuticals",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GOOGL",
+      "security": "Alphabet Inc. (Class A)",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": 3700285.5159398615,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GOOG",
+      "security": "Alphabet Inc. (Class C)",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": 3700285.5159398615,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMZN",
+      "security": "Amazon",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Broadline Retail",
+      "marketCap": 2133994.9906553742,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AEP",
+      "security": "American Electric Power",
+      "sector": "Utilities",
+      "subIndustry": "Electric Utilities",
+      "marketCap": 69400.23721383722,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMGN",
+      "security": "Amgen",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": 198801.7010192148,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADI",
+      "security": "Analog Devices",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 164716.69414017204,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AAPL",
+      "security": "Apple Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Technology Hardware, Storage & Peripherals",
+      "marketCap": 3755142.056902102,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AMAT",
+      "security": "Applied Materials",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": 281699.68725565297,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "APP",
+      "security": "AppLovin",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 131988.32065592025,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ARM",
+      "security": "Arm Holdings",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ASML",
+      "security": "ASML Holding",
+      "sector": "Information Technology",
+      "subIndustry": "Industrial Machinery",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ALAB",
+      "security": "Astera Labs",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADSK",
+      "security": "Autodesk",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 49018.64120529464,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ADP",
+      "security": "Automatic Data Processing",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": 85404.90188880343,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AXON",
+      "security": "Axon Enterprise",
+      "sector": "Industrials",
+      "subIndustry": "Aerospace & Defense",
+      "marketCap": 33905.461048719444,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BKR",
+      "security": "Baker Hughes",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Equipment & Services",
+      "marketCap": 60480.07388573383,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "BKNG",
+      "security": "Booking Holdings",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Hotels, Resorts & Cruise Lines",
+      "marketCap": 133467.33437356894,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "AVGO",
+      "security": "Broadcom",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 1541720.1049578562,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CDNS",
+      "security": "Cadence Design Systems",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 81513.30430091918,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CTAS",
+      "security": "Cintas",
+      "sector": "Industrials",
+      "subIndustry": "Diversified Support Services",
+      "marketCap": 77354.65600105333,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CSCO",
+      "security": "Cisco",
+      "sector": "Information Technology",
+      "subIndustry": "Communications Equipment",
+      "marketCap": 303641.6109744893,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CCEP",
+      "security": "Coca-Cola Europacific Partners",
+      "sector": "Consumer Staples",
+      "subIndustry": "Soft Drinks",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CMCSA",
+      "security": "Comcast",
+      "sector": "Communication Services",
+      "subIndustry": "Cable & Satellite",
+      "marketCap": 113583.9966990443,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CEG",
+      "security": "Constellation Energy",
+      "sector": "Utilities",
+      "subIndustry": "Electric Utilities",
+      "marketCap": 104514.18600343567,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CPRT",
+      "security": "Copart",
+      "sector": "Industrials",
+      "subIndustry": "Diversified Support Services",
+      "marketCap": 36290.98478693274,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CRWV",
+      "security": "CoreWeave",
+      "sector": "Information Technology",
+      "subIndustry": "Computer Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "COST",
+      "security": "Costco",
+      "sector": "Consumer Staples",
+      "subIndustry": "Consumer Staples Merchandise Retail",
+      "marketCap": 452072.11544814595,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CRWD",
+      "security": "CrowdStrike",
+      "sector": "Information Technology",
+      "subIndustry": "Systems Software",
+      "marketCap": 108311.57362525605,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "CSX",
+      "security": "CSX Corporation",
+      "sector": "Industrials",
+      "subIndustry": "Rail Transportation",
+      "marketCap": 76000.08631558229,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DDOG",
+      "security": "Datadog",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 44258.45371835092,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DXCM",
+      "security": "DexCom",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": 27308.94184135925,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FANG",
+      "security": "Diamondback Energy",
+      "sector": "Energy",
+      "subIndustry": "Oil & Gas Exploration & Production",
+      "marketCap": 48462.945334408796,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "DASH",
+      "security": "DoorDash",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Specialized Consumer Services",
+      "marketCap": 69106.303596511,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "EXC",
+      "security": "Exelon",
+      "sector": "Utilities",
+      "subIndustry": "Electric Utilities",
+      "marketCap": 48978.872144312925,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FAST",
+      "security": "Fastenal",
+      "sector": "Industrials",
+      "subIndustry": "Trading Companies & Distributors",
+      "marketCap": 53286.997707409755,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FER",
+      "security": "Ferrovial",
+      "sector": "Industrials",
+      "subIndustry": "Military, Government, Technical",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "FTNT",
+      "security": "Fortinet",
+      "sector": "Information Technology",
+      "subIndustry": "Systems Software",
+      "marketCap": 63626.53581452742,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GEHC",
+      "security": "GE HealthCare",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": 36614.93854792066,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "GILD",
+      "security": "Gilead Sciences",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": 192280.51595816488,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HONA",
+      "security": "Honeywell Aerospace",
+      "sector": "Industrials",
+      "subIndustry": "Aerospace",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "HON",
+      "security": "Honeywell Technologies",
+      "sector": "Industrials",
+      "subIndustry": "Industrial Conglomerates",
+      "marketCap": 153249.07520341285,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "IDXX",
+      "security": "Idexx Laboratories",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": 50254.43300495179,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "INTC",
+      "security": "Intel",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 233716.04769774678,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "INTU",
+      "security": "Intuit",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 111142.65232530155,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ISRG",
+      "security": "Intuitive Surgical",
+      "sector": "Health Care",
+      "subIndustry": "Health Care Equipment",
+      "marketCap": 172536.48238571663,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KDP",
+      "security": "Keurig Dr Pepper",
+      "sector": "Consumer Staples",
+      "subIndustry": "Soft Drinks & Non-alcoholic Beverages",
+      "marketCap": 40336.33291995419,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "KLAC",
+      "security": "KLA Corporation",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": 191913.20018267396,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LRCX",
+      "security": "Lam Research",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": 294123.0241717328,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LIN",
+      "security": "Linde plc",
+      "sector": "Materials",
+      "subIndustry": "Industrial Gases",
+      "marketCap": 224602.4351501565,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "LITE",
+      "security": "Lumentum",
+      "sector": "Information Technology",
+      "subIndustry": "Communication Equipment",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MAR",
+      "security": "Marriott International",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Hotels, Resorts & Cruise Lines",
+      "marketCap": 93775.38172177893,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MRVL",
+      "security": "Marvell Technology",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MELI",
+      "security": "Mercado Libre",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Catalog/Specialty Distribution",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "META",
+      "security": "Meta Platforms",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Media & Services",
+      "marketCap": 1618333.684406646,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MCHP",
+      "security": "Microchip Technology",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 42511.59894519615,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MU",
+      "security": "Micron Technology",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 463327.1504776688,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MSFT",
+      "security": "Microsoft",
+      "sector": "Information Technology",
+      "subIndustry": "Systems Software",
+      "marketCap": 2980053.3654979393,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MSTR",
+      "security": "MicroStrategy",
+      "sector": "Information Technology",
+      "subIndustry": "Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MRNA",
+      "security": "Moderna",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": 16500.680688161057,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MDLZ",
+      "security": "Mondelez International",
+      "sector": "Consumer Staples",
+      "subIndustry": "Packaged Foods & Meats",
+      "marketCap": 80230.71570939769,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MPWR",
+      "security": "Monolithic Power Systems",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 56121.61764983489,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "MNST",
+      "security": "Monster Beverage",
+      "sector": "Consumer Staples",
+      "subIndustry": "Soft Drinks & Non-alcoholic Beverages",
+      "marketCap": 79607.68388572082,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NBIS",
+      "security": "Nebius Group",
+      "sector": "Information Technology",
+      "subIndustry": "Computer Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NFLX",
+      "security": "Netflix, Inc.",
+      "sector": "Communication Services",
+      "subIndustry": "Movies & Entertainment",
+      "marketCap": 324557.60395877645,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NVDA",
+      "security": "Nvidia",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 4442283.058015331,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "NXPI",
+      "security": "NXP Semiconductors",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 61516.79107622858,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ORLY",
+      "security": "O'Reilly Automotive",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automotive Retail",
+      "marketCap": 81591.09813239156,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ODFL",
+      "security": "Old Dominion Freight Line",
+      "sector": "Industrials",
+      "subIndustry": "Cargo Ground Transportation",
+      "marketCap": 40399.90732358074,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PCAR",
+      "security": "Paccar",
+      "sector": "Industrials",
+      "subIndustry": "Construction Machinery & Heavy Transportation Equipment",
+      "marketCap": 66700.94994743672,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PLTR",
+      "security": "Palantir Technologies",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 313207.5973698567,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PANW",
+      "security": "Palo Alto Networks",
+      "sector": "Information Technology",
+      "subIndustry": "Systems Software",
+      "marketCap": 116364.14825472084,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PAYX",
+      "security": "Paychex",
+      "sector": "Industrials",
+      "subIndustry": "Human Resource & Employment Services",
+      "marketCap": 33879.3472211342,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PYPL",
+      "security": "PayPal",
+      "sector": "Financials",
+      "subIndustry": "Transaction & Payment Processing Services",
+      "marketCap": 37093.57648863102,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PDD",
+      "security": "PDD Holdings",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "EDP Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "PEP",
+      "security": "PepsiCo",
+      "sector": "Consumer Staples",
+      "subIndustry": "Soft Drinks & Non-alcoholic Beverages",
+      "marketCap": 226781.73886113756,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "QCOM",
+      "security": "Qualcomm",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 150126.90132296816,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "REGN",
+      "security": "Regeneron Pharmaceuticals",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": 84897.20531023582,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "RKLB",
+      "security": "Rocket Lab",
+      "sector": "Industrials",
+      "subIndustry": "Aerospace",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ROP",
+      "security": "Roper Technologies",
+      "sector": "Information Technology",
+      "subIndustry": "Electronic Equipment & Instruments",
+      "marketCap": 34595.74661689019,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "ROST",
+      "security": "Ross Stores",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Apparel Retail",
+      "marketCap": 63569.87173535468,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SNDK",
+      "security": "Sandisk",
+      "sector": "Information Technology",
+      "subIndustry": "Technology Hardware, Storage & Peripherals",
+      "marketCap": 92459.7301065371,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "STX",
+      "security": "Seagate Technology",
+      "sector": "Information Technology",
+      "subIndustry": "Technology Hardware, Storage & Peripherals",
+      "marketCap": 92896.94533177139,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SHOP",
+      "security": "Shopify",
+      "sector": "Information Technology",
+      "subIndustry": "Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SPCX",
+      "security": "SpaceX",
+      "sector": "Communication Services",
+      "subIndustry": "Telecommunications Services",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SBUX",
+      "security": "Starbucks",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Restaurants",
+      "marketCap": 106854.95393828877,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "SNPS",
+      "security": "Synopsys",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 83623.27621015231,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TMUS",
+      "security": "T-Mobile US",
+      "sector": "Communication Services",
+      "subIndustry": "Wireless Telecommunication Services",
+      "marketCap": 241858.87480490963,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TTWO",
+      "security": "Take-Two Interactive",
+      "sector": "Communication Services",
+      "subIndustry": "Interactive Home Entertainment",
+      "marketCap": 35862.928655754506,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TER",
+      "security": "Teradyne",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductor Materials & Equipment",
+      "marketCap": 49278.36484936816,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TSLA",
+      "security": "Tesla, Inc.",
+      "sector": "Consumer Discretionary",
+      "subIndustry": "Automobile Manufacturers",
+      "marketCap": 1566415.1934847455,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TXN",
+      "security": "Texas Instruments",
+      "sector": "Information Technology",
+      "subIndustry": "Semiconductors",
+      "marketCap": 205251.6708838802,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "TRI",
+      "security": "Thomson Reuters",
+      "sector": "Information Technology",
+      "subIndustry": "Software",
+      "marketCap": null,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "VRTX",
+      "security": "Vertex Pharmaceuticals",
+      "sector": "Health Care",
+      "subIndustry": "Biotechnology",
+      "marketCap": 119468.59,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WMT",
+      "security": "Walmart",
+      "sector": "Consumer Staples",
+      "subIndustry": "Consumer Staples Merchandise Retail",
+      "marketCap": 1028310.94,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WDC",
+      "security": "Western Digital",
+      "sector": "Information Technology",
+      "subIndustry": "Technology Hardware, Storage & Peripherals",
+      "marketCap": 96961.46,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "WDAY",
+      "security": "Workday, Inc.",
+      "sector": "Information Technology",
+      "subIndustry": "Application Software",
+      "marketCap": 40649.28,
+      "portfolioWeight": null
+    },
+    {
+      "symbol": "XEL",
+      "security": "Xcel Energy",
+      "sector": "Utilities",
+      "subIndustry": "Multi-Utilities",
+      "marketCap": 45211.38,
+      "portfolioWeight": null
+    }
+  ],
+  "benchmarks": [],
+  "sectors": []
+}
