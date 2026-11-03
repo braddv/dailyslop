@@ -8,6 +8,14 @@
       "destination": "/api/:path*"
     },
     {
+      "source": "/qqq",
+      "destination": "/public/qqq/index.html"
+    },
+    {
+      "source": "/qqq/:path*",
+      "destination": "/public/qqq/:path*"
+    },
+    {
       "source": "/magus",
       "destination": "/public/magus/index.html"
     },

@@ -5,9 +5,8 @@ name: Capture daily market signals
 
 on:
   schedule:
-    # GitHub cron uses UTC. This is 2 PM Eastern during daylight saving time.
-    # Update the UTC hour when standard time begins.
-    - cron: "0 18 * * 1-5"
+    # Run both UTC candidates; the local-time gate handles daylight saving.
+    - cron: "0 18,19 * * 1-5"
   workflow_dispatch:
 
 permissions: {}
@@ -27,11 +26,23 @@ jobs:
         include:
           - name: S&P 500
             endpoint: signal-history
+          - name: QQQ
+            endpoint: qqq-signal-history
           - name: SmallCap
             endpoint: smallcap-signal-history
 
     steps:
+      - name: Check Eastern snapshot window
+        id: window
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "$(TZ=America/New_York date +%H)" == "14" ]]; then
+            echo "capture=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "capture=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Validate capture secret
+        if: steps.window.outputs.capture == 'true'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
@@ -41,6 +52,7 @@ jobs:
           fi
 
       - name: Capture ${{ matrix.name }} signals
+        if: steps.window.outputs.capture == 'true'
         env:
           CAPTURE_ENDPOINT: ${{ matrix.endpoint }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -69,4 +81,4 @@ jobs:
             exit 1
           fi
 
-          jq --exit-status '.success == true' "${response_file}" >/dev/null
+          jq --exit-status '.success == true or .skipped == true' "${response_file}" >/dev/null

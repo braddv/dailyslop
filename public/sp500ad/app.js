@@ -479,7 +479,7 @@ function updateSubhead() {
     return;
   }
   if (appView === "watchlist") {
-    metricSubhead.textContent = "Personal signal and trend monitor for your watched S&P 500 stocks.";
+    metricSubhead.textContent = `Personal signal and trend monitor for your watched ${APP_CONFIG.broadLabel} stocks.`;
     return;
   }
   let base = METRICS[selectedMetric]?.subhead || "";
@@ -923,7 +923,7 @@ function buildChart(stocks) {
         ? `<div>${REPLAY_PERIODS[replayPeriod].label} replay ${formatPerf(getReplayValue(stock, replayFrames[replayFrameIndex]))}</div>`
         : "";
       const weightLine = Number.isFinite(stock.sp500Weight)
-        ? `<div>${stock.symbol === APP_CONFIG.broadSymbol ? "Benchmark" : `${APP_CONFIG.broadLabel} weight`} ${stock.symbol === APP_CONFIG.broadSymbol ? "100%" : `${stock.sp500Weight.toFixed(1)}%`}</div>`
+        ? `<div>${stock.symbol === APP_CONFIG.broadSymbol ? "Benchmark" : (APP_CONFIG.weightLabel || `${APP_CONFIG.broadLabel} weight`)} ${stock.symbol === APP_CONFIG.broadSymbol ? "100%" : `${stock.sp500Weight.toFixed(1)}%`}</div>`
         : "";
       return `
         <div><strong>${displayStockLabel(stock)}</strong>${stock.isSubIndustry ? "" : ` • ${stock.security}`}</div>
@@ -1940,7 +1940,7 @@ function renderActionBuckets(
     // Synthesizing historical snapshots on the client evaluates every period
     // several extra times. Avoid that heavyweight fallback for the SmallCap
     // 600; its change-based buckets should be driven by shared server history.
-    if (renderUi && APP_CONFIG.universe !== "smallcaps") seedHistoricalActionHistory(key);
+    if (renderUi && APP_CONFIG.universe === "sp500") seedHistoricalActionHistory(key);
     const history = readActionHistory();
     const signalAsOf = currentSignalAsOf();
     priorSnapshots = (Array.isArray(history[key]) ? history[key] : [])

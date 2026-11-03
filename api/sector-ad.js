@@ -2,6 +2,8 @@ const { readSharedCache, writeSharedCache } = require('./_lib/cache');
 const seedData = require('../public/sp500ad/data/sector-ad.json');
 const smallCapSeedData = require('../public/smallcaps/data/universe.json');
 
+const qqqSeedData = require('../public/qqq/data/universe.json');
+
 const DAILY_CACHE_KEY = 'sector_ad_yahoo_daily_v3';
 const INTRADAY_CACHE_KEY = 'sector_ad_yahoo_intraday_v5';
 const DAILY_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
@@ -39,6 +41,14 @@ const SMALLCAP_BENCHMARKS = [
 ];
 
 function universeConfig(name) {
+  if (name === 'qqq') {
+    return {
+      name: 'qqq', seed: qqqSeedData,
+      benchmarks: [['QQQ', 'Invesco QQQ Trust', 'Nasdaq-100'], ...BENCHMARKS.slice(1)],
+      minimumStocks: Math.ceil(qqqSeedData.stocks.length * 0.7),
+      dailyCacheKey: 'qqq_yahoo_daily_v1', intradayCacheKey: 'qqq_yahoo_intraday_v1',
+    };
+  }
   if (name === 'smallcaps') {
     return {
       name: 'smallcaps',
@@ -89,8 +99,8 @@ async function fetchJsonWithRetry(url, label) {
   throw lastErr || new Error(`${label} failed`);
 }
 
-function hasValidStocks(payload) {
-  return Array.isArray(payload?.stocks) && payload.stocks.length > 100;
+function hasValidStocks(payload, config) {
+  return Array.isArray(payload?.stocks) && payload.stocks.length >= (config.minimumStocks || 101);
 }
 
 function chunk(arr, size) {
@@ -421,7 +431,9 @@ function buildDailyResponse(config) {
     return {
       asOf: new Date().toISOString(),
       source: {
-        constituents: config.name === 'smallcaps'
+        constituents: config.name === 'qqq'
+          ? 'seed:/public/qqq/data/universe.json (Nasdaq-100 equity membership)'
+          : config.name === 'smallcaps'
           ? 'seed:/public/smallcaps/data/universe.json (SPSM/S&P SmallCap 600 fallback)'
           : 'seed:/public/sp500ad/data/sector-ad.json',
         quotes: 'Yahoo Finance spark',
@@ -490,8 +502,8 @@ function isUsMarketHours(now = new Date()) {
   return minutes >= 9 * 60 + 30 && minutes < 16 * 60 + 15;
 }
 
-function hasValidIntraday(payload) {
-  return Array.isArray(payload?.stocks) && payload.stocks.length > 100;
+function hasValidIntraday(payload, config) {
+  return Array.isArray(payload?.stocks) && payload.stocks.length >= (config.minimumStocks || 101);
 }
 
 function mergeQuoteRow(stock, live = {}) {
@@ -573,8 +585,8 @@ module.exports = async function handler(req, res) {
   let intraday = refresh
     ? null
     : await readSharedCache(config.intradayCacheKey, intradayTtl);
-  let dailyFresh = hasValidStocks(daily);
-  let intradayFresh = hasValidIntraday(intraday);
+  let dailyFresh = hasValidStocks(daily, config);
+  let intradayFresh = hasValidIntraday(intraday, config);
 
   const [dailyAttempt, intradayAttempt] = await Promise.all([
     dailyFresh
@@ -591,7 +603,7 @@ module.exports = async function handler(req, res) {
     await writeSharedCache(config.dailyCacheKey, daily, 7 * DAY_MS);
   } else if (!dailyFresh) {
     daily = await readSharedCache(config.dailyCacheKey, 7 * DAY_MS);
-    if (!hasValidStocks(daily)) daily = config.seed;
+    if (!hasValidStocks(daily, config)) daily = config.seed;
     daily = {
       ...daily,
       failures: [
@@ -607,7 +619,7 @@ module.exports = async function handler(req, res) {
     await writeSharedCache(config.intradayCacheKey, intraday, 2 * DAY_MS);
   } else if (!intradayFresh) {
     intraday = await readSharedCache(config.intradayCacheKey, 2 * DAY_MS);
-    if (!hasValidIntraday(intraday)) {
+    if (!hasValidIntraday(intraday, config)) {
       intraday = { asOf: daily.asOf, failures: [], stocks: [] };
     }
     if (intradayAttempt?.error) {
