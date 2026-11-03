@@ -1,3 +1,4 @@
+import qqqHistoryHandler from "./_lib/qqq-signal-history.js";
 import { neon } from "@neondatabase/serverless";
 import { buildSignalSnapshot, historicalCutoffs } from "./_lib/signals.js";
 
@@ -528,6 +529,7 @@ async function history(req) {
 }
 
 export default async function handler(req, res) {
+  if (String(req.query?.universe || "").toLowerCase() === "qqq") return qqqHistoryHandler(req, res);
   res.setHeader("Cache-Control", "no-store, max-age=0");
   if (!sql) {
     return res.status(503).json({ error: "DATABASE_URL is not configured" });

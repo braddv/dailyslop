@@ -4,6 +4,14 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/api/qqq",
+      "destination": "/api/sector-ad?universe=qqq"
+    },
+    {
+      "source": "/api/qqq-signal-history",
+      "destination": "/api/smallcap-signal-history?universe=qqq"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/:path*"
     },

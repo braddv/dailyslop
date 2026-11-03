@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import { buildSignalSnapshot, historicalCutoffs } from "./_lib/signals.js";
+import { buildSignalSnapshot, historicalCutoffs } from "./signals.js";
 
 const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 const OUTCOME_RESULT_LIMIT = 5000;
